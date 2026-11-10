@@ -56,18 +56,17 @@ header h1 {
   gap: 15px;
 }
 
-/* ✅ الشعار في الهيدر - استخدام shield.png وإخفاء الخلفية السوداء */
+/* ✅ الشعار الشفاف 100% (بدون أي مربعات) */
 header h1::before {
   content: '';
   display: inline-block;
   width: 50px;
   height: 50px;
-  background-image: url('/img/shield.png'); 
+  background-image: url('https://cdn-icons-png.flaticon.com/512/2885/2885232.png'); /* صورة شفافة */
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-  mix-blend-mode: screen; /* يجعل الأسود شفافاً */
-  filter: drop-shadow(0 0 10px var(--neon-blue)); 
+  filter: drop-shadow(0 0 10px var(--neon-blue)); /* توهج أزرق */
 }
 
 /* الأزرار العامة */
