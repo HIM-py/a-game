@@ -8,59 +8,74 @@
 </head>
 <body>
 <div class="container">
-  <header><h1>🎓 لوحة المشرف</h1></header>
-
-  <div id="setup" class="panel">
-    <h3>اختر نمط اللعب:</h3>
-    <div class="mode-pick">
-      <button class="mode-btn" data-mode="solo">🧑 فردي</button>
-      <button class="mode-btn" data-mode="team">👥 جماعي</button>
+  <header>
+    <div style="display: flex; align-items: center; gap: 15px;">
+      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="مشرف" style="width: 40px; filter: drop-shadow(0 0 10px #0ea5e9);">
+      <div>
+        <h1 style="margin: 0;">لوحة المشرف</h1>
+        <p style="margin: 0; color: #94a3b8; font-size: 0.9em;">صراع النشرات الأمنية</p>
+      </div>
     </div>
-    <button id="createBtn" class="btn" disabled>➕ إنشاء غرفة</button>
+    <a href="index.html" style="text-decoration: none; color: #0ea5e9; font-weight: bold; background: rgba(14, 165, 233, 0.1); padding: 10px 20px; border-radius: 20px; border: 1px solid #0ea5e9;">العودة للرئيسية</a>
+  </header>
+
+  <div id="setup" class="panel" style="text-align: center;">
+    <h2 style="margin-bottom: 30px; color: #fff; font-size: 1.8em;">اختر نمط اللعب</h2>
+    <div class="mode-pick">
+      <button class="mode-btn" data-mode="team">
+        <img src="https://cdn-icons-png.flaticon.com/512/921/921071.png" alt="جماعي" style="width: 50px; margin-bottom: 10px;">
+        جماعي
+        <span style="font-size: 0.8em; font-weight: normal; color: #94a3b8;">لعب مع فريق من اللاعبين</span>
+      </button>
+      <button class="mode-btn" data-mode="solo">
+        <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="فردي" style="width: 50px; margin-bottom: 10px;">
+        فردي
+        <span style="font-size: 0.8em; font-weight: normal; color: #94a3b8;">لعب بمفردك</span>
+      </button>
+    </div>
+    <button id="createBtn" class="btn" disabled style="width: 100%; max-width: 400px;">+ إنشاء غرفة</button>
   </div>
 
   <div id="lobby" class="panel hidden">
     <div class="room-code-box">
-      <p>كود الغرفة:</p>
-      <div id="roomCode" class="code"></div>
-      <p class="hint" id="modeHint"></p>
+      <p>كود الغرفة</p>
+      <div id="roomCode" class="code">----</div>
+      <p class="hint" id="modeHint" style="margin-top: 10px;"></p>
     </div>
-    <div id="playersList" class="players-list"><h4>اللاعبون (0):</h4></div>
+    <div id="playersList" class="players-list" style="text-align: center;"><h4>اللاعبون (0):</h4></div>
     <div id="teamsView" class="teams-view hidden"></div>
-    <div class="actions">
-      <div id="distOptions" class="hidden">
-        <button id="randomBtn" class="btn next-btn">🎲 توزيع عشوائي (فريقين)</button>
+    
+    <div class="actions" style="text-align: center; margin-top: 30px;">
+      <div id="distOptions" class="hidden" style="margin-bottom: 20px;">
+        <button id="randomBtn" class="btn" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">توزيع عشوائي (فريقين)</button>
       </div>
-      <button id="startBtn" class="btn next-btn hidden">▶️ ابدأ اللعبة</button>
+      <button id="startBtn" class="btn next-btn hidden" style="width: 100%; max-width: 400px;">ابدأ اللعبة</button>
     </div>
   </div>
 
   <div id="gameArea" class="panel hidden">
-    <div class="scoreboard" id="scoreboard"></div>
+    <div class="scoreboard" id="scoreboard" style="margin-bottom: 20px; display: flex; justify-content: center; gap: 20px;"></div>
     
-    <!-- المربع البنفسجي -->
-    <div id="hostAnswerBox" style="display:none; background:rgba(139,92,246,0.2); border:2px solid #a78bfa; padding:15px; border-radius:10px; margin-bottom:15px; color:#e9d5ff; font-size:1.05em; text-align:right;"></div>
+    <div id="hostAnswerBox" style="display:none; background:rgba(139,92,246,0.15); border:2px solid #8b5cf6; padding:20px; border-radius:15px; margin-bottom:20px; color:#e2e8f0; font-size:1.05em; text-align:right; box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);"></div>
 
     <div id="cardsView" class="cards"></div>
     <div id="statusMsg" class="status"></div>
     <div id="revealBox" class="reveal hidden"></div>
     
-    <!-- أزرار التحكم -->
-    <div style="text-align: center; margin-top: 20px;">
-      <button id="forceEndBtn" class="btn hidden" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; margin: 5px;">🛑 إنهاء الجولة الآن</button>
-      <button id="nextBtn" class="btn next-btn hidden" style="margin: 5px;">الجولة التالية ➡️</button>
+    <div style="text-align: center; margin-top: 30px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+      <button id="forceEndBtn" class="btn hidden" style="background: linear-gradient(135deg, #ef4444, #b91c1c); box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);">إنهاء الجولة الآن</button>
+      <button id="nextBtn" class="btn next-btn hidden">الجولة التالية</button>
     </div>
   </div>
 
-  <!-- الحقوق -->
-  <div style="text-align: center; margin-top: 30px; color: #64748b; font-size: 0.8em; padding-bottom: 20px;">
-    <p>صراع النشرات الأمنية - تصميم <strong>العقيلي HIM.PY</strong> &copy; 2026</p>
+  <div style="text-align: center; margin-top: 40px; color: #475569; font-size: 0.9em; padding-bottom: 20px;">
+    <p>صراع النشرات الأمنية - تصميم <strong style="color: #64748b;">محمد العقيلي HIM.PY</strong> &copy; 2026</p>
   </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-console.log("🔥 شاشة المشرف (النسخة النهائية)");
+console.log("🔥 شاشة المشرف V9");
 const socket = io();
 let currentMode = null;
 
@@ -76,14 +91,14 @@ document.querySelectorAll('.mode-btn').forEach(b => {
 document.getElementById('createBtn').onclick = () => {
   socket.emit('createRoom', { mode: currentMode }, ({ code, mode }) => {
     document.getElementById('roomCode').textContent = code;
-    document.getElementById('modeHint').textContent = mode === 'solo' ? '🧑 نمط فردي' : '👥 نمط جماعي';
+    document.getElementById('modeHint').textContent = mode === 'solo' ? 'نمط فردي' : 'نمط جماعي';
     document.getElementById('setup').classList.add('hidden');
     document.getElementById('lobby').classList.remove('hidden');
   });
 };
 
 socket.on('roomUpdate', (room) => {
-  document.getElementById('playersList').innerHTML = `<h4>اللاعبون (${room.players.length}):</h4>` + room.players.map(p => `<span class="player-chip">👤 ${p.name}</span>`).join('');
+  document.getElementById('playersList').innerHTML = `<h4>اللاعبون (${room.players.length}):</h4>` + room.players.map(p => `<span class="player-chip">${p.name}</span>`).join('');
 
   if (room.mode === 'solo') {
     document.getElementById('distOptions').classList.add('hidden');
@@ -102,7 +117,7 @@ socket.on('roomUpdate', (room) => {
 socket.on('distributed', (room) => {
   document.getElementById('distOptions').classList.add('hidden');
   document.getElementById('teamsView').classList.remove('hidden');
-  document.getElementById('teamsView').innerHTML = '<h4>🎲 تم التوزيع:</h4>' + room.teams.map(t => `
+  document.getElementById('teamsView').innerHTML = '<h4 style="width:100%; text-align:center; margin-bottom:15px; color:#fff;">تم التوزيع:</h4>' + room.teams.map(t => `
     <div class="team-card"><h5>${t.name} (${t.members.length})</h5><p>${t.members.join(' · ')}</p></div>`).join('');
   document.getElementById('startBtn').classList.remove('hidden');
   document.getElementById('startBtn').disabled = false;
@@ -122,14 +137,14 @@ socket.on('roundStartedHost', ({ round, total, data }) => {
   const box = document.getElementById('hostAnswerBox');
   box.style.display = 'block'; 
   box.innerHTML = `
-    <strong style="color:#fbbf24; font-size:1.1em;">🔒 شاشة المشرف:</strong><br><br>
+    <strong style="color:#a78bfa; font-size:1.1em;">شاشة المشرف:</strong><br><br>
     <strong>الإجابة الصحيحة:</strong> البطاقة ${data.correct} <br>
     <strong>السبب:</strong> ${data.reasons.find(r => r.correct)?.text} <br>
     <strong>الشرح:</strong> ${data.explain} <br>
-    <strong style="color:#4ade80;">(قيمة هذه الجولة: ${data.points} نقاط)</strong>
+    <strong style="color:#10b981;">(قيمة هذه الجولة: ${data.points} نقاط)</strong>
   `;
 
-  document.getElementById('statusMsg').textContent = `⏳ الجولة ${round} / ${total} — في انتظار اختيارات اللاعبين...`;
+  document.getElementById('statusMsg').textContent = `الجولة ${round} / ${total} — في انتظار اختيارات اللاعبين...`;
   renderCards(data);
 });
 
@@ -140,21 +155,21 @@ function renderCards(data) {
     const d = data[k];
     c.innerHTML += `
       <div class="card">
-        <div class="card-title">📄 البطاقة ${k}</div>
+        <div class="card-title">البطاقة ${k}</div>
         <div class="card-field"><span>المنتج</span><b>${d.product}</b></div>
         <div class="card-field"><span>الشدة</span><b class="severity">${d.severity}</b></div>
         <div class="card-field"><span>الحالة</span><b>${d.condition}</b></div>
         <div class="card-field"><span>الأثر</span><b>${d.impact}</b></div>
-        <div class="context-box">🏢 ${d.context}</div>
+        <div class="context-box">${d.context}</div>
       </div>`;
   });
 }
 
 socket.on('progressUpdate', ({ answered, total }) => {
-  document.getElementById('statusMsg').textContent = `⏳ ${answered} / ${total} أجابوا...`;
+  document.getElementById('statusMsg').textContent = `${answered} / ${total} أجابوا...`;
 });
 socket.on('phaseChange', () => {
-  document.getElementById('statusMsg').textContent = '🧠 في انتظار اختيار السبب...';
+  document.getElementById('statusMsg').textContent = 'في انتظار اختيار السبب...';
 });
 
 socket.on('revealSolo', ({ correct, explain, leaderboard, points }) => {
@@ -164,7 +179,7 @@ socket.on('revealSolo', ({ correct, explain, leaderboard, points }) => {
   
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
-  box.innerHTML = `<h3>✅ الإجابة: ${correct} (الجولة بقيمة ${points} نقاط)</h3><p class="explain">${explain}</p><div class="leaderboard">${leaderboard.map((p, i) => `<div class="lb-row ${i===0?'top':''}"><span class="rank">${i+1}</span><span class="name">${p.name}</span><span class="pts">${p.total}</span></div>`).join('')}</div>`;
+  box.innerHTML = `<h3 style="color:#10b981; text-align:center;">الإجابة: ${correct} (${points} نقاط)</h3><p class="explain" style="text-align:center; margin-bottom:20px;">${explain}</p><div class="leaderboard">${leaderboard.map((p, i) => `<div class="lb-row ${i===0?'top':''}"><span class="rank">${i+1}</span><span class="name">${p.name}</span><span class="pts">${p.total}</span></div>`).join('')}</div>`;
   document.getElementById('nextBtn').classList.remove('hidden');
 });
 
@@ -175,18 +190,18 @@ socket.on('revealTeam', ({ correct, explain, results, points }) => {
 
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
-  box.innerHTML = `<h3>✅ الإجابة: ${correct} (الجولة بقيمة ${points} نقاط)</h3><p class="explain">${explain}</p><div class="results">${results.map(r => `
+  box.innerHTML = `<h3 style="color:#10b981; text-align:center;">الإجابة: ${correct} (${points} نقاط)</h3><p class="explain" style="text-align:center; margin-bottom:20px;">${explain}</p><div class="results">${results.map(r => `
     <div class="res-team ${r.pts > (points/2) ? 'perfect' : r.pts > 0 ? 'partial' : 'wrong'}">
       <h4>${r.name}</h4>
       <p>${r.members.join(' · ')}</p>
-      <p style="font-size:0.85em; color:#cbd5e1;">البطاقة: ${r.cardRatio}% | السبب: ${r.reasonRatio}%</p>
+      <p style="font-size:0.85em; color:#cbd5e1; margin-top:10px;">البطاقة: ${r.cardRatio}% | السبب: ${r.reasonRatio}%</p>
       <p class="pts">+${r.pts} (المجموع: ${r.total})</p>
     </div>`).join('')}</div>`;
   document.getElementById('nextBtn').classList.remove('hidden');
 });
 
 document.getElementById('forceEndBtn').onclick = () => {
-  if(confirm('هل أنت متأكد من إنهاء الجولة الآن؟ سيتم احتساب إجابات الطلاب الذين أجابوا فقط.')) {
+  if(confirm('هل أنت متأكد من إنهاء الجولة الآن؟')) {
     socket.emit('forceEnd');
   }
 };
@@ -202,7 +217,7 @@ socket.on('readyNext', () => {
 });
 
 socket.on('gameEnded', () => {
-  document.getElementById('gameArea').innerHTML = `<div class="end-screen"><h2>🏁 انتهت اللعبة!</h2><button class="btn" onclick="location.reload()">🔄 لعبة جديدة</button></div>`;
+  document.getElementById('gameArea').innerHTML = `<div class="end-screen"><h2>انتهت اللعبة!</h2><button class="btn" onclick="location.reload()">لعبة جديدة</button></div>`;
 });
 </script>
 </body>
