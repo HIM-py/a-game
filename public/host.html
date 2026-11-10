@@ -53,6 +53,11 @@
 const socket = io();
 let currentMode = null;
 
+// ==========================================
+// بصمة سرية للتأكد من تحميل النسخة الجديدة
+console.log("✅ تم تحميل نسخة شاشة المعلم الجديدة V3");
+// ==========================================
+
 document.querySelectorAll('.mode-btn').forEach(b => {
   b.onclick = () => {
     document.querySelectorAll('.mode-btn').forEach(x => x.classList.remove('selected'));
@@ -169,12 +174,17 @@ socket.on('revealTeam', ({ correct, explain, results }) => {
   document.getElementById('nextBtn').classList.remove('hidden');
 });
 
-document.getElementById('nextBtn').onclick = () => socket.emit('nextRound');
+document.getElementById('nextBtn').onclick = () => {
+  console.log("تم الضغط على الجولة التالية...");
+  socket.emit('nextRound');
+};
 
 // ✅ استقبال إشارة الاستعداد
 socket.on('readyNext', () => {
+  console.log("المعلم استعد للجولة القادمة");
   document.getElementById('revealBox').classList.add('hidden');
   document.getElementById('nextBtn').classList.add('hidden');
+  // لا نخفي المربع البنفسجي هنا، سيظهر تلقائياً في الدالة التالية
 });
 
 socket.on('gameEnded', () => {
