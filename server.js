@@ -9,9 +9,6 @@ const io = new Server(server, { cors: { origin: "*", methods: ["GET", "POST"] } 
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ============================================================
-// بنك الأسئلة (مولد 100 سؤال)
-// ============================================================
 const PRODUCTS = ["LibraryApp", "PayPortal", "PrintServer", "VPN Gateway", "ChatApp", "StudentPortal", "Antivirus", "Backup Server", "Email Filter", "File Share", "WebServer", "HR Portal", "Router Firmware", "Cloud Storage", "Dev Tools", "Public API", "Backup Tape", "Mobile App", "Old CRM", "Wi-Fi Guest"];
 const CONDITIONS = ["تسجيل دخول الزوار مُفعّل", "الجلسة لا تنتهي بعد الخروج", "ثغرة في خدمة الطباعة", "ثغرة في المصادقة الثنائية", "رسائل غير مشفرة", "ثغرة في رفع الملفات", "ثغرة في محرك الفحص", "ثغرة في استعادة النسخ", "تجاوز فلتر البريد", "صلاحيات مفتوحة", "ثغرة تنفيذ أوامر عن بُعد", "تسريب بيانات الموظفين", "كلمة مرور افتراضية", "روابط مشاركة دائمة"];
 const IMPACTS = ["وصول غير مصرّح للبيانات", "سرقة جلسات العملاء", "تسريب مستندات داخلية", "دخول غير مصرّح للشبكة", "كشف محادثات الموظفين", "رفع ملفات خبيثة", "تجاوز الفحص الأمني", "فشل استعادة البيانات", "وصول تصيّد للموظفين", "وصول لملفات حساسة", "اختراق كامل للخادم", "كشف رواتب وبيانات شخصية"];
@@ -44,7 +41,6 @@ function generate100Rounds() {
     const cardA = dangerInA ? { product: realProduct, severity: parseFloat(realSeverity), condition: realCondition, impact: realImpact, context: realContext } : { product: fakeProduct, severity: parseFloat(fakeSeverity), condition: fakeCondition, impact: fakeImpact, context: fakeContext };
     const cardB = dangerInA ? { product: fakeProduct, severity: parseFloat(fakeSeverity), condition: fakeCondition, impact: fakeImpact, context: fakeContext } : { product: realProduct, severity: parseFloat(realSeverity), condition: realCondition, impact: realImpact, context: realContext };
     
-    // ✅ خيارات الأسباب المطورة
     const reasons = [
       { text: dangerInA ? "البطاقة A: لأن درجة خطورتها (الشدة) هي الأعلى في القائمة" : "البطاقة B: لأن درجة خطورتها (الشدة) هي الأعلى في القائمة", correct: false },
       { text: dangerInA ? "البطاقة A: لأنها مُعرّضة للجميع وتفتقر للضوابط، بينما B محدودة أو محمية" : "البطاقة B: لأنها مُعرّضة للجميع وتفتقر للضوابط، بينما A محدودة أو محمية", correct: true },
@@ -52,11 +48,7 @@ function generate100Rounds() {
       { text: "لا يمكن تحديد الأولوية بدون معرفة اسم المخترق", correct: false }
     ];
 
-    rounds.push({ 
-      A: cardA, B: cardB, correct: dangerInA ? "A" : "B", 
-      reasons: shuffleArray(reasons), 
-      explain: `البطاقة ${dangerInA ? "A" : "B"} هي الخطر الحقيقي رغم أن شدتها أقل، لأنها مُعرّضة للجميع وبلا حماية.` 
-    });
+    rounds.push({ A: cardA, B: cardB, correct: dangerInA ? "A" : "B", reasons: shuffleArray(reasons), explain: `البطاقة ${dangerInA ? "A" : "B"} هي الخطر الحقيقي رغم أن شدتها أقل، لأنها مُعرّضة للجميع وبلا حماية.` });
   }
   return rounds;
 }
@@ -167,8 +159,9 @@ io.on('connection', (socket) => {
       io.to(socket.roomCode).emit('gameEnded', { mode: room.mode, finalScores });
     } else {
       room.phase = 'waiting';
-      io.to(socket.roomCode).emit('prepareNextRound'); // ✅ إرسال إشارة للطلاب لإخفاء النتيجة
-      io.to(room.hostSocket).emit('readyNext', publicRoom(room)); // ✅ إعادة إظهار الحل للمعلم
+      // ✅ إرسال أمر الانتقال للطلاب وإخفاء النتيجة
+      io.to(socket.roomCode).emit('prepareNextRound');
+      io.to(room.hostSocket).emit('readyNext', publicRoom(room));
     }
   });
 });
@@ -187,7 +180,6 @@ function revealSolo(room) {
   room.players.forEach(p => io.to(p.socketId).emit('revealSoloPlayer', { correct: r.correct, explain: r.explain, mine: leaderboard.find(x => x.id === p.id) }));
 }
 
-// ✅ احتساب نسبي عادل للفرق
 function revealTeamFractional(room) {
   room.phase = 'reveal';
   const r = room.rounds[room.round - 1];
