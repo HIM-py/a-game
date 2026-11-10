@@ -25,7 +25,9 @@
       <div id="roomCode" class="code"></div>
       <p class="hint" id="modeHint"></p>
     </div>
-    <div id="playersList" class="players-list"></div>
+    <div id="playersList" class="players-list">
+      <h4>اللاعبون (0):</h4>
+    </div>
     <div id="teamsView" class="teams-view hidden"></div>
     <div class="actions">
       <button id="distributeBtn" class="btn next-btn hidden">🎲 توزيع عشوائي</button>
@@ -36,10 +38,7 @@
 
   <div id="gameArea" class="panel hidden">
     <div class="scoreboard" id="scoreboard"></div>
-    
-    <!-- هنا سيظهر المربع البنفسجي الخاص بالمعلم -->
     <div id="hostAnswerBox" class="hidden"></div>
-
     <div id="cardsView" class="cards"></div>
     <div id="statusMsg" class="status"></div>
     <div id="revealBox" class="reveal hidden"></div>
@@ -51,7 +50,6 @@
 <script>
 const socket = io();
 let currentMode = null;
-let roomState = null;
 
 document.querySelectorAll('.mode-btn').forEach(b => {
   b.onclick = () => {
@@ -73,8 +71,8 @@ document.getElementById('createBtn').onclick = () => {
   });
 };
 
+// تحديث القائمة عند دخول أي طالب
 socket.on('roomUpdate', (room) => {
-  roomState = room;
   const pl = document.getElementById('playersList');
   pl.innerHTML = `<h4>اللاعبون (${room.players.length}):</h4>` +
     room.players.map(p => `<span class="player-chip">👤 ${p.name}</span>`).join('');
@@ -88,6 +86,7 @@ socket.on('roomUpdate', (room) => {
   } else {
     if (!room.distributed) {
       document.getElementById('distributeBtn').classList.remove('hidden');
+      // زر التوزيع يعمل فقط إذا كان هناك طالبان على الأقل
       document.getElementById('distributeBtn').disabled = room.players.length < 2;
       document.getElementById('teamsView').classList.add('hidden');
       document.getElementById('startBtn').classList.add('hidden');
@@ -96,8 +95,8 @@ socket.on('roomUpdate', (room) => {
   }
 });
 
+// بعد التوزيع
 socket.on('distributed', (room) => {
-  roomState = room;
   document.getElementById('distributeBtn').classList.add('hidden');
   document.getElementById('teamsView').classList.remove('hidden');
   const tv = document.getElementById('teamsView');
@@ -115,7 +114,6 @@ document.getElementById('distributeBtn').onclick = () => socket.emit('distribute
 document.getElementById('redistributeBtn').onclick = () => socket.emit('redistribute');
 document.getElementById('startBtn').onclick = () => socket.emit('startRound');
 
-// استقبال السؤال مع الحل من السيرفر (للمعلم فقط)
 socket.on('roundStartedHost', ({ round, total, data }) => {
   document.getElementById('lobby').classList.add('hidden');
   document.getElementById('gameArea').classList.remove('hidden');
@@ -123,7 +121,6 @@ socket.on('roundStartedHost', ({ round, total, data }) => {
   document.getElementById('revealBox').classList.add('hidden');
   document.getElementById('statusMsg').textContent = `⏳ الجولة ${round} / ${total} — في انتظار اختيارات اللاعبين...`;
   
-  // عرض المربع البنفسجي للمعلم
   const box = document.getElementById('hostAnswerBox');
   box.classList.remove('hidden');
   box.style.cssText = 'background:rgba(139,92,246,0.2); border:2px solid #a78bfa; padding:15px; border-radius:10px; margin-bottom:15px; color:#e9d5ff; font-size:1.05em; text-align:right;';
@@ -135,7 +132,6 @@ socket.on('roundStartedHost', ({ round, total, data }) => {
   `;
 
   renderCards(data);
-  renderScoreboard(roomState);
 });
 
 function renderCards(data) {
@@ -156,23 +152,6 @@ function renderCards(data) {
   });
 }
 
-function renderScoreboard(room) {
-  if (!room) return;
-  const sb = document.getElementById('scoreboard');
-  if (room.mode === 'solo') {
-    const entries = Object.entries(room.scores || {})
-      .map(([id, s]) => ({ name: (room.players.find(p => p.id === id) || {}).name || '?', score: s }))
-      .sort((a, b) => b.score - a.score).slice(0, 5);
-    sb.innerHTML = '<h4>🏆 أعلى 5:</h4>' + entries.map((e, i) =>
-      `<div class="lb-row ${i===0?'top':''}"><span class="rank">${i+1}</span><span class="name">${e.name}</span><span class="pts">${e.score}</span></div>`
-    ).join('');
-  } else {
-    sb.innerHTML = (room.teams || []).map(t =>
-      `<div class="team-score"><span>${t.name}</span><span class="score">${t.score}</span></div>`
-    ).join('');
-  }
-}
-
 socket.on('progressUpdate', ({ answered, total }) => {
   document.getElementById('statusMsg').textContent = `⏳ ${answered} / ${total} أجابوا...`;
 });
@@ -181,100 +160,42 @@ socket.on('phaseChange', () => {
   document.getElementById('statusMsg').textContent = '🧠 في انتظار اختيار السبب...';
 });
 
-socket.on('revealSolo', ({ correct, explain, leaderboard, round, total }) => {
+socket.on('revealSolo', ({ correct, explain, leaderboard }) => {
   document.getElementById('statusMsg').textContent = '';
-  document.getElementById('hostAnswerBox').classList.add('hidden'); // إخفاء الحل بعد كشف النتيجة
-  
+  document.getElementById('hostAnswerBox').classList.add('hidden'); 
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
   box.innerHTML = `
     <h3>✅ الإجابة الصحيحة: البطاقة ${correct}</h3>
     <p class="explain">${explain}</p>
     <h4>🏆 لوحة الصدارة:</h4>
-    <div class="leaderboard">
-      ${leaderboard.map((p, i) => `
-        <div class="lb-row ${i===0?'top':''}">
-          <span class="rank">${i+1}</span>
-          <span class="name">${p.name}</span>
-          <span class="badge">${p.cardOk?'✅':'❌'} ${p.reasonOk?'✅':'❌'}</span>
-          <span class="pts">${p.total}</span>
-        </div>`).join('')}
-    </div>`;
-  showNext(round, total);
+    <div class="leaderboard">${leaderboard.map((p, i) => `<div class="lb-row ${i===0?'top':''}"><span class="rank">${i+1}</span><span class="name">${p.name}</span><span class="badge">${p.cardOk?'✅':'❌'} ${p.reasonOk?'✅':'❌'}</span><span class="pts">${p.total}</span></div>`).join('')}</div>`;
+  document.getElementById('nextBtn').classList.remove('hidden');
 });
 
-socket.on('revealTeam', ({ correct, explain, results, round, total }) => {
+socket.on('revealTeam', ({ correct, explain, results }) => {
   document.getElementById('statusMsg').textContent = '';
-  document.getElementById('hostAnswerBox').classList.add('hidden'); // إخفاء الحل بعد كشف النتيجة
-
+  document.getElementById('hostAnswerBox').classList.add('hidden');
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
   box.innerHTML = `
     <h3>✅ الإجابة الصحيحة: البطاقة ${correct}</h3>
     <p class="explain">${explain}</p>
-    <div class="results">
-      ${results.map(r => `
-        <div class="res-team ${r.cardOk && r.reasonOk ? 'perfect' : r.cardOk ? 'partial' : 'wrong'}">
-          <h4>${r.name}</h4>
-          <p>${r.members.join(' · ')}</p>
-          <p>${r.cardOk?'✅ البطاقة':'❌ البطاقة'} | ${r.reasonOk?'✅ السبب':'❌ السبب'}</p>
-          <p class="pts">+${r.pts} (المجموع: ${r.total})</p>
-        </div>`).join('')}
-    </div>`;
-  showNext(round, total);
-});
-
-function showNext(round, total) {
+    <div class="results">${results.map(r => `<div class="res-team ${r.cardOk && r.reasonOk ? 'perfect' : r.cardOk ? 'partial' : 'wrong'}"><h4>${r.name}</h4><p>${r.members.join(' · ')}</p><p>${r.cardOk?'✅ البطاقة':'❌ البطاقة'} | ${r.reasonOk?'✅ السبب':'❌ السبب'}</p><p class="pts">+${r.pts} (المجموع: ${r.total})</p></div>`).join('')}</div>`;
   document.getElementById('nextBtn').classList.remove('hidden');
-  document.getElementById('nextBtn').textContent = round < total ? 'الجولة التالية ➡️' : '🏁 النتيجة النهائية';
-}
+});
 
 document.getElementById('nextBtn').onclick = () => socket.emit('nextRound');
 
-socket.on('readyNext', (room) => {
-  roomState = room;
+socket.on('readyNext', () => {
   document.getElementById('revealBox').classList.add('hidden');
   document.getElementById('hostAnswerBox').classList.add('hidden');
   document.getElementById('nextBtn').classList.add('hidden');
-  renderScoreboard(room);
 });
 
 socket.on('gameEnded', ({ mode, finalScores }) => {
   const area = document.getElementById('gameArea');
-  if (mode === 'solo') {
-    const entries = Object.entries(finalScores)
-      .map(([id, s]) => ({ name: (roomState.players.find(p => p.id === id) || {}).name || '?', score: s }))
-      .sort((a, b) => b.score - a.score);
-    area.innerHTML = `
-      <div class="end-screen">
-        <h2>🏁 انتهت اللعبة!</h2>
-        <h3>🏆 لوحة الصدارة النهائية:</h3>
-        <div class="leaderboard">
-          ${entries.map((e, i) => `
-            <div class="lb-row ${i===0?'top':''}">
-              <span class="rank">${i+1}</span>
-              <span class="name">${e.name}</span>
-              <span class="pts">${e.score}</span>
-            </div>`).join('')}
-        </div>
-        <button class="btn" onclick="location.reload()">🔄 لعبة جديدة</button>
-      </div>`;
-  } else {
-    const sorted = finalScores.slice().sort((a, b) => b.score - a.score);
-    area.innerHTML = `
-      <div class="end-screen">
-        <h2>🏁 انتهت اللعبة!</h2>
-        <div class="leaderboard">
-          ${sorted.map((t, i) => `
-            <div class="lb-row ${i===0?'top':''}">
-              <span class="rank">${i+1}</span>
-              <span class="name">${t.name}</span>
-              <span class="pts">${t.score}</span>
-            </div>`).join('')}
-        </div>
-        <button class="btn" onclick="location.reload()">🔄 لعبة جديدة</button>
-      </div>`;
-  }
+  area.innerHTML = `<div class="end-screen"><h2>🏁 انتهت اللعبة!</h2><button class="btn" onclick="location.reload()">🔄 لعبة جديدة</button></div>`;
 });
 </script>
 </body>
