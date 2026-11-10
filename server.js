@@ -32,23 +32,19 @@ function generate100Rounds() {
     let realContext, fakeContext;
 
     if (pattern < 0.5) {
-      // 50%: الصح هو الأقل شدة (السياق يغلب الشدة)
       realSev = (Math.random() * 2 + 4).toFixed(1);
       fakeSev = (Math.random() * 2 + 8).toFixed(1);
       realContext = getRandom(CONTEXT_HIGH);
       fakeContext = getRandom(CONTEXT_LOW);
     } else if (pattern < 0.8) {
-      // 30%: الصح هو الأعلى شدة (لتفادي الحفظ)
       realSev = (Math.random() * 2 + 8).toFixed(1); 
       fakeSev = (Math.random() * 2 + 4).toFixed(1); 
       realContext = getRandom(CONTEXT_HIGH);
       fakeContext = getRandom(CONTEXT_LOW);
     } else {
-      // 20%: الشدتان متقاربتان جداً (السياق هو الفيصل الواضح)
       const base = Math.random() * 2 + 7; 
       realSev = (base + 0.1).toFixed(1);
       fakeSev = base.toFixed(1);
-      // سياق متطرف جداً للتوضيح
       realContext = "مفتوح للإنترنت بالكامل، بيانات العملاء الحساسة مكشوفة، لا يوجد أي جدار حماية";
       fakeContext = "خادم داخلي مغلق، لا يوجد اتصال بالإنترنت، وصول محصور بموظف واحد";
     }
@@ -71,19 +67,18 @@ function generate100Rounds() {
     const correctLetter = dangerInA ? "A" : "B";
     const wrongLetter = dangerInA ? "B" : "A";
     const realCard = dangerInA ? cardA : cardB;
-    const fakeCard = dangerInA ? cardB : cardA;
 
     const reasonTemplates = [
       { text: `البطاقة ${correctLetter}: لأنها مُعرّضة للجمهور/الإنترنت، بينما ${wrongLetter} داخلية أو محدودة`, correct: true },
       { text: `البطاقة ${correctLetter}: لأنها بلا أي ضوابط حماية، بينما ${wrongLetter} لديها إجراءات وقائية`, correct: true },
       { text: `البطاقة ${correctLetter}: لأن الأثر المترتب عليها كارثي (${realCard.impact})، بينما ${wrongLetter} أثره محدود`, correct: true },
-      { text: `البطاقة ${wrongLetter}: لأن درجة شدتها (${fakeCard.severity}) أعلى، والرقم الأكبر يفوز دائماً`, correct: false },
+      { text: `البطاقة ${wrongLetter}: لأن درجة شدتها أعلى، والرقم الأكبر يفوز دائماً`, correct: false },
       { text: `البطاقة ${wrongLetter}: لأنها الأحدث في الإصدار، والأحدث دائماً أخطر`, correct: false },
       { text: "كلتاهما لهما نفس الأولوية تماماً، لا فرق بينهما", correct: false },
       { text: "لا يمكن تحديد الأولوية إلا بمعرفة من سيهجم ومتى", correct: false }
     ];
 
-    const selectedReasons = shuffleArray(reasonTemplates).filter((r, i, arr) => arr.findIndex(x => x.text === r.text) === i).slice(0, 4);
+    const selectedReasons = shuffleArray(reasonTemplates).slice(0, 4);
     if (!selectedReasons.some(r => r.correct)) selectedReasons[0] = reasonTemplates[0];
 
     rounds.push({ 
@@ -165,7 +160,6 @@ io.on('connection', (socket) => {
     });
   });
 
-  // ✅ اللاعب يختار البطاقة، ويظهر له السبب فوراً
   socket.on('pickCard', ({ card }) => {
     const room = rooms[socket.roomCode];
     if (!room || room.phase !== 'question') return;
@@ -177,7 +171,6 @@ io.on('connection', (socket) => {
     io.to(room.hostSocket).emit('progressUpdate', { answered: totalAnswered, total: room.players.length });
   });
 
-  // ✅ اللاعب يختار السبب (هنا ننتظر الجميع)
   socket.on('pickReason', ({ idx }) => {
     const room = rooms[socket.roomCode];
     if (!room || room.phase === 'reveal') return;
@@ -187,7 +180,6 @@ io.on('connection', (socket) => {
     const totalReasons = Object.keys(room.playerReasons).length;
     io.to(room.hostSocket).emit('progressUpdate', { answered: totalReasons, total: room.players.length });
 
-    // إذا أجاب كل الطلاب (بطاقة + سبب)، نكشف النتيجة
     if (totalReasons === room.players.length) {
       if (room.mode === 'solo') revealSolo(room);
       else revealTeamFractional(room);
