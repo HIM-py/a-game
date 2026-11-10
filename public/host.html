@@ -37,7 +37,10 @@
 
   <div id="gameArea" class="panel hidden">
     <div class="scoreboard" id="scoreboard"></div>
+    
+    <!-- ✅ المربع البنفسجي (شاشة المعلم) -->
     <div id="hostAnswerBox" class="hidden"></div>
+
     <div id="cardsView" class="cards"></div>
     <div id="statusMsg" class="status"></div>
     <div id="revealBox" class="reveal hidden"></div>
@@ -97,13 +100,13 @@ socket.on('distributed', (room) => {
 document.getElementById('randomBtn').onclick = () => socket.emit('distributeRandom');
 document.getElementById('startBtn').onclick = () => socket.emit('startRound');
 
+// ✅ إصلاح: إعادة إظهار الحل في كل جولة
 socket.on('roundStartedHost', ({ round, total, data }) => {
   document.getElementById('lobby').classList.add('hidden');
   document.getElementById('gameArea').classList.remove('hidden');
   document.getElementById('nextBtn').classList.add('hidden');
   document.getElementById('revealBox').classList.add('hidden');
   
-  // ✅ إصلاح 1: إعادة إظهار الحل في كل جولة
   const box = document.getElementById('hostAnswerBox');
   box.classList.remove('hidden');
   box.style.cssText = 'background:rgba(139,92,246,0.2); border:2px solid #a78bfa; padding:15px; border-radius:10px; margin-bottom:15px; color:#e9d5ff; font-size:1.05em; text-align:right;';
@@ -173,7 +176,6 @@ document.getElementById('nextBtn').onclick = () => socket.emit('nextRound');
 socket.on('readyNext', () => {
   document.getElementById('revealBox').classList.add('hidden');
   document.getElementById('nextBtn').classList.add('hidden');
-  // المربع البنفسجي سيظهر في الجولة القادمة عبر roundStartedHost
 });
 
 socket.on('gameEnded', () => {
