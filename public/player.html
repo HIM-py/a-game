@@ -43,6 +43,7 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
+console.log("🔥 شاشة الطالب V4");
 const socket = io();
 let myPick = null;
 let currentRoundData = null;
@@ -63,7 +64,7 @@ document.getElementById('joinBtn').onclick = () => {
   });
 };
 
-socket.on('youAreInTeam', ({ teamName, members }) => {
+socket.on('youAreInTeam', ({ teamName }) => {
   document.getElementById('teamInfo').innerHTML = `👥 فريقك: <strong>${teamName}</strong>`;
 });
 
@@ -131,8 +132,9 @@ function loadReasons() {
   });
 }
 
-// ✅ هذا هو السطر السحري الذي كان ناقصاً: إخفاء النتيجة عند بدء جولة جديدة
+// هنا يعود الطالب للانتظار وتختفي شاشة النتيجة
 socket.on('prepareNextRound', () => {
+  console.log("الطالب يستعد للجولة القادمة");
   document.getElementById('revealBox').classList.add('hidden');
   document.getElementById('statusMsg').textContent = '⏳ جاري تجهيز الجولة القادمة...';
 });
