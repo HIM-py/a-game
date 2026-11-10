@@ -21,7 +21,6 @@ function getRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function shuffleArray(arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
-// دالة لترجمة النصوص التي يرسلها السيرفر
 function getI18nReasons(isExpert, isTrap, realCard, fakeCard, correctLetter, wrongLetter) {
   const ar = [];
   const en = [];
@@ -121,7 +120,6 @@ function generateQuestionByType(type) {
   const realCard = dangerInA ? cardA : cardB;
   const fakeCard = dangerInA ? cardB : cardA;
 
-  // توليد النصوص باللغتين
   const i18nReasons = getI18nReasons(isExpert, isTrap, realCard, fakeCard, correctLetter, wrongLetter);
   
   let arExplain = `البطاقة ${correctLetter} هي الخطر الحقيقي لأن طبيعة الثغرة (${realCard.condition}) أو السياق المحلي (${realCard.context}) يجعلها أولوية قصوى، بينما البطاقة ${wrongLetter} أقل خطورة.`;
@@ -249,16 +247,19 @@ io.on('connection', (socket) => {
     const currentRound = room.rounds[room.round - 1];
     room.playerAnswers[socket.playerId] = card;
     
-    // إرسال النتيجة للاعب حسب اللغة التي اختارها
     const lang = socket.handshake.auth.lang || 'ar';
     if (card !== currentRound.correct) {
       socket.emit('wrongAnswer', { 
         correct: currentRound.correct, 
-        explain: lang === 'ar' ? currentRound.explain_ar : currentRound.explain_en 
+        explain_ar: currentRound.explain_ar, 
+        explain_en: currentRound.explain_en 
       });
       room.playerReasons[socket.playerId] = -1;
     } else {
-      socket.emit('showReasons', { reasons: lang === 'ar' ? currentRound.reasons_ar : currentRound.reasons_en });
+      socket.emit('showReasons', { 
+        reasons_ar: currentRound.reasons_ar, 
+        reasons_en: currentRound.reasons_en 
+      });
     }
 
     const answeredNames = room.players.filter(p => room.playerAnswers[p.id]).map(p => p.name);
@@ -280,12 +281,26 @@ io.on('connection', (socket) => {
     finishRound(room);
   });
 
+  // ✅ التعديل هنا: إرسال الترتيب النهائي كقائمة
   socket.on('nextRound', () => {
     const room = rooms[socket.roomCode];
     if (!room) return;
     if (room.round >= 10) {
-      const finalScores = room.mode === 'solo' ? room.playerScores : room.teams.map(t => ({ name: t.name, score: t.score }));
-      io.to(socket.roomCode).emit('gameEnded', { mode: room.mode, finalScores });
+      room.phase = 'ended';
+      let finalLeaderboard = [];
+
+      if (room.mode === 'solo') {
+        finalLeaderboard = room.players.map(p => ({ name: p.name, score: room.playerScores[p.id] }))
+                            .sort((a, b) => b.score - a.score);
+      } else {
+        finalLeaderboard = room.teams.map(t => ({ name: t.name, score: t.score }))
+                            .sort((a, b) => b.score - a.score);
+      }
+
+      io.to(socket.roomCode).emit('gameEnded', { 
+        mode: room.mode, 
+        leaderboard: finalLeaderboard
+      });
     } else {
       room.phase = 'waiting'; room.playerAnswers = {}; room.playerReasons = {};
       io.to(socket.roomCode).emit('prepareNextRound');
@@ -316,7 +331,6 @@ function revealSolo(room) {
     return { id: p.id, name: p.name, cardOk, reasonOk, pts, total: room.playerScores[p.id] };
   }).sort((a, b) => b.total - a.total);
 
-  // إرسال النتائج للمشرف (عربي دائماً للوحة المشرف، ويمكن تغييره)
   io.to(room.hostSocket).emit('revealSolo', { 
     correct: r.correct, 
     explain_ar: r.explain_ar, explain_en: r.explain_en, 
