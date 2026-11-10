@@ -21,6 +21,45 @@ function getRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function shuffleArray(arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
+// دالة لترجمة النصوص التي يرسلها السيرفر
+function getI18nReasons(isExpert, isTrap, realCard, fakeCard, correctLetter, wrongLetter) {
+  const ar = [];
+  const en = [];
+
+  if (isExpert) {
+    ar.push({ text: `البطاقة ${correctLetter}: لأنها تفتح ثغرة للمخترق للدخول كمدير (تجاوز 2FA)، بينما ${wrongLetter} مجرد تسريب معلومات لا يسمح بالدخول.`, correct: true });
+    ar.push({ text: `البطاقة ${correctLetter}: لأنها رغم أن شدتها أقل بقليل، إلا أن طبيعتها تسمح بالتحكم الكامل، بينما ${wrongLetter} لا تفعل.`, correct: true });
+    ar.push({ text: `البطاقة ${correctLetter}: لأنها تعمل على مستوى المصادقة، بينما ${wrongLetter} تعمل على مستوى الإفصاح فقط.`, correct: false });
+    ar.push({ text: `البطاقة ${correctLetter}: لأن البطاقة ${wrongLetter} قد تكون خطيرة أيضاً، لكن الأثر المباشر لـ ${correctLetter} أخطر بكثير.`, correct: false });
+
+    en.push({ text: `Card ${correctLetter}: Because it allows an attacker to bypass 2FA and gain admin access, while ${wrongLetter} is just information disclosure.`, correct: true });
+    en.push({ text: `Card ${correctLetter}: Because despite its slightly lower severity, it allows full control, while ${wrongLetter} does not.`, correct: true });
+    en.push({ text: `Card ${correctLetter}: Because it operates at the authentication level, while ${wrongLetter} operates at the disclosure level only.`, correct: false });
+    en.push({ text: `Card ${correctLetter}: Because ${wrongLetter} might also be dangerous, but the direct impact of ${correctLetter} is much worse.`, correct: false });
+  } else if (isTrap) {
+    ar.push({ text: `البطاقة ${correctLetter}: لأن كلتاهما لهما سياق خطير، ولكن درجة الشدة (${realCard.severity}) وطبيعة الثغرة تجعلها الأكثر فتكاً.`, correct: true });
+    ar.push({ text: `البطاقة ${correctLetter}: لأن الأثر المترتب عليها كارثي (${realCard.impact})، بينما ${wrongLetter} أثره محدود.`, correct: true });
+    ar.push({ text: `البطاقة ${correctLetter}: لأن سياقها يبدو آمناً أكثر للوهلة الأولى.`, correct: false });
+    ar.push({ text: "كلتاهما آمنتان، لا يوجد خطر حقيقي.", correct: false });
+
+    en.push({ text: `Card ${correctLetter}: Because both have a dangerous context, but the severity (${realCard.severity}) and nature of the vulnerability make it the most lethal.`, correct: true });
+    en.push({ text: `Card ${correctLetter}: Because its impact is catastrophic (${realCard.impact}), while ${wrongLetter}'s impact is limited.`, correct: true });
+    en.push({ text: `Card ${correctLetter}: Because its context seems safer at first glance.`, correct: false });
+    en.push({ text: "Both are safe, there is no real risk.", correct: false });
+  } else {
+    ar.push({ text: `البطاقة ${correctLetter}: لأن السياق المحلي (${realCard.context}) يجعلها مكشوفة للخطر أكثر من ${wrongLetter}.`, correct: true });
+    ar.push({ text: `البطاقة ${correctLetter}: لأن طبيعة الثغرة (${realCard.condition}) والأثر (${realCard.impact}) أخطر بكثير، بينما ${wrongLetter} ثغرة بسيطة.`, correct: true });
+    ar.push({ text: `البطاقة ${correctLetter}: لأن درجة شدتها (${realCard.severity}) هي الأعلى، وفي الأمن السيبراني الرقم الأكبر هو الأخطر دائماً.`, correct: false });
+    ar.push({ text: `البطاقة ${correctLetter}: لأنها الأحدث في الإصدار، والنسخ الجديدة تكون أكثر عرضة للثغرات المكتشفة حديثاً.`, correct: false });
+
+    en.push({ text: `Card ${correctLetter}: Because the local context (${realCard.context}) makes it more exposed than ${wrongLetter}.`, correct: true });
+    en.push({ text: `Card ${correctLetter}: Because the nature of the vulnerability (${realCard.condition}) and impact (${realCard.impact}) are far worse than ${wrongLetter}.`, correct: true });
+    en.push({ text: `Card ${correctLetter}: Because its severity (${realCard.severity}) is the highest, and in cybersecurity, the biggest number always wins.`, correct: false });
+    en.push({ text: `Card ${correctLetter}: Because it's the newest version, and new versions are more prone to newly discovered vulnerabilities.`, correct: false });
+  }
+  return { ar, en };
+}
+
 function generateQuestionByType(type) {
   let realSev, fakeSev;
   let realCondition, fakeCondition;
@@ -82,49 +121,33 @@ function generateQuestionByType(type) {
   const realCard = dangerInA ? cardA : cardB;
   const fakeCard = dangerInA ? cardB : cardA;
 
-  let wrongExplanation = `البطاقة ${correctLetter} هي الخطر الحقيقي لأن طبيعة الثغرة (${realCard.condition}) أو السياق المحلي (${realCard.context}) يجعلها أولوية قصوى، بينما البطاقة ${wrongLetter} أقل خطورة.`;
-  if (isExpert) {
-    wrongExplanation = `انتبه! البطاقة ${wrongLetter} شدتها ${fakeCard.severity}، لكنها لا تسمح بالدخول. بينما البطاقة ${correctLetter} شدتها ${realCard.severity}، لكنها تسمح بالدخول كمدير. الشدة وحدها لا تكفي!`;
-  } else if (isTrap) {
-    wrongExplanation = `في هذه الجولة، كلتاهما خطيرتان! لكن البطاقة ${correctLetter} طبيعتها أخطر وشدتها أعلى.`;
-  }
-
-  const reasons = [];
-
-  if (isExpert) {
-    reasons.push({ text: `البطاقة ${correctLetter}: لأنها تفتح ثغرة للمخترق للدخول كمدير (تجاوز 2FA)، بينما ${wrongLetter} مجرد تسريب معلومات لا يسمح بالدخول.`, correct: true });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأنها رغم أن شدتها أقل بقليل، إلا أن طبيعتها تسمح بالتحكم الكامل، بينما ${wrongLetter} لا تفعل.`, correct: true });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأنها تعمل على مستوى المصادقة، بينما ${wrongLetter} تعمل على مستوى الإفصاح فقط.`, correct: false });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأن البطاقة ${wrongLetter} قد تكون خطيرة أيضاً، لكن الأثر المباشر لـ ${correctLetter} أخطر بكثير.`, correct: false });
-  } else if (type === 'nature') {
-    reasons.push({ text: `البطاقة ${correctLetter}: لأنها تسمح بالتحكم الكامل بالخادم (RCE)، بينما ${wrongLetter} لا تؤدي إلا لتسريب مسارات الملفات.`, correct: true });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأن طبيعة الثغرة (${realCard.condition}) كارثية وتؤدي للتحكم، بينما ${wrongLetter} مجرد تسريب معلومات حساسة.`, correct: true });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأنها تعمل على نظام داخلي، وهذا يجعل من الصعب اكتشافها من قبل فرق الأمن السيبراني المختصة.`, correct: false });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأن شدتها وإن كانت منخفضة، إلا أن المخترق قد يستغلها بشكل خطير للغاية في حال تمكن من الوصول إليها.`, correct: false });
-  } else if (type === 'context') {
-    reasons.push({ text: `البطاقة ${correctLetter}: لأن السياق المحلي (${realCard.context}) يجعلها مكشوفة للجميع، بينما ${wrongLetter} داخلية ومحمية.`, correct: true });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأنها الأكثر عرضة للهجوم من قبل أي شخص على الإنترنت، بينما ${wrongLetter} لا يمكن الوصول إليها.`, correct: true });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأن شدتها العالية تجعلها أخطر بغض النظر عن السياق المحلي أو الضوابط الأمنية الموجودة.`, correct: false });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأنها تعمل على خدمة ويب، وخدمات الويب دائماً مستهدفة من قبل المخترقين بشكل أكبر بكثير.`, correct: false });
-  } else {
-    reasons.push({ text: `البطاقة ${correctLetter}: لأن السياق المحلي (${realCard.context}) يجعلها مكشوفة للخطر أكثر من ${wrongLetter}.`, correct: true });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأن طبيعة الثغرة (${realCard.condition}) والأثر (${realCard.impact}) أخطر بكثير، بينما ${wrongLetter} ثغرة بسيطة.`, correct: true });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأن درجة شدتها (${realCard.severity}) هي الأعلى، وفي الأمن السيبراني الرقم الأكبر هو الأخطر دائماً.`, correct: false });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأنها الأحدث في الإصدار، والنسخ الجديدة تكون أكثر عرضة للثغرات المكتشفة حديثاً.`, correct: false });
-  }
-
-  const correctReasons = reasons.filter(r => r.correct);
-  const wrongReasons = reasons.filter(r => !r.correct);
+  // توليد النصوص باللغتين
+  const i18nReasons = getI18nReasons(isExpert, isTrap, realCard, fakeCard, correctLetter, wrongLetter);
   
-  const selectedReasons = shuffleArray([
-    ...shuffleArray(correctReasons).slice(0, 2),
-    ...shuffleArray(wrongReasons).slice(0, 2)
-  ]);
+  let arExplain = `البطاقة ${correctLetter} هي الخطر الحقيقي لأن طبيعة الثغرة (${realCard.condition}) أو السياق المحلي (${realCard.context}) يجعلها أولوية قصوى، بينما البطاقة ${wrongLetter} أقل خطورة.`;
+  let enExplain = `Card ${correctLetter} is the real threat because its nature (${realCard.condition}) or local context (${realCard.context}) makes it a top priority, while Card ${wrongLetter} is less risky.`;
+
+  if (isExpert) {
+    arExplain = `انتبه! البطاقة ${wrongLetter} شدتها ${fakeCard.severity}، لكنها لا تسمح بالدخول. بينما البطاقة ${correctLetter} شدتها ${realCard.severity}، لكنها تسمح بالدخول كمدير. الشدة وحدها لا تكفي!`;
+    enExplain = `Watch out! Card ${wrongLetter} has severity ${fakeCard.severity} but doesn't allow access. Card ${correctLetter} has severity ${realCard.severity} but allows admin access. Severity alone isn't enough!`;
+  } else if (isTrap) {
+    arExplain = `في هذه الجولة، كلتاهما خطيرتان! لكن البطاقة ${correctLetter} طبيعتها أخطر وشدتها أعلى.`;
+    enExplain = `In this round, both are dangerous! But Card ${correctLetter} is more severe and has a higher score.`;
+  }
+
+  const correctAr = i18nReasons.ar.filter(r => r.correct);
+  const wrongAr = i18nReasons.ar.filter(r => !r.correct);
+  const correctEn = i18nReasons.en.filter(r => r.correct);
+  const wrongEn = i18nReasons.en.filter(r => !r.correct);
+
+  const selectedAr = shuffleArray([...shuffleArray(correctAr).slice(0, 2), ...shuffleArray(wrongAr).slice(0, 2)]);
+  const selectedEn = shuffleArray([...shuffleArray(correctEn).slice(0, 2), ...shuffleArray(wrongEn).slice(0, 2)]);
 
   return { 
     A: cardA, B: cardB, correct: correctLetter, 
-    reasons: selectedReasons, points: points,
-    explain: wrongExplanation
+    reasons_ar: selectedAr, reasons_en: selectedEn, 
+    points: points,
+    explain_ar: arExplain, explain_en: enExplain
   };
 }
 
@@ -159,7 +182,6 @@ function setupTeams(room, groups) {
   io.to(room.hostSocket).emit('distributed', publicRoom(room));
 }
 
-// دالة مساعدة لإنهاء الجولة وتصفير المؤقت
 function finishRound(room) {
   if (room.roundTimeout) clearTimeout(room.roundTimeout);
   room.players.forEach(p => {
@@ -214,48 +236,42 @@ io.on('connection', (socket) => {
     io.to(room.hostSocket).emit('roundStartedHost', { round: room.round, total: 10, data, mode: room.mode });
     room.players.forEach(p => io.to(p.socketId).emit('roundStarted', { round: room.round, total: 10, data, mode: room.mode }));
 
-    // ✅ مؤقت 35 ثانية لإنهاء الجولة تلقائياً
     if (room.roundTimeout) clearTimeout(room.roundTimeout);
     room.roundTimeout = setTimeout(() => {
       const currentRoom = rooms[socket.roomCode];
-      if (currentRoom && currentRoom.phase !== 'reveal') {
-        finishRound(currentRoom);
-      }
+      if (currentRoom && currentRoom.phase !== 'reveal') finishRound(currentRoom);
     }, 35000);
   });
 
-  // ✅ إرسال أسماء من أجاب للمشرف
   socket.on('pickCard', ({ card }) => {
     const room = rooms[socket.roomCode];
     if (!room || room.phase !== 'question') return;
     const currentRound = room.rounds[room.round - 1];
     room.playerAnswers[socket.playerId] = card;
     
+    // إرسال النتيجة للاعب حسب اللغة التي اختارها
+    const lang = socket.handshake.auth.lang || 'ar';
     if (card !== currentRound.correct) {
-      socket.emit('wrongAnswer', { correct: currentRound.correct, explain: currentRound.explain });
+      socket.emit('wrongAnswer', { 
+        correct: currentRound.correct, 
+        explain: lang === 'ar' ? currentRound.explain_ar : currentRound.explain_en 
+      });
       room.playerReasons[socket.playerId] = -1;
     } else {
-      socket.emit('showReasons', { reasons: currentRound.reasons });
+      socket.emit('showReasons', { reasons: lang === 'ar' ? currentRound.reasons_ar : currentRound.reasons_en });
     }
 
     const answeredNames = room.players.filter(p => room.playerAnswers[p.id]).map(p => p.name);
     io.to(room.hostSocket).emit('progressUpdate', { answeredNames, total: room.players.length });
 
-    // إذا جاوب الكل، نكشف النتيجة فوراً
-    if (Object.keys(room.playerAnswers).length === room.players.length) {
-      finishRound(room);
-    }
+    if (Object.keys(room.playerAnswers).length === room.players.length) finishRound(room);
   });
 
   socket.on('pickReason', ({ idx }) => {
     const room = rooms[socket.roomCode];
     if (!room || room.phase === 'reveal') return;
     room.playerReasons[socket.playerId] = idx;
-    
-    // بما أن الجميع أجاب على البطاقة، هنا فقط نتابع اختيار الأسباب
-    if (Object.keys(room.playerReasons).length === room.players.length) {
-      finishRound(room);
-    }
+    if (Object.keys(room.playerReasons).length === room.players.length) finishRound(room);
   });
 
   socket.on('forceEnd', () => {
@@ -278,33 +294,40 @@ io.on('connection', (socket) => {
         const data = room.rounds[room.round - 1];
         io.to(room.hostSocket).emit('roundStartedHost', { round: room.round, total: 10, data, mode: room.mode });
         room.players.forEach(p => io.to(p.socketId).emit('roundStarted', { round: room.round, total: 10, data, mode: room.mode }));
-
-        // مؤقت جديد للجولة القادمة
         if (room.roundTimeout) clearTimeout(room.roundTimeout);
         room.roundTimeout = setTimeout(() => {
           const currentRoom = rooms[socket.roomCode];
           if (currentRoom && currentRoom.phase !== 'reveal') finishRound(currentRoom);
         }, 35000);
-
       }, 100); 
     }
   });
 });
 
-// باقي الدوال كما هي
 function revealSolo(room) {
   room.phase = 'reveal';
   const r = room.rounds[room.round - 1];
   const maxPoints = r.points;
   const leaderboard = room.players.map(p => {
     const cardOk = room.playerAnswers[p.id] === r.correct;
-    const reasonOk = r.reasons[room.playerReasons[p.id]]?.correct;
+    const reasonOk = r.reasons_ar[room.playerReasons[p.id]]?.correct;
     let pts = (cardOk && reasonOk) ? maxPoints : cardOk ? (maxPoints / 2) : 0;
     room.playerScores[p.id] += pts;
     return { id: p.id, name: p.name, cardOk, reasonOk, pts, total: room.playerScores[p.id] };
   }).sort((a, b) => b.total - a.total);
-  io.to(room.hostSocket).emit('revealSolo', { correct: r.correct, explain: r.explain, leaderboard, points: maxPoints });
-  room.players.forEach(p => io.to(p.socketId).emit('revealSoloPlayer', { correct: r.correct, explain: r.explain, mine: leaderboard.find(x => x.id === p.id), points: maxPoints }));
+
+  // إرسال النتائج للمشرف (عربي دائماً للوحة المشرف، ويمكن تغييره)
+  io.to(room.hostSocket).emit('revealSolo', { 
+    correct: r.correct, 
+    explain_ar: r.explain_ar, explain_en: r.explain_en, 
+    leaderboard, points: maxPoints 
+  });
+  
+  room.players.forEach(p => io.to(p.socketId).emit('revealSoloPlayer', { 
+    correct: r.correct, 
+    explain_ar: r.explain_ar, explain_en: r.explain_en, 
+    mine: leaderboard.find(x => x.id === p.id), points: maxPoints 
+  }));
 }
 
 function revealTeamFractional(room) {
@@ -316,16 +339,26 @@ function revealTeamFractional(room) {
     const teamReasons = team.members.map(m => room.playerReasons[m.id]).filter(a => a !== undefined && a !== -1);
     const correctCardVotes = teamAnswers.filter(ans => ans === r.correct).length;
     const cardRatio = teamAnswers.length > 0 ? (correctCardVotes / teamAnswers.length) : 0;
-    const correctReasonIdx = r.reasons.findIndex(x => x.correct);
+    const correctReasonIdx = r.reasons_ar.findIndex(x => x.correct);
     const correctReasonVotes = teamReasons.filter(ans => ans === correctReasonIdx).length;
     const reasonRatio = teamReasons.length > 0 ? (correctReasonVotes / teamReasons.length) : 0;
     let pts = ((cardRatio * maxPoints) / 2) + ((reasonRatio * maxPoints) / 2); 
     pts = Math.round(pts * 100) / 100; team.score = Math.round((team.score + pts) * 100) / 100; 
     return { teamIdx: i, name: team.name, members: team.members.map(m => m.name), cardRatio: Math.round(cardRatio * 100), reasonRatio: Math.round(reasonRatio * 100), pts, total: team.score };
   });
-  io.to(room.hostSocket).emit('revealTeam', { correct: r.correct, explain: r.explain, results, points: maxPoints });
+
+  io.to(room.hostSocket).emit('revealTeam', { 
+    correct: r.correct, 
+    explain_ar: r.explain_ar, explain_en: r.explain_en, 
+    results, points: maxPoints 
+  });
+  
   room.teams.forEach((team, idx) => {
-    team.members.forEach(m => io.to(m.socketId).emit('revealTeamPlayer', { correct: r.correct, explain: r.explain, mine: results.find(x => x.teamIdx === idx), points: maxPoints }));
+    team.members.forEach(m => io.to(m.socketId).emit('revealTeamPlayer', { 
+      correct: r.correct, 
+      explain_ar: r.explain_ar, explain_en: r.explain_en, 
+      mine: results.find(x => x.teamIdx === idx), points: maxPoints 
+    }));
   });
 }
 
