@@ -23,35 +23,78 @@ function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min +
 function shuffleArray(arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 function generate100Rounds() {
-  const rounds = []; const used = new Set();
+  const rounds = []; 
+  const used = new Set();
+  
   while (rounds.length < 100) {
+    const pattern = Math.random();
+    let realSev, fakeSev;
+    let realContext, fakeContext;
+
+    if (pattern < 0.5) {
+      // 50%: الصح هو الأقل شدة (السياق يغلب الشدة)
+      realSev = (Math.random() * 2 + 4).toFixed(1);
+      fakeSev = (Math.random() * 2 + 8).toFixed(1);
+      realContext = getRandom(CONTEXT_HIGH);
+      fakeContext = getRandom(CONTEXT_LOW);
+    } else if (pattern < 0.8) {
+      // 30%: الصح هو الأعلى شدة (لأن السياق خطير جداً أيضاً)
+      realSev = (Math.random() * 2 + 8).toFixed(1); 
+      fakeSev = (Math.random() * 2 + 4).toFixed(1); 
+      realContext = getRandom(CONTEXT_HIGH);
+      fakeContext = getRandom(CONTEXT_LOW);
+    } else {
+      // 20%: الشدتان متقاربتان جداً (السياق هو الفيصل الواضح)
+      const base = Math.random() * 2 + 7; 
+      realSev = (base + 0.1).toFixed(1);
+      fakeSev = base.toFixed(1);
+      // نجعل السياق متطرفاً جداً لصالح الصح
+      realContext = "مفتوح للإنترنت بالكامل، بيانات العملاء الحساسة مكشوفة، لا يوجد أي جدار حماية";
+      fakeContext = "خادم داخلي مغلق، لا يوجد اتصال بالإنترنت، وصول محصور بموظف واحد";
+    }
+
     const dangerInA = Math.random() < 0.5;
     const realProduct = `${getRandom(PRODUCTS)} ${getRandomInt(1,5)}.${getRandomInt(0,9)}`;
     const realCondition = getRandom(CONDITIONS);
     const realImpact = getRandom(IMPACTS);
-    const realContext = getRandom(CONTEXT_HIGH);
-    const realSeverity = (Math.random() * 2 + 5).toFixed(1); 
 
     const fakeProduct = `${getRandom(PRODUCTS)} ${getRandomInt(1,5)}.${getRandomInt(0,9)}`;
     const fakeCondition = getRandom(CONDITIONS);
     const fakeImpact = getRandom(IMPACTS);
-    const fakeContext = getRandom(CONTEXT_LOW);
-    const fakeSeverity = (Math.random() * 2 + 8).toFixed(1); 
 
     const key = realProduct + realCondition + fakeProduct + fakeCondition;
     if (used.has(key)) continue; used.add(key);
 
-    const cardA = dangerInA ? { product: realProduct, severity: parseFloat(realSeverity), condition: realCondition, impact: realImpact, context: realContext } : { product: fakeProduct, severity: parseFloat(fakeSeverity), condition: fakeCondition, impact: fakeImpact, context: fakeContext };
-    const cardB = dangerInA ? { product: fakeProduct, severity: parseFloat(fakeSeverity), condition: fakeCondition, impact: fakeImpact, context: fakeContext } : { product: realProduct, severity: parseFloat(realSeverity), condition: realCondition, impact: realImpact, context: realContext };
+    const cardA = dangerInA ? { product: realProduct, severity: parseFloat(realSev), condition: realCondition, impact: realImpact, context: realContext } : { product: fakeProduct, severity: parseFloat(fakeSev), condition: fakeCondition, impact: fakeImpact, context: fakeContext };
+    const cardB = dangerInA ? { product: fakeProduct, severity: parseFloat(fakeSev), condition: fakeCondition, impact: fakeImpact, context: fakeContext } : { product: realProduct, severity: parseFloat(realSev), condition: realCondition, impact: realImpact, context: realContext };
     
-    const reasons = [
-      { text: dangerInA ? "البطاقة A: لأن درجة خطورتها (الشدة) هي الأعلى في القائمة" : "البطاقة B: لأن درجة خطورتها (الشدة) هي الأعلى في القائمة", correct: false },
-      { text: dangerInA ? "البطاقة A: لأنها مُعرّضة للجميع وتفتقر للضوابط، بينما B محدودة أو محمية" : "البطاقة B: لأنها مُعرّضة للجميع وتفتقر للضوابط، بينما A محدودة أو محمية", correct: true },
-      { text: "كلتاهما لهما نفس الأولوية، لأن الشدة هي العامل الوحيد", correct: false },
-      { text: "لا يمكن تحديد الأولوية بدون معرفة اسم المخترق", correct: false }
+    const correctLetter = dangerInA ? "A" : "B";
+    const wrongLetter = dangerInA ? "B" : "A";
+    const realCard = dangerInA ? cardA : cardB;
+    const fakeCard = dangerInA ? cardB : cardA;
+
+    // توليد أسباب متنوعة
+    const reasonTemplates = [
+      { text: `البطاقة ${correctLetter}: لأنها مُعرّضة للجمهور/الإنترنت، بينما ${wrongLetter} داخلية أو محدودة`, correct: true },
+      { text: `البطاقة ${correctLetter}: لأنها بلا أي ضوابط حماية، بينما ${wrongLetter} لديها إجراءات وقائية`, correct: true },
+      { text: `البطاقة ${correctLetter}: لأن عدد المستخدمين المعرضين للخطر هائل، بينما ${wrongLetter} يخدم فئة محدودة`, correct: true },
+      { text: `البطاقة ${correctLetter}: لأن الأثر المترتب عليها كارثي (${realCard.impact})، بينما ${wrongLetter} أثره محدود`, correct: true },
+      { text: `البطاقة ${wrongLetter}: لأن درجة شدتها (${fakeCard.severity}) أعلى، والرقم الأكبر يفوز دائماً`, correct: false },
+      { text: `البطاقة ${wrongLetter}: لأنها الأحدث في الإصدار، والأحدث دائماً أخطر`, correct: false },
+      { text: "كلتاهما لهما نفس الأولوية تماماً، لا فرق بينهما", correct: false },
+      { text: "لا يمكن تحديد الأولوية إلا بمعرفة من سيهجم ومتى", correct: false }
     ];
 
-    rounds.push({ A: cardA, B: cardB, correct: dangerInA ? "A" : "B", reasons: shuffleArray(reasons), explain: `البطاقة ${dangerInA ? "A" : "B"} هي الخطر الحقيقي رغم أن شدتها أقل، لأنها مُعرّضة للجميع وبلا حماية.` });
+    const selectedReasons = shuffleArray(reasonTemplates).filter((r, i, arr) => arr.findIndex(x => x.text === r.text) === i).slice(0, 4);
+    if (!selectedReasons.some(r => r.correct)) selectedReasons[0] = reasonTemplates[0];
+
+    rounds.push({ 
+      A: cardA, 
+      B: cardB, 
+      correct: correctLetter, 
+      reasons: shuffleArray(selectedReasons), 
+      explain: `البطاقة ${correctLetter} هي الخطر الحقيقي. السياق المحلي (${realCard.context}) يجعلها أولوية قصوى.` 
+    });
   }
   return rounds;
 }
@@ -154,7 +197,21 @@ io.on('connection', (socket) => {
     }
   });
 
-  // ✅ الإصلاح الجذري: تصفير الحالة وإرسال السؤال الجديد فوراً
+  // زر الإنهاء الإجباري (Force End)
+  socket.on('forceEnd', () => {
+    const room = rooms[socket.roomCode];
+    if (!room || room.phase === 'reveal') return;
+    
+    // إعطاء إجابات فارغة للذين لم يجيبوا
+    room.players.forEach(p => {
+      if (!room.playerAnswers[p.id]) room.playerAnswers[p.id] = "None";
+      if (room.playerReasons[p.id] === undefined) room.playerReasons[p.id] = -1;
+    });
+
+    if (room.mode === 'solo') revealSolo(room);
+    else revealTeamFractional(room);
+  });
+
   socket.on('nextRound', () => {
     const room = rooms[socket.roomCode];
     if (!room) return;
@@ -201,8 +258,8 @@ function revealTeamFractional(room) {
   room.phase = 'reveal';
   const r = room.rounds[room.round - 1];
   const results = room.teams.map((team, i) => {
-    const teamAnswers = team.members.map(m => room.playerAnswers[m.id]).filter(a => a);
-    const teamReasons = team.members.map(m => room.playerReasons[m.id]).filter(a => a !== undefined);
+    const teamAnswers = team.members.map(m => room.playerAnswers[m.id]).filter(a => a && a !== "None");
+    const teamReasons = team.members.map(m => room.playerReasons[m.id]).filter(a => a !== undefined && a !== -1);
     
     const correctCardVotes = teamAnswers.filter(ans => ans === r.correct).length;
     const cardRatio = teamAnswers.length > 0 ? (correctCardVotes / teamAnswers.length) : 0;
