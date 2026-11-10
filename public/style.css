@@ -56,18 +56,18 @@ header h1 {
   gap: 15px;
 }
 
-/* ✅ الشعار في الهيدر - سحر إخفاء الخلفية السوداء */
+/* ✅ الشعار في الهيدر - استخدام shield.png وإخفاء الخلفية السوداء */
 header h1::before {
   content: '';
   display: inline-block;
   width: 50px;
   height: 50px;
-  background-image: url('/img/shield.jpg'); /* استخدام الشعار الدائري */
+  background-image: url('/img/shield.png'); 
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
   mix-blend-mode: screen; /* يجعل الأسود شفافاً */
-  filter: drop-shadow(0 0 10px var(--neon-blue)); /* توهج */
+  filter: drop-shadow(0 0 10px var(--neon-blue)); 
 }
 
 /* الأزرار العامة */
