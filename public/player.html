@@ -62,7 +62,7 @@ document.getElementById('joinBtn').onclick = () => {
     document.getElementById('joinBox').classList.add('hidden');
     document.getElementById('waitBox').classList.remove('hidden');
     document.getElementById('myName').textContent = res.name;
-    document.getElementById('teamInfo').textContent = '⏳ في انتظار المعلم...';
+    document.getElementById('teamInfo').textContent = '⏳ في انتظار المشرف...';
   });
 };
 
@@ -124,13 +124,12 @@ socket.on('showReasons', ({ reasons }) => {
       b.classList.add('selected');
       socket.emit('pickReason', { idx: i });
       document.getElementById('reasonView').classList.add('hidden');
-      document.getElementById('statusMsg').textContent = '✅ تم اختيار السبب — في انتظار الباقين...';
+      document.getElementById('statusMsg').textContent = '✅ تم اختيار السبب — في انتظار المشرف...';
     };
     box.appendChild(b);
   });
 });
 
-// ✅ استقبال الشرح الفوري عند الخطأ
 socket.on('wrongAnswer', ({ correct, explain }) => {
   document.getElementById('reasonView').classList.add('hidden');
   document.getElementById('statusMsg').textContent = '❌ إجابة خاطئة!';
@@ -142,7 +141,7 @@ socket.on('wrongAnswer', ({ correct, explain }) => {
     <h3 style="color: #ef4444;">❌ إجابة خاطئة!</h3>
     <p>الإجابة الصحيحة كانت: <strong>البطاقة ${correct}</strong></p>
     <p class="explain">${explain}</p>
-    <p class="wait-msg">في انتظار المعلم للجولة التالية...</p>
+    <p class="wait-msg">في انتظار المشرف للجولة التالية...</p>
   `;
 });
 
@@ -175,7 +174,7 @@ socket.on('gameEnded', ({ mode, finalScores }) => {
   if (mode === 'solo') {
     document.getElementById('endContent').innerHTML = `<h2>نتيجتك: ${finalScores[myPlayerId] || 0} نقطة</h2>`;
   } else {
-    document.getElementById('endContent').innerHTML = `<h2>انتهت اللعبة — راجع شاشة المعلم للنتائج</h2>`;
+    document.getElementById('endContent').innerHTML = `<h2>انتهت اللعبة — راجع شاشة المشرف للنتائج</h2>`;
   }
 });
 </script>
