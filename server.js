@@ -86,36 +86,30 @@ function generateQuestionByType(type) {
     wrongExplanation = `في هذه الجولة، كلتاهما خطيرتان! لكن البطاقة ${correctLetter} طبيعتها أخطر وشدتها أعلى.`;
   }
 
-  // ✅ الأسباب المخصصة والصعبة (كلها تتحدث عن البطاقة الصح)
   const reasons = [];
 
   if (isExpert) {
-    // 4 نقاط: أسباب متشابهة جداً
     reasons.push({ text: `البطاقة ${correctLetter}: لأن طبيعتها تسمح بالتحكم الكامل، بينما ${wrongLetter} مجرد تسريب معلومات لا يسمح بالدخول.`, correct: true });
     reasons.push({ text: `البطاقة ${correctLetter}: لأنها رغم أن شدتها أقل، إلا أنها تفتح ثغرة للمخترق للدخول كمدير، بينما ${wrongLetter} لا تفعل.`, correct: true });
     reasons.push({ text: `البطاقة ${correctLetter}: لأنها تعمل على مستوى المصادقة، بينما ${wrongLetter} تعمل على مستوى الإفصاح فقط.`, correct: false });
     reasons.push({ text: `البطاقة ${correctLetter}: لأن البطاقة ${wrongLetter} قد تكون خطيرة أيضاً، لكن الأثر المباشر لـ ${correctLetter} أخطر بكثير.`, correct: false });
   } else if (type === 'nature') {
-    // 3 نقاط: أسباب متقاربة
     reasons.push({ text: `البطاقة ${correctLetter}: لأنها تسمح بالتحكم الكامل بالخادم، بينما ${wrongLetter} لا تؤدي إلا لكشف أسماء الملفات.`, correct: true });
     reasons.push({ text: `البطاقة ${correctLetter}: لأن طبيعة الثغرة (${realCard.condition}) كارثية وتؤدي للتحكم، بينما ${wrongLetter} مجرد إفصاح بسيط.`, correct: true });
     reasons.push({ text: `البطاقة ${correctLetter}: لأنها تعمل على نظام داخلي، وهذا يجعل من الصعب اكتشافها.`, correct: false });
     reasons.push({ text: `البطاقة ${correctLetter}: لأن شدتها وإن كانت منخفضة، إلا أن المخترق قد يستغلها بشكل خطير.`, correct: false });
   } else if (type === 'context') {
-    // 3 نقاط: أسباب متقاربة
     reasons.push({ text: `البطاقة ${correctLetter}: لأن السياق المحلي (${realCard.context}) يجعلها مكشوفة للجميع، بينما ${wrongLetter} داخلية ومحمية.`, correct: true });
     reasons.push({ text: `البطاقة ${correctLetter}: لأنها الأكثر عرضة للهجوم من قبل أي شخص على الإنترنت، بينما ${wrongLetter} لا يمكن الوصول إليها.`, correct: true });
     reasons.push({ text: `البطاقة ${correctLetter}: لأن شدتها العالية تجعلها أخطر، بغض النظر عن السياق.`, correct: false });
     reasons.push({ text: `البطاقة ${correctLetter}: لأنها تعمل على خدمة ويب، وخدمات الويب دائماً مستهدفة.`, correct: false });
   } else {
-    // 2 نقاط: أسباب عادية
     reasons.push({ text: `البطاقة ${correctLetter}: لأن السياق المحلي (${realCard.context}) يجعلها مكشوفة للخطر أكثر من ${wrongLetter}.`, correct: true });
     reasons.push({ text: `البطاقة ${correctLetter}: لأن طبيعة الثغرة (${realCard.condition}) والأثر (${realCard.impact}) أخطر بكثير، بينما ${wrongLetter} ثغرة بسيطة.`, correct: true });
     reasons.push({ text: `البطاقة ${correctLetter}: لأن درجة شدتها (${realCard.severity}) هي الأعلى، والرقم الأكبر هو الأخطر دائماً.`, correct: false });
     reasons.push({ text: `البطاقة ${correctLetter}: لأنها الأحدث في الإصدار.`, correct: false });
   }
 
-  // نختار سببين صحيحين + سببين خاطئين عشوائياً
   const correctReasons = reasons.filter(r => r.correct);
   const wrongReasons = reasons.filter(r => !r.correct);
   
