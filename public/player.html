@@ -43,10 +43,9 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-console.log("🔥 شاشة الطالب V5");
+console.log("🔥 شاشة الطالب V8 (اختيار فوري للسبب)");
 const socket = io();
 let myPick = null;
-let currentRoundData = null;
 let myPlayerId = null;
 
 document.getElementById('joinBtn').onclick = () => {
@@ -69,7 +68,6 @@ socket.on('youAreInTeam', ({ teamName }) => {
 });
 
 socket.on('roundStarted', ({ round, total, data }) => {
-  currentRoundData = data;
   myPick = null;
   document.getElementById('waitBox').classList.add('hidden');
   document.getElementById('playBox').classList.remove('hidden');
@@ -99,25 +97,23 @@ function renderCards(data) {
   });
 }
 
+// ✅ عند اختيار البطاقة، نرسلها للسيرفر وننتظر الأسباب
 function pickCard(k) {
   if (myPick) return;
   myPick = k;
   document.getElementById('pickA').classList.toggle('picked', k === 'A');
   document.getElementById('pickB').classList.toggle('picked', k === 'B');
   socket.emit('pickCard', { card: k });
-  document.getElementById('statusMsg').textContent = '✅ اخترت البطاقة ' + k + ' — في انتظار الباقين...';
+  document.getElementById('statusMsg').textContent = '⏳ جاري تحميل الأسباب...';
 }
 
-socket.on('phaseChange', () => {
+// ✅ استقبال الأسباب من السيرفر وعرضها فوراً
+socket.on('showReasons', ({ reasons }) => {
   document.getElementById('reasonView').classList.remove('hidden');
   document.getElementById('statusMsg').textContent = '🧠 اختر السبب';
-  loadReasons();
-});
-
-function loadReasons() {
   const box = document.getElementById('reasonOptions');
   box.innerHTML = '';
-  currentRoundData.reasons.forEach((r, i) => {
+  reasons.forEach((r, i) => {
     const b = document.createElement('button');
     b.className = 'reason-option';
     b.textContent = r.text;
@@ -126,18 +122,17 @@ function loadReasons() {
       b.classList.add('selected');
       socket.emit('pickReason', { idx: i });
       document.getElementById('reasonView').classList.add('hidden');
-      document.getElementById('statusMsg').textContent = '✅ اخترت السبب — في انتظار الباقين...';
+      document.getElementById('statusMsg').textContent = '✅ تم اختيار السبب — في انتظار الباقين...';
     };
     box.appendChild(b);
   });
-}
+});
 
-// ✅ إجبار شاشة الطالب على الانتقال
 socket.on('prepareNextRound', () => {
   console.log("الطالب يستعد للجولة القادمة");
   const box = document.getElementById('revealBox');
   box.classList.add('hidden');
-  box.style.display = 'none'; // إجبار الإخفاء
+  box.style.display = 'none'; 
   document.getElementById('statusMsg').textContent = '⏳ جاري تجهيز الجولة القادمة...';
 });
 
@@ -145,7 +140,7 @@ socket.on('revealSoloPlayer', ({ correct, explain, mine }) => {
   document.getElementById('statusMsg').textContent = '';
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
-  box.style.display = 'block'; // إجبار الظهور
+  box.style.display = 'block'; 
   box.innerHTML = `<h3>✅ الإجابة: ${correct}</h3><p class="explain">${explain}</p><div class="res-team ${mine.cardOk && mine.reasonOk ? 'perfect' : mine.cardOk ? 'partial' : 'wrong'}"><h4>نتيجتك</h4><p>${mine.cardOk?'✅ البطاقة':'❌ البطاقة'} | ${mine.reasonOk?'✅ السبب':'❌ السبب'}</p><p class="pts">+${mine.pts}</p></div>`;
 });
 
@@ -153,7 +148,7 @@ socket.on('revealTeamPlayer', ({ correct, explain, mine }) => {
   document.getElementById('statusMsg').textContent = '';
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
-  box.style.display = 'block'; // إجبار الظهور
+  box.style.display = 'block'; 
   box.innerHTML = `<h3>✅ الإجابة: ${correct}</h3><p class="explain">${explain}</p><div class="res-team ${mine.pts > 1 ? 'perfect' : mine.pts > 0 ? 'partial' : 'wrong'}"><h4>نتيجة فريقك</h4><p>نسبة البطاقة: ${mine.cardRatio}% | نسبة السبب: ${mine.reasonRatio}%</p><p class="pts">+${mine.pts} (المجموع: ${mine.total})</p></div>`;
 });
 
