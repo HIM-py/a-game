@@ -13,8 +13,8 @@
   <div id="setup" class="panel">
     <h3>اختر نمط اللعب:</h3>
     <div class="mode-pick">
-      <button class="mode-btn" data-mode="solo">🧑 فردي — كل طالب بنفسه</button>
-      <button class="mode-btn" data-mode="team">👥 جماعي — توزيع عشوائي على فرق</button>
+      <button class="mode-btn" data-mode="solo">🧑 فردي</button>
+      <button class="mode-btn" data-mode="team">👥 جماعي</button>
     </div>
     <button id="createBtn" class="btn" disabled>➕ إنشاء غرفة</button>
   </div>
@@ -28,10 +28,23 @@
     <div id="playersList" class="players-list">
       <h4>اللاعبون (0):</h4>
     </div>
+
+    <!-- واجهة التوزيع اليدوي -->
+    <div id="manualDistView" class="manual-dist-view hidden">
+      <h4>📝 التوزيع اليدوي (اختر الفريق لكل طالب):</h4>
+      <div id="manualPlayersList"></div>
+      <button id="saveManualBtn" class="btn next-btn">حفظ التوزيع وبدء</button>
+    </div>
+
     <div id="teamsView" class="teams-view hidden"></div>
+    
     <div class="actions">
-      <button id="distributeBtn" class="btn next-btn hidden">🎲 توزيع عشوائي</button>
-      <button id="redistributeBtn" class="btn hidden">🔄 إعادة التوزيع</button>
+      <!-- خيارات التوزيع تظهر هنا -->
+      <div id="distOptions" class="hidden">
+        <button id="randomBtn" class="btn next-btn">🎲 توزيع عشوائي</button>
+        <button id="manualBtn" class="btn">📝 توزيع يدوي</button>
+      </div>
+      
       <button id="startBtn" class="btn next-btn hidden">▶️ ابدأ اللعبة</button>
     </div>
   </div>
@@ -50,6 +63,7 @@
 <script>
 const socket = io();
 let currentMode = null;
+let currentPlayers = [];
 
 document.querySelectorAll('.mode-btn').forEach(b => {
   b.onclick = () => {
@@ -64,58 +78,86 @@ document.getElementById('createBtn').onclick = () => {
   socket.emit('createRoom', { mode: currentMode }, ({ code, mode }) => {
     document.getElementById('roomCode').textContent = code;
     document.getElementById('modeHint').textContent =
-      mode === 'solo' ? '🧑 نمط فردي — كل طالب يلعب بنفسه'
-                      : '👥 نمط جماعي — التوزيع عشوائي على فرق من 2';
+      mode === 'solo' ? '🧑 نمط فردي' : '👥 نمط جماعي';
     document.getElementById('setup').classList.add('hidden');
     document.getElementById('lobby').classList.remove('hidden');
   });
 };
 
-// ✅ التحديث الفوري عند دخول أي لاعب
 socket.on('roomUpdate', (room) => {
-  // تحديث قائمة اللاعبين
+  currentPlayers = room.players;
   const pl = document.getElementById('playersList');
   pl.innerHTML = `<h4>اللاعبون (${room.players.length}):</h4>` +
     room.players.map(p => `<span class="player-chip">👤 ${p.name}</span>`).join('');
 
-  // إدارة الأزرار بناءً على النمط
   if (room.mode === 'solo') {
-    document.getElementById('distributeBtn').classList.add('hidden');
-    document.getElementById('redistributeBtn').classList.add('hidden');
+    document.getElementById('distOptions').classList.add('hidden');
     document.getElementById('teamsView').classList.add('hidden');
     document.getElementById('startBtn').classList.remove('hidden');
     document.getElementById('startBtn').disabled = room.players.length === 0;
   } else {
     if (!room.distributed) {
-      // في الجماعي: إظهار زر التوزيع فوراً إذا كان هناك لاعبان على الأقل
-      document.getElementById('distributeBtn').classList.remove('hidden');
-      document.getElementById('distributeBtn').disabled = room.players.length < 2;
+      document.getElementById('distOptions').classList.remove('hidden');
+      document.getElementById('randomBtn').disabled = room.players.length < 2;
+      document.getElementById('manualBtn').disabled = room.players.length < 2;
       document.getElementById('teamsView').classList.add('hidden');
       document.getElementById('startBtn').classList.add('hidden');
-      document.getElementById('redistributeBtn').classList.add('hidden');
+      document.getElementById('manualDistView').classList.add('hidden');
     }
   }
 });
 
-// ✅ بعد التوزيع
+// عند التوزيع (سواء عشوائي أو يدوي)
 socket.on('distributed', (room) => {
-  document.getElementById('distributeBtn').classList.add('hidden');
+  document.getElementById('distOptions').classList.add('hidden');
+  document.getElementById('manualDistView').classList.add('hidden');
   document.getElementById('teamsView').classList.remove('hidden');
+  
   const tv = document.getElementById('teamsView');
   tv.innerHTML = '<h4>🎲 التوزيع العشوائي:</h4>' + room.teams.map(t => `
     <div class="team-card">
       <h5>${t.name} (${t.members.length})</h5>
       <p>${t.members.join(' · ')}</p>
     </div>`).join('');
-  document.getElementById('redistributeBtn').classList.remove('hidden');
+  
   document.getElementById('startBtn').classList.remove('hidden');
   document.getElementById('startBtn').disabled = false;
 });
 
-document.getElementById('distributeBtn').onclick = () => socket.emit('distribute');
-document.getElementById('redistributeBtn').onclick = () => socket.emit('redistribute');
+// عند اختيار التوزيع العشوائي
+document.getElementById('randomBtn').onclick = () => socket.emit('distributeRandom');
+
+// عند اختيار التوزيع اليدوي
+document.getElementById('manualBtn').onclick = () => {
+  document.getElementById('distOptions').classList.add('hidden');
+  document.getElementById('manualDistView').classList.remove('hidden');
+  
+  const list = document.getElementById('manualPlayersList');
+  list.innerHTML = currentPlayers.map(p => `
+    <div class="manual-player-row">
+      <span>👤 ${p.name}</span>
+      <select id="team-select-${p.id}" class="team-select">
+        <option value="1">الفريق 1</option>
+        <option value="2">الفريق 2</option>
+        <option value="3">الفريق 3</option>
+        <option value="4">الفريق 4</option>
+        <option value="5">الفريق 5</option>
+      </select>
+    </div>
+  `).join('');
+};
+
+document.getElementById('saveManualBtn').onclick = () => {
+  const assignments = currentPlayers.map(p => ({
+    playerId: p.id,
+    teamNum: document.getElementById(`team-select-${p.id}`).value
+  }));
+  socket.emit('distributeManual', { assignments });
+};
+
 document.getElementById('startBtn').onclick = () => socket.emit('startRound');
 
+// ============ اللعبة (شاشة المعلم) ============
 socket.on('roundStartedHost', ({ round, total, data }) => {
   document.getElementById('lobby').classList.add('hidden');
   document.getElementById('gameArea').classList.remove('hidden');
@@ -127,7 +169,7 @@ socket.on('roundStartedHost', ({ round, total, data }) => {
   box.classList.remove('hidden');
   box.style.cssText = 'background:rgba(139,92,246,0.2); border:2px solid #a78bfa; padding:15px; border-radius:10px; margin-bottom:15px; color:#e9d5ff; font-size:1.05em; text-align:right;';
   box.innerHTML = `
-    <strong style="color:#fbbf24; font-size:1.1em;">🔒 شاشة المعلم (مخفية عن الطلاب):</strong><br><br>
+    <strong style="color:#fbbf24; font-size:1.1em;">🔒 شاشة المعلم (مخفية):</strong><br><br>
     <strong>الإجابة الصحيحة:</strong> البطاقة ${data.correct} <br>
     <strong>السبب:</strong> ${data.reasons.find(r => r.correct)?.text} <br>
     <strong>الشرح:</strong> ${data.explain}
@@ -170,8 +212,7 @@ socket.on('revealSolo', ({ correct, explain, leaderboard }) => {
   box.innerHTML = `
     <h3>✅ الإجابة الصحيحة: البطاقة ${correct}</h3>
     <p class="explain">${explain}</p>
-    <h4>🏆 لوحة الصدارة:</h4>
-    <div class="leaderboard">${leaderboard.map((p, i) => `<div class="lb-row ${i===0?'top':''}"><span class="rank">${i+1}</span><span class="name">${p.name}</span><span class="badge">${p.cardOk?'✅':'❌'} ${p.reasonOk?'✅':'❌'}</span><span class="pts">${p.total}</span></div>`).join('')}</div>`;
+    <div class="leaderboard">${leaderboard.map((p, i) => `<div class="lb-row ${i===0?'top':''}"><span class="rank">${i+1}</span><span class="name">${p.name}</span><span class="pts">${p.total}</span></div>`).join('')}</div>`;
   document.getElementById('nextBtn').classList.remove('hidden');
 });
 
@@ -183,7 +224,7 @@ socket.on('revealTeam', ({ correct, explain, results }) => {
   box.innerHTML = `
     <h3>✅ الإجابة الصحيحة: البطاقة ${correct}</h3>
     <p class="explain">${explain}</p>
-    <div class="results">${results.map(r => `<div class="res-team ${r.cardOk && r.reasonOk ? 'perfect' : r.cardOk ? 'partial' : 'wrong'}"><h4>${r.name}</h4><p>${r.members.join(' · ')}</p><p>${r.cardOk?'✅ البطاقة':'❌ البطاقة'} | ${r.reasonOk?'✅ السبب':'❌ السبب'}</p><p class="pts">+${r.pts} (المجموع: ${r.total})</p></div>`).join('')}</div>`;
+    <div class="results">${results.map(r => `<div class="res-team ${r.cardOk && r.reasonOk ? 'perfect' : r.cardOk ? 'partial' : 'wrong'}"><h4>${r.name}</h4><p>${r.members.join(' · ')}</p><p class="pts">+${r.pts}</p></div>`).join('')}</div>`;
   document.getElementById('nextBtn').classList.remove('hidden');
 });
 
