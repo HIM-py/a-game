@@ -10,7 +10,6 @@
 <div class="container">
   <header>
     <div style="display: flex; align-items: center; gap: 15px;">
-      <!-- صورة المشرف في الهيدر -->
       <img src="/img/host.png" alt="مشرف" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%; border: 2px solid #0ea5e9; box-shadow: 0 0 10px rgba(14, 165, 233, 0.7); background-color: #060b19;">
       <div>
         <h1 style="margin: 0;">لوحة المشرف</h1>
@@ -23,8 +22,6 @@
   <div id="setup" class="panel" style="text-align: center;">
     <h2 style="margin-bottom: 30px; color: #fff; font-size: 1.8em;">اختر نمط اللعب</h2>
     <div class="mode-pick">
-      
-      <!-- النمط الجماعي: أيقونة SVG لمجموعة -->
       <button class="mode-btn" data-mode="team">
         <svg width="70" height="70" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 15px; filter: drop-shadow(0 0 10px #0ea5e9);">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -33,19 +30,17 @@
           <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
         </svg>
         جماعي
-        <span style="font-size: 0.8em; font-weight: normal; color: #94a3b8;">تحدي جماعي</span>
+        <span style="font-size: 0.8em; font-weight: normal; color: #94a3b8;">لعب مع فريق من اللاعبين</span>
       </button>
       
-      <!-- النمط الفردي: أيقونة SVG لشخص -->
       <button class="mode-btn" data-mode="solo">
         <svg width="70" height="70" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 15px; filter: drop-shadow(0 0 10px #8b5cf6);">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
         فردي
-        <span style="font-size: 0.8em; font-weight: normal; color: #94a3b8;">تحدي فردي</span>
+        <span style="font-size: 0.8em; font-weight: normal; color: #94a3b8;">لعب بمفردك</span>
       </button>
-      
     </div>
     <button id="createBtn" class="btn" disabled style="width: 100%; max-width: 400px;">+ إنشاء غرفة</button>
   </div>
@@ -70,6 +65,9 @@
   <div id="gameArea" class="panel hidden">
     <div class="scoreboard" id="scoreboard" style="margin-bottom: 20px; display: flex; justify-content: center; gap: 20px;"></div>
     
+    <!-- ✅ عداد الوقت -->
+    <div style="text-align: center; margin-bottom: 15px; font-size: 1.5em; font-weight: bold; color: #ef4444;" id="timerDisplay">00:35</div>
+    
     <div id="hostAnswerBox" style="display:none; background:rgba(139,92,246,0.15); border:2px solid #8b5cf6; padding:20px; border-radius:15px; margin-bottom:20px; color:#e2e8f0; font-size:1.05em; text-align:right; box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);"></div>
 
     <div id="cardsView" class="cards"></div>
@@ -89,9 +87,33 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-console.log("🔥 شاشة المشرف (النسخة النهائية)");
+console.log("🔥 شاشة المشرف V12 (مع المؤقت)");
 const socket = io();
 let currentMode = null;
+let timerInterval = null;
+let timeLeft = 35;
+
+function startTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  timeLeft = 35;
+  document.getElementById('timerDisplay').textContent = `00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`;
+  document.getElementById('timerDisplay').style.display = 'block';
+
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      document.getElementById('timerDisplay').textContent = '00:00';
+    } else {
+      document.getElementById('timerDisplay').textContent = `00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`;
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  document.getElementById('timerDisplay').style.display = 'none';
+}
 
 document.querySelectorAll('.mode-btn').forEach(b => {
   b.onclick = () => {
@@ -160,6 +182,7 @@ socket.on('roundStartedHost', ({ round, total, data }) => {
 
   document.getElementById('statusMsg').textContent = `الجولة ${round} / ${total} — في انتظار اختيارات اللاعبين...`;
   renderCards(data);
+  startTimer(); 
 });
 
 function renderCards(data) {
@@ -179,14 +202,16 @@ function renderCards(data) {
   });
 }
 
-socket.on('progressUpdate', ({ answered, total }) => {
-  document.getElementById('statusMsg').textContent = `${answered} / ${total} أجابوا...`;
+// ✅ استقبال أسماء من أجاب
+socket.on('progressUpdate', ({ answeredNames, total }) => {
+  document.getElementById('statusMsg').textContent = `${answeredNames.length} / ${total} أجابوا: ${answeredNames.join(' - ')}`;
 });
 socket.on('phaseChange', () => {
   document.getElementById('statusMsg').textContent = 'في انتظار اختيار السبب...';
 });
 
 socket.on('revealSolo', ({ correct, explain, leaderboard, points }) => {
+  stopTimer();
   document.getElementById('statusMsg').textContent = '';
   document.getElementById('hostAnswerBox').style.display = 'none'; 
   document.getElementById('forceEndBtn').classList.add('hidden'); 
@@ -198,6 +223,7 @@ socket.on('revealSolo', ({ correct, explain, leaderboard, points }) => {
 });
 
 socket.on('revealTeam', ({ correct, explain, results, points }) => {
+  stopTimer();
   document.getElementById('statusMsg').textContent = '';
   document.getElementById('hostAnswerBox').style.display = 'none';
   document.getElementById('forceEndBtn').classList.add('hidden');
@@ -228,9 +254,11 @@ socket.on('readyNext', () => {
   document.getElementById('revealBox').classList.add('hidden');
   document.getElementById('nextBtn').classList.add('hidden');
   document.getElementById('forceEndBtn').classList.add('hidden');
+  stopTimer();
 });
 
 socket.on('gameEnded', () => {
+  stopTimer();
   document.getElementById('gameArea').innerHTML = `<div class="end-screen"><h2>انتهت اللعبة!</h2><button class="btn" onclick="location.reload()">لعبة جديدة</button></div>`;
 });
 </script>
