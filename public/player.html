@@ -131,9 +131,10 @@ function loadReasons() {
   });
 }
 
-// ✅ إصلاح: إخفاء شاشة النتيجة عند استلام إشارة الجولة الجديدة
+// ✅ هذا هو السطر السحري الذي كان ناقصاً: إخفاء النتيجة عند بدء جولة جديدة
 socket.on('prepareNextRound', () => {
   document.getElementById('revealBox').classList.add('hidden');
+  document.getElementById('statusMsg').textContent = '⏳ جاري تجهيز الجولة القادمة...';
 });
 
 socket.on('revealSoloPlayer', ({ correct, explain, mine }) => {
