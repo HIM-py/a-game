@@ -77,7 +77,6 @@ socket.on('roundStarted', ({ round, total, data }) => {
   document.getElementById('reasonView').classList.add('hidden');
   document.getElementById('revealBox').classList.add('hidden');
   document.getElementById('statusMsg').textContent = `👉 الجولة ${round} / ${total} — اختر البطاقة`;
-  
   document.getElementById('roundPoints').textContent = data.points + " نقاط";
   renderCards(data);
 });
@@ -108,7 +107,7 @@ function pickCard(k) {
   document.getElementById('pickA').classList.toggle('picked', k === 'A');
   document.getElementById('pickB').classList.toggle('picked', k === 'B');
   socket.emit('pickCard', { card: k });
-  document.getElementById('statusMsg').textContent = '⏳ جاري تحميل الأسباب...';
+  document.getElementById('statusMsg').textContent = '⏳ جاري التحقق...';
 }
 
 socket.on('showReasons', ({ reasons }) => {
@@ -129,6 +128,22 @@ socket.on('showReasons', ({ reasons }) => {
     };
     box.appendChild(b);
   });
+});
+
+// ✅ استقبال الشرح الفوري عند الخطأ
+socket.on('wrongAnswer', ({ correct, explain }) => {
+  document.getElementById('reasonView').classList.add('hidden');
+  document.getElementById('statusMsg').textContent = '❌ إجابة خاطئة!';
+  
+  const box = document.getElementById('revealBox');
+  box.classList.remove('hidden');
+  box.style.display = 'block';
+  box.innerHTML = `
+    <h3 style="color: #ef4444;">❌ إجابة خاطئة!</h3>
+    <p>الإجابة الصحيحة كانت: <strong>البطاقة ${correct}</strong></p>
+    <p class="explain">${explain}</p>
+    <p class="wait-msg">في انتظار المعلم للجولة التالية...</p>
+  `;
 });
 
 socket.on('prepareNextRound', () => {
