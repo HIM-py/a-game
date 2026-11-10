@@ -1,39 +1,100 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" id="htmlRoot">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>صراع النشرات الأمنية</title>
+<title id="pageTitle">صراع النشرات الأمنية</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="container">
+  <!-- زر تبديل اللغة -->
+  <div style="text-align: left; width: 100%; margin-bottom: 20px;">
+    <button onclick="toggleLanguage()" style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9; border: 1px solid #0ea5e9; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-family: inherit; font-weight: bold;" id="langBtn">
+      🌐 English
+    </button>
+  </div>
+
   <header>
-    <h1 style="text-align: center;">صراع النشرات الأمنية</h1>
-    <p class="subtitle" style="text-align: center;">الشدة تصف الضعف... لكن الخطر يعتمد عليك</p>
-    <p class="subtitle" style="text-align: center;">20 بطاقة · 10 جولات · فردي أو جماعي</p>
+    <h1 style="text-align: center;" data-i18n="title">صراع النشرات الأمنية</h1>
+    <p class="subtitle" style="text-align: center;" data-i18n="subtitle1">الشدة تصف الضعف... لكن الخطر يعتمد عليك</p>
+    <p class="subtitle" style="text-align: center;" data-i18n="subtitle2">20 بطاقة · 10 جولات · فردي أو جماعي</p>
   </header>
   
   <div class="choices">
     <a href="host.html" class="choice-card">
-      <!-- صورة المشرف: host.png -->
       <img src="/img/host.png" alt="المشرف" style="width: 130px; height: 130px; object-fit: cover; border-radius: 50%; border: 3px solid #0ea5e9; box-shadow: 0 0 25px rgba(14, 165, 233, 0.7); margin-bottom: 20px; background-color: #060b19;">
-      <h2>أنا المشرف</h2>
-      <p>أنشئ غرفة واعرض الكود على اللاعبين</p>
+      <h2 data-i18n="hostTitle">أنا المشرف</h2>
+      <p data-i18n="hostDesc">أنشئ غرفة واعرض الكود على اللاعبين</p>
     </a>
     
     <a href="player.html" class="choice-card">
-      <!-- صورة اللاعب: player.png -->
       <img src="/img/player.png" alt="اللاعب" style="width: 130px; height: 130px; object-fit: cover; border-radius: 50%; border: 3px solid #8b5cf6; box-shadow: 0 0 25px rgba(139, 92, 246, 0.7); margin-bottom: 20px; background-color: #060b19;">
-      <h2>أنا لاعب</h2>
-      <p>انضم إلى غرفة بكود من المشرف</p>
+      <h2 data-i18n="playerTitle">أنا لاعب</h2>
+      <p data-i18n="playerDesc">انضم إلى غرفة بكود من المشرف</p>
     </a>
   </div>
 
-  <!-- الحقوق -->
   <div style="text-align: center; margin-top: 40px; color: #64748b; font-size: 0.9em;">
-    <p>تم التصميم والتطوير بواسطة <strong style="color: #94a3b8;">محمد العقيلي HIM.PY</strong> &copy; 2026</p>
+    <p data-i18n="copyright">تم التصميم والتطوير بواسطة محمد العقيلي HIM.PY &copy; 2026</p>
   </div>
 </div>
+
+<script>
+const translations = {
+  ar: {
+    title: "صراع النشرات الأمنية",
+    subtitle1: "الشدة تصف الضعف... لكن الخطر يعتمد عليك",
+    subtitle2: "20 بطاقة · 10 جولات · فردي أو جماعي",
+    hostTitle: "أنا المشرف",
+    hostDesc: "أنشئ غرفة واعرض الكود على اللاعبين",
+    playerTitle: "أنا لاعب",
+    playerDesc: "انضم إلى غرفة بكود من المشرف",
+    copyright: "تم التصميم والتطوير بواسطة محمد العقيلي HIM.PY © 2026",
+    langBtn: "🌐 English",
+    pageTitle: "صراع النشرات الأمنية"
+  },
+  en: {
+    title: "Cyber Security Duel",
+    subtitle1: "Severity describes the weakness... but risk depends on you",
+    subtitle2: "20 Cards · 10 Rounds · Solo or Team",
+    hostTitle: "I am the Host",
+    hostDesc: "Create a room and share the code with players",
+    playerTitle: "I am a Player",
+    playerDesc: "Join a room with a code from the host",
+    copyright: "Designed & Developed by Mohammed Al-Oqaili HIM.PY © 2026",
+    langBtn: "🌐 عربي",
+    pageTitle: "Cyber Security Duel"
+  }
+};
+
+function toggleLanguage() {
+  const currentLang = localStorage.getItem('lang') || 'ar';
+  const newLang = currentLang === 'ar' ? 'en' : 'ar';
+  localStorage.setItem('lang', newLang);
+  applyLanguage(newLang);
+}
+
+function applyLanguage(lang) {
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (translations[lang][key]) {
+      el.innerHTML = translations[lang][key];
+    }
+  });
+  
+  document.getElementById('langBtn').innerHTML = translations[lang].langBtn;
+  document.getElementById('pageTitle').innerText = translations[lang].pageTitle;
+}
+
+// تطبيق اللغة عند التحميل
+window.onload = () => {
+  const savedLang = localStorage.getItem('lang') || 'ar';
+  applyLanguage(savedLang);
+};
+</script>
 </body>
 </html>
