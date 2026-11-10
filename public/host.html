@@ -16,10 +16,7 @@
         <p style="margin: 0; color: #94a3b8; font-size: 0.9em;" data-i18n="gameTitle">صراع النشرات الأمنية</p>
       </div>
     </div>
-    <div style="display: flex; gap: 10px;">
-      <button onclick="toggleLanguage()" style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9; border: 1px solid #0ea5e9; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-family: inherit; font-weight: bold;" id="langBtn">🌐 English</button>
-      <a href="index.html" style="text-decoration: none; color: #0ea5e9; font-weight: bold; background: rgba(14, 165, 233, 0.1); padding: 10px 20px; border-radius: 20px; border: 1px solid #0ea5e9;" data-i18n="backHome">العودة للرئيسية</a>
-    </div>
+    <a href="index.html" style="text-decoration: none; color: #0ea5e9; font-weight: bold; background: rgba(14, 165, 233, 0.1); padding: 10px 20px; border-radius: 20px; border: 1px solid #0ea5e9;" data-i18n="backHome">العودة للرئيسية</a>
   </header>
 
   <div id="setup" class="panel" style="text-align: center;">
@@ -94,28 +91,19 @@ const translations = {
     hostPanel: "لوحة المشرف", gameTitle: "صراع النشرات الأمنية", backHome: "العودة للرئيسية",
     chooseMode: "اختر نمط اللعب", teamMode: "جماعي", teamModeDesc: "لعب مع فريق من اللاعبين",
     soloMode: "فردي", soloModeDesc: "لعب بمفردك", createRoom: "+ إنشاء غرفة",
-    roomCode: "كود الغرفة", players: "اللاعبون (0):", randomDist: "توزيع عشوائي (فريقين)",
+    roomCode: "كود الغرفة", players: "اللاعبون", randomDist: "توزيع عشوائي (فريقين)",
     startGame: "ابدأ اللعبة", forceEnd: "إنهاء الجولة الآن", nextRound: "الجولة التالية",
-    copyright: "صراع النشرات الأمنية - تصميم محمد العقيلي HIM.PY © 2026", langBtn: "🌐 English",
-    pageTitle: "لوحة المشرف"
+    copyright: "صراع النشرات الأمنية - تصميم محمد العقيلي HIM.PY © 2026"
   },
   en: {
     hostPanel: "Host Panel", gameTitle: "Cyber Security Duel", backHome: "Back to Home",
     chooseMode: "Choose Game Mode", teamMode: "Team", teamModeDesc: "Play with a team of players",
     soloMode: "Solo", soloModeDesc: "Play by yourself", createRoom: "+ Create Room",
-    roomCode: "Room Code", players: "Players (0):", randomDist: "Random Distribution (2 Teams)",
+    roomCode: "Room Code", players: "Players", randomDist: "Random Distribution (2 Teams)",
     startGame: "Start Game", forceEnd: "End Round Now", nextRound: "Next Round",
-    copyright: "Cyber Security Duel - Designed by Mohammed Al-Oqaili HIM.PY © 2026", langBtn: "🌐 عربي",
-    pageTitle: "Host Panel"
+    copyright: "Cyber Security Duel - Designed by Mohammed Al-Oqaili HIM.PY © 2026"
   }
 };
-
-function toggleLanguage() {
-  const currentLang = localStorage.getItem('lang') || 'ar';
-  const newLang = currentLang === 'ar' ? 'en' : 'ar';
-  localStorage.setItem('lang', newLang);
-  applyLanguage(newLang);
-}
 
 function applyLanguage(lang) {
   document.documentElement.lang = lang;
@@ -124,13 +112,13 @@ function applyLanguage(lang) {
     const key = el.getAttribute('data-i18n');
     if (translations[lang][key]) el.innerHTML = translations[lang][key];
   });
-  document.getElementById('langBtn').innerHTML = translations[lang].langBtn;
-  document.getElementById('pageTitle').innerText = translations[lang].pageTitle;
 }
 
-window.onload = () => { applyLanguage(localStorage.getItem('lang') || 'ar'); };
+window.onload = () => {
+  const savedLang = localStorage.getItem('lang') || 'ar';
+  applyLanguage(savedLang);
+};
 
-// باقي كود السوكيت
 const socket = io();
 let currentMode = null;
 let timerInterval = null;
@@ -168,15 +156,17 @@ document.querySelectorAll('.mode-btn').forEach(b => {
 
 document.getElementById('createBtn').onclick = () => {
   socket.emit('createRoom', { mode: currentMode }, ({ code, mode }) => {
+    const lang = localStorage.getItem('lang') || 'ar';
     document.getElementById('roomCode').textContent = code;
-    document.getElementById('modeHint').textContent = mode === 'solo' ? translations[localStorage.getItem('lang')||'ar'].soloMode : translations[localStorage.getItem('lang')||'ar'].teamMode;
+    document.getElementById('modeHint').textContent = mode === 'solo' ? translations[lang].soloMode : translations[lang].teamMode;
     document.getElementById('setup').classList.add('hidden');
     document.getElementById('lobby').classList.remove('hidden');
   });
 };
 
 socket.on('roomUpdate', (room) => {
-  document.getElementById('playersList').innerHTML = `<h4>${translations[localStorage.getItem('lang')||'ar'].players.split('(')[0]}(${room.players.length}):</h4>` + room.players.map(p => `<span class="player-chip">${p.name}</span>`).join('');
+  const lang = localStorage.getItem('lang') || 'ar';
+  document.getElementById('playersList').innerHTML = `<h4>${translations[lang].players} (${room.players.length}):</h4>` + room.players.map(p => `<span class="player-chip">${p.name}</span>`).join('');
   if (room.mode === 'solo') {
     document.getElementById('distOptions').classList.add('hidden');
     document.getElementById('teamsView').classList.add('hidden');
@@ -192,6 +182,7 @@ socket.on('roomUpdate', (room) => {
 });
 
 socket.on('distributed', (room) => {
+  const lang = localStorage.getItem('lang') || 'ar';
   document.getElementById('distOptions').classList.add('hidden');
   document.getElementById('teamsView').classList.remove('hidden');
   document.getElementById('teamsView').innerHTML = '<h4 style="width:100%; text-align:center; margin-bottom:15px; color:#fff;">---</h4>' + room.teams.map(t => `
@@ -204,6 +195,7 @@ document.getElementById('randomBtn').onclick = () => socket.emit('distributeRand
 document.getElementById('startBtn').onclick = () => socket.emit('startRound');
 
 socket.on('roundStartedHost', ({ round, total, data }) => {
+  const lang = localStorage.getItem('lang') || 'ar';
   document.getElementById('lobby').classList.add('hidden');
   document.getElementById('gameArea').classList.remove('hidden');
   document.getElementById('nextBtn').classList.add('hidden');
@@ -214,79 +206,91 @@ socket.on('roundStartedHost', ({ round, total, data }) => {
   box.style.display = 'block'; 
   box.innerHTML = `
     <strong style="color:#a78bfa; font-size:1.1em;">---</strong><br><br>
-    <strong>Correct:</strong> ${data.correct} <br>
-    <strong>Reason:</strong> ${data.reasons.find(r => r.correct)?.text} <br>
-    <strong>Explanation:</strong> ${data.explain} <br>
-    <strong style="color:#10b981;">(Points: ${data.points})</strong>
+    <strong>${lang === 'ar' ? 'الإجابة الصحيحة' : 'Correct Answer'}:</strong> ${lang === 'ar' ? 'البطاقة' : 'Card'} ${data.correct} <br>
+    <strong>${lang === 'ar' ? 'السبب' : 'Reason'}:</strong> ${data.reasons.find(r => r.correct)?.text} <br>
+    <strong>${lang === 'ar' ? 'الشرح' : 'Explanation'}:</strong> ${data.explain} <br>
+    <strong style="color:#10b981;">(${lang === 'ar' ? 'قيمة الجولة' : 'Round Points'}: ${data.points})</strong>
   `;
-  document.getElementById('statusMsg').textContent = `Round ${round} / ${total} — Waiting...`;
-  renderCards(data);
+  document.getElementById('statusMsg').textContent = `${lang === 'ar' ? 'الجولة' : 'Round'} ${round} / ${total} — ${lang === 'ar' ? 'في انتظار اللاعبين...' : 'Waiting for players...'}`;
+  renderCards(data, lang);
   startTimer(); 
 });
 
-function renderCards(data) {
+function renderCards(data, lang) {
   const c = document.getElementById('cardsView');
   c.innerHTML = '';
   ['A','B'].forEach(k => {
     const d = data[k];
     c.innerHTML += `
       <div class="card">
-        <div class="card-title">Card ${k}</div>
-        <div class="card-field"><span>Product</span><b>${d.product}</b></div>
-        <div class="card-field"><span>Severity</span><b class="severity">${d.severity}</b></div>
-        <div class="card-field"><span>Condition</span><b>${d.condition}</b></div>
-        <div class="card-field"><span>Impact</span><b>${d.impact}</b></div>
+        <div class="card-title">${lang === 'ar' ? 'البطاقة' : 'Card'} ${k}</div>
+        <div class="card-field"><span>${lang === 'ar' ? 'المنتج' : 'Product'}</span><b>${d.product}</b></div>
+        <div class="card-field"><span>${lang === 'ar' ? 'الشدة' : 'Severity'}</span><b class="severity">${d.severity}</b></div>
+        <div class="card-field"><span>${lang === 'ar' ? 'الحالة' : 'Condition'}</span><b>${d.condition}</b></div>
+        <div class="card-field"><span>${lang === 'ar' ? 'الأثر' : 'Impact'}</span><b>${d.impact}</b></div>
         <div class="context-box">${d.context}</div>
       </div>`;
   });
 }
 
 socket.on('progressUpdate', ({ answeredNames, total }) => {
+  const lang = localStorage.getItem('lang') || 'ar';
   document.getElementById('statusMsg').textContent = `${answeredNames.length} / ${total}: ${answeredNames.join(' - ')}`;
 });
-socket.on('phaseChange', () => { document.getElementById('statusMsg').textContent = 'Waiting for reason...'; });
+socket.on('phaseChange', () => {
+  const lang = localStorage.getItem('lang') || 'ar';
+  document.getElementById('statusMsg').textContent = lang === 'ar' ? 'في انتظار اختيار السبب...' : 'Waiting for reasons...';
+});
 
 socket.on('revealSolo', ({ correct, explain, leaderboard, points }) => {
+  const lang = localStorage.getItem('lang') || 'ar';
   stopTimer();
   document.getElementById('statusMsg').textContent = '';
   document.getElementById('hostAnswerBox').style.display = 'none'; 
   document.getElementById('forceEndBtn').classList.add('hidden'); 
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
-  box.innerHTML = `<h3 style="color:#10b981; text-align:center;">Answer: ${correct} (${points} pts)</h3><p class="explain" style="text-align:center; margin-bottom:20px;">${explain}</p><div class="leaderboard">${leaderboard.map((p, i) => `<div class="lb-row ${i===0?'top':''}"><span class="rank">${i+1}</span><span class="name">${p.name}</span><span class="pts">${p.total}</span></div>`).join('')}</div>`;
+  box.innerHTML = `<h3 style="color:#10b981; text-align:center;">${lang === 'ar' ? 'الإجابة' : 'Answer'}: ${correct} (${points})</h3><p class="explain" style="text-align:center; margin-bottom:20px;">${explain}</p><div class="leaderboard">${leaderboard.map((p, i) => `<div class="lb-row ${i===0?'top':''}"><span class="rank">${i+1}</span><span class="name">${p.name}</span><span class="pts">${p.total}</span></div>`).join('')}</div>`;
   document.getElementById('nextBtn').classList.remove('hidden');
 });
 
 socket.on('revealTeam', ({ correct, explain, results, points }) => {
+  const lang = localStorage.getItem('lang') || 'ar';
   stopTimer();
   document.getElementById('statusMsg').textContent = '';
   document.getElementById('hostAnswerBox').style.display = 'none';
   document.getElementById('forceEndBtn').classList.add('hidden');
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
-  box.innerHTML = `<h3 style="color:#10b981; text-align:center;">Answer: ${correct} (${points} pts)</h3><p class="explain" style="text-align:center; margin-bottom:20px;">${explain}</p><div class="results">${results.map(r => `
+  box.innerHTML = `<h3 style="color:#10b981; text-align:center;">${lang === 'ar' ? 'الإجابة' : 'Answer'}: ${correct} (${points})</h3><p class="explain" style="text-align:center; margin-bottom:20px;">${explain}</p><div class="results">${results.map(r => `
     <div class="res-team ${r.pts > (points/2) ? 'perfect' : r.pts > 0 ? 'partial' : 'wrong'}">
       <h4>${r.name}</h4>
       <p>${r.members.join(' · ')}</p>
-      <p style="font-size:0.85em; color:#cbd5e1; margin-top:10px;">Card: ${r.cardRatio}% | Reason: ${r.reasonRatio}%</p>
-      <p class="pts">+${r.pts} (Total: ${r.total})</p>
+      <p style="font-size:0.85em; color:#cbd5e1; margin-top:10px;">${lang === 'ar' ? 'البطاقة' : 'Card'}: ${r.cardRatio}% | ${lang === 'ar' ? 'السبب' : 'Reason'}: ${r.reasonRatio}%</p>
+      <p class="pts">+${r.pts} (${lang === 'ar' ? 'المجموع' : 'Total'}: ${r.total})</p>
     </div>`).join('')}</div>`;
   document.getElementById('nextBtn').classList.remove('hidden');
 });
 
 document.getElementById('forceEndBtn').onclick = () => {
-  if(confirm('Are you sure?')) socket.emit('forceEnd');
+  const lang = localStorage.getItem('lang') || 'ar';
+  if(confirm(lang === 'ar' ? 'هل أنت متأكد من إنهاء الجولة الآن؟' : 'Are you sure you want to end the round?')) {
+    socket.emit('forceEnd');
+  }
 };
 document.getElementById('nextBtn').onclick = () => socket.emit('nextRound');
+
 socket.on('readyNext', () => {
   document.getElementById('revealBox').classList.add('hidden');
   document.getElementById('nextBtn').classList.add('hidden');
   document.getElementById('forceEndBtn').classList.add('hidden');
   stopTimer();
 });
+
 socket.on('gameEnded', () => {
+  const lang = localStorage.getItem('lang') || 'ar';
   stopTimer();
-  document.getElementById('gameArea').innerHTML = `<div class="end-screen"><h2>Game Over!</h2><button class="btn" onclick="location.reload()">New Game</button></div>`;
+  document.getElementById('gameArea').innerHTML = `<div class="end-screen"><h2>${lang === 'ar' ? 'انتهت اللعبة!' : 'Game Over!'}</h2><button class="btn" onclick="location.reload()">${lang === 'ar' ? 'لعبة جديدة' : 'New Game'}</button></div>`;
 });
 </script>
 </body>
