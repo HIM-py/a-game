@@ -173,8 +173,11 @@ function pickCard(k) {
   document.getElementById('statusMsg').textContent = lang === 'ar' ? 'جاري التحقق...' : 'Checking...';
 }
 
-socket.on('showReasons', ({ reasons }) => {
+// ✅ استقبال الأسباب باللغتين واختيار المناسب
+socket.on('showReasons', ({ reasons_ar, reasons_en }) => {
   const lang = localStorage.getItem('lang') || 'ar';
+  const reasons = lang === 'ar' ? reasons_ar : reasons_en;
+  
   document.getElementById('reasonView').classList.remove('hidden');
   document.getElementById('statusMsg').textContent = lang === 'ar' ? 'اختر السبب' : 'Choose reason';
   const box = document.getElementById('reasonOptions');
@@ -194,8 +197,11 @@ socket.on('showReasons', ({ reasons }) => {
   });
 });
 
-socket.on('wrongAnswer', ({ correct, explain }) => {
+// ✅ استقبال الشرح عند الخطأ باللغتين
+socket.on('wrongAnswer', ({ correct, explain_ar, explain_en }) => {
   const lang = localStorage.getItem('lang') || 'ar';
+  const explain = lang === 'ar' ? explain_ar : explain_en;
+  
   document.getElementById('reasonView').classList.add('hidden');
   document.getElementById('statusMsg').textContent = lang === 'ar' ? 'إجابة خاطئة!' : 'Wrong Answer!';
   
@@ -216,8 +222,11 @@ socket.on('prepareNextRound', () => {
   box.style.display = 'none'; 
 });
 
-socket.on('revealSoloPlayer', ({ correct, explain, mine, points }) => {
+// ✅ استقبال نتائج الفردي باللغتين
+socket.on('revealSoloPlayer', ({ correct, explain_ar, explain_en, mine, points }) => {
   const lang = localStorage.getItem('lang') || 'ar';
+  const explain = lang === 'ar' ? explain_ar : explain_en;
+  
   document.getElementById('statusMsg').textContent = '';
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
@@ -225,8 +234,11 @@ socket.on('revealSoloPlayer', ({ correct, explain, mine, points }) => {
   box.innerHTML = `<h3 style="color:#10b981; text-align:center;">${lang === 'ar' ? 'الإجابة' : 'Answer'}: ${correct} (${points} ${lang === 'ar' ? 'نقاط' : 'pts'})</h3><p class="explain" style="text-align:center; margin-bottom:15px;">${explain}</p><div class="res-team ${mine.cardOk && mine.reasonOk ? 'perfect' : mine.cardOk ? 'partial' : 'wrong'}"><h4>${lang === 'ar' ? 'نتيجتك' : 'Your Score'}</h4><p>${mine.cardOk ? (lang === 'ar'?'البطاقة صحيحة':'Card Correct') : (lang === 'ar'?'البطاقة خاطئة':'Card Wrong')} | ${mine.reasonOk ? (lang === 'ar'?'السبب صحيح':'Reason Correct') : (lang === 'ar'?'السبب خاطئ':'Reason Wrong')}</p><p class="pts">+${mine.pts}</p></div>`;
 });
 
-socket.on('revealTeamPlayer', ({ correct, explain, mine, points }) => {
+// ✅ استقبال نتائج الجماعي باللغتين
+socket.on('revealTeamPlayer', ({ correct, explain_ar, explain_en, mine, points }) => {
   const lang = localStorage.getItem('lang') || 'ar';
+  const explain = lang === 'ar' ? explain_ar : explain_en;
+  
   document.getElementById('statusMsg').textContent = '';
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
