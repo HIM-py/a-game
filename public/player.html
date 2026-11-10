@@ -43,7 +43,7 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-console.log("🔥 شاشة الطالب V4");
+console.log("🔥 شاشة الطالب V5");
 const socket = io();
 let myPick = null;
 let currentRoundData = null;
@@ -132,10 +132,12 @@ function loadReasons() {
   });
 }
 
-// هنا يعود الطالب للانتظار وتختفي شاشة النتيجة
+// ✅ إجبار شاشة الطالب على الانتقال
 socket.on('prepareNextRound', () => {
   console.log("الطالب يستعد للجولة القادمة");
-  document.getElementById('revealBox').classList.add('hidden');
+  const box = document.getElementById('revealBox');
+  box.classList.add('hidden');
+  box.style.display = 'none'; // إجبار الإخفاء
   document.getElementById('statusMsg').textContent = '⏳ جاري تجهيز الجولة القادمة...';
 });
 
@@ -143,6 +145,7 @@ socket.on('revealSoloPlayer', ({ correct, explain, mine }) => {
   document.getElementById('statusMsg').textContent = '';
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
+  box.style.display = 'block'; // إجبار الظهور
   box.innerHTML = `<h3>✅ الإجابة: ${correct}</h3><p class="explain">${explain}</p><div class="res-team ${mine.cardOk && mine.reasonOk ? 'perfect' : mine.cardOk ? 'partial' : 'wrong'}"><h4>نتيجتك</h4><p>${mine.cardOk?'✅ البطاقة':'❌ البطاقة'} | ${mine.reasonOk?'✅ السبب':'❌ السبب'}</p><p class="pts">+${mine.pts}</p></div>`;
 });
 
@@ -150,6 +153,7 @@ socket.on('revealTeamPlayer', ({ correct, explain, mine }) => {
   document.getElementById('statusMsg').textContent = '';
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
+  box.style.display = 'block'; // إجبار الظهور
   box.innerHTML = `<h3>✅ الإجابة: ${correct}</h3><p class="explain">${explain}</p><div class="res-team ${mine.pts > 1 ? 'perfect' : mine.pts > 0 ? 'partial' : 'wrong'}"><h4>نتيجة فريقك</h4><p>نسبة البطاقة: ${mine.cardRatio}% | نسبة السبب: ${mine.reasonRatio}%</p><p class="pts">+${mine.pts} (المجموع: ${mine.total})</p></div>`;
 });
 
