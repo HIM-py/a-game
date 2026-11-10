@@ -1,61 +1,62 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" id="htmlRoot">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>انضم للعبة</title>
+<title id="pageTitle">انضم للعبة</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="container">
   <header>
     <div style="display: flex; align-items: center; gap: 15px;">
-      <!-- صورة اللاعب: player.png -->
       <img src="/img/player.png" alt="لاعب" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%; border: 2px solid #8b5cf6; box-shadow: 0 0 10px rgba(139, 92, 246, 0.7); background-color: #060b19;">
       <div>
-        <h1 style="margin: 0;">انضم للعبة</h1>
-        <p style="margin: 0; color: #94a3b8; font-size: 0.9em;">صراع النشرات الأمنية</p>
+        <h1 style="margin: 0;" data-i18n="joinTitle">انضم للعبة</h1>
+        <p style="margin: 0; color: #94a3b8; font-size: 0.9em;" data-i18n="gameTitle">صراع النشرات الأمنية</p>
       </div>
     </div>
-    <a href="index.html" style="text-decoration: none; color: #0ea5e9; font-weight: bold; background: rgba(14, 165, 233, 0.1); padding: 10px 20px; border-radius: 20px; border: 1px solid #0ea5e9;">العودة للرئيسية</a>
+    <div style="display: flex; gap: 10px;">
+      <button onclick="toggleLanguage()" style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9; border: 1px solid #0ea5e9; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-family: inherit; font-weight: bold;" id="langBtn">🌐 English</button>
+      <a href="index.html" style="text-decoration: none; color: #0ea5e9; font-weight: bold; background: rgba(14, 165, 233, 0.1); padding: 10px 20px; border-radius: 20px; border: 1px solid #0ea5e9;" data-i18n="backHome">العودة للرئيسية</a>
+    </div>
   </header>
 
   <div id="joinBox" class="panel" style="max-width: 500px; text-align: center;">
-    <!-- صورة اللاعب الكبيرة: player.png -->
     <img src="/img/player.png" alt="لاعب" style="width: 110px; height: 110px; object-fit: cover; border-radius: 50%; border: 3px solid #8b5cf6; box-shadow: 0 0 20px rgba(139, 92, 246, 0.7); margin-bottom: 20px; background-color: #060b19;">
-    <h2 style="color: #fff; margin-bottom: 10px;">انضم للعبة</h2>
-    <p style="color: #94a3b8; margin-bottom: 30px;">أدخل بيانات الدخول للانضمام إلى اللعبة</p>
+    <h2 style="color: #fff; margin-bottom: 10px;" data-i18n="joinTitle">انضم للعبة</h2>
+    <p style="color: #94a3b8; margin-bottom: 30px;" data-i18n="joinDesc">أدخل بيانات الدخول للانضمام إلى اللعبة</p>
     
     <div style="text-align: right;">
-      <label>كود الغرفة</label>
-      <input id="codeInput" class="input" maxlength="4" placeholder="مثال: AB12" style="text-transform:uppercase; text-align: center; letter-spacing: 5px; font-weight: bold; font-size: 1.2em;">
+      <label data-i18n="roomCode">كود الغرفة</label>
+      <input id="codeInput" class="input" maxlength="4" placeholder="AB12" style="text-transform:uppercase; text-align: center; letter-spacing: 5px; font-weight: bold; font-size: 1.2em;">
       
-      <label>اسمك</label>
-      <input id="nameInput" class="input" placeholder="مثال: أحمد">
+      <label data-i18n="yourName">اسمك</label>
+      <input id="nameInput" class="input" placeholder="Ahmed">
     </div>
     
-    <button id="joinBtn" class="btn" style="width: 100%; margin-top: 10px;">دخول</button>
+    <button id="joinBtn" class="btn" style="width: 100%; margin-top: 10px;" data-i18n="joinBtn">دخول</button>
     <p id="errMsg" class="err"></p>
     
-    <div style="margin-top: 20px; padding: 15px; background: rgba(14, 165, 233, 0.1); border-radius: 10px; border: 1px solid rgba(14, 165, 233, 0.3); color: #cbd5e1; font-size: 0.9em;">
+    <div style="margin-top: 20px; padding: 15px; background: rgba(14, 165, 233, 0.1); border-radius: 10px; border: 1px solid rgba(14, 165, 233, 0.3); color: #cbd5e1; font-size: 0.9em;" data-i18n="note">
       يرجى الحصول على كود الغرفة من المشرف
     </div>
   </div>
 
   <div id="waitBox" class="panel hidden" style="text-align: center;">
-    <h2 style="color: #0ea5e9; margin-bottom: 15px;">في الانتظار...</h2>
-    <p style="font-size: 1.2em; margin-bottom: 10px;">أهلاً <strong id="myName" style="color: #fff;"></strong></p>
+    <h2 style="color: #0ea5e9; margin-bottom: 15px;" data-i18n="waiting">في الانتظار...</h2>
+    <p style="font-size: 1.2em; margin-bottom: 10px;"><span data-i18n="welcome">أهلاً</span> <strong id="myName" style="color: #fff;"></strong></p>
     <p id="teamInfo" style="color: #94a3b8;"></p>
   </div>
 
   <div id="playBox" class="panel hidden" style="max-width: 900px;">
     <div style="text-align: center; margin-bottom: 25px; font-weight: bold; color: #10b981; font-size: 1.3em; background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.3);">
-      نقاط هذه الجولة: <span id="roundPoints">-</span>
+      <span data-i18n="roundPoints">نقاط هذه الجولة:</span> <span id="roundPoints">-</span>
     </div>
     
     <div id="cardsView" class="cards"></div>
     <div id="reasonView" class="hidden">
-      <h3 style="color: #fff; margin-bottom: 15px;">لماذا اخترت هذه البطاقة؟</h3>
+      <h3 style="color: #fff; margin-bottom: 15px;" data-i18n="whyChoose">لماذا اخترت هذه البطاقة؟</h3>
       <div id="reasonOptions" class="reason-options"></div>
     </div>
     <div id="statusMsg" class="status"></div>
@@ -63,17 +64,59 @@
   </div>
 
   <div id="endBox" class="panel hidden" style="text-align: center;">
-    <h2 style="color: #0ea5e9; margin-bottom: 20px;">انتهت اللعبة</h2>
+    <h2 style="color: #0ea5e9; margin-bottom: 20px;" data-i18n="gameOver">انتهت اللعبة</h2>
     <div id="endContent"></div>
   </div>
 
   <div style="text-align: center; margin-top: 40px; color: #475569; font-size: 0.9em; padding-bottom: 20px;">
-    <p>صراع النشرات الأمنية - تصميم <strong style="color: #64748b;">محمد العقيلي HIM.PY</strong> &copy; 2026</p>
+    <p data-i18n="copyright">صراع النشرات الأمنية - تصميم محمد العقيلي HIM.PY &copy; 2026</p>
   </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
+const translations = {
+  ar: {
+    joinTitle: "انضم للعبة", gameTitle: "صراع النشرات الأمنية", backHome: "العودة للرئيسية",
+    joinDesc: "أدخل بيانات الدخول للانضمام إلى اللعبة", roomCode: "كود الغرفة",
+    yourName: "اسمك", joinBtn: "دخول", note: "يرجى الحصول على كود الغرفة من المشرف",
+    waiting: "في الانتظار...", welcome: "أهلاً", roundPoints: "نقاط هذه الجولة:",
+    whyChoose: "لماذا اخترت هذه البطاقة؟", gameOver: "انتهت اللعبة",
+    copyright: "صراع النشرات الأمنية - تصميم محمد العقيلي HIM.PY © 2026",
+    langBtn: "🌐 English", pageTitle: "انضم للعبة"
+  },
+  en: {
+    joinTitle: "Join Game", gameTitle: "Cyber Security Duel", backHome: "Back to Home",
+    joinDesc: "Enter your details to join the game", roomCode: "Room Code",
+    yourName: "Your Name", joinBtn: "Join", note: "Please get the room code from the host",
+    waiting: "Waiting...", welcome: "Welcome", roundPoints: "Round Points:",
+    whyChoose: "Why did you choose this card?", gameOver: "Game Over",
+    copyright: "Cyber Security Duel - Designed by Mohammed Al-Oqaili HIM.PY © 2026",
+    langBtn: "🌐 عربي", pageTitle: "Join Game"
+  }
+};
+
+function toggleLanguage() {
+  const currentLang = localStorage.getItem('lang') || 'ar';
+  const newLang = currentLang === 'ar' ? 'en' : 'ar';
+  localStorage.setItem('lang', newLang);
+  applyLanguage(newLang);
+}
+
+function applyLanguage(lang) {
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (translations[lang][key]) el.innerHTML = translations[lang][key];
+  });
+  document.getElementById('langBtn').innerHTML = translations[lang].langBtn;
+  document.getElementById('pageTitle').innerText = translations[lang].pageTitle;
+}
+
+window.onload = () => { applyLanguage(localStorage.getItem('lang') || 'ar'); };
+
+// Socket logic (same as before)
 const socket = io();
 let myPick = null;
 let myPlayerId = null;
@@ -81,7 +124,8 @@ let myPlayerId = null;
 document.getElementById('joinBtn').onclick = () => {
   const code = document.getElementById('codeInput').value.trim().toUpperCase();
   const name = document.getElementById('nameInput').value.trim();
-  if (!code || !name) { document.getElementById('errMsg').textContent = 'أدخل الكود والاسم'; return; }
+  const lang = localStorage.getItem('lang') || 'ar';
+  if (!code || !name) { document.getElementById('errMsg').textContent = lang === 'ar' ? 'أدخل الكود والاسم' : 'Enter code and name'; return; }
   
   socket.emit('joinRoom', { code, name }, (res) => {
     if (res.error) { document.getElementById('errMsg').textContent = res.error; return; }
@@ -89,26 +133,29 @@ document.getElementById('joinBtn').onclick = () => {
     document.getElementById('joinBox').classList.add('hidden');
     document.getElementById('waitBox').classList.remove('hidden');
     document.getElementById('myName').textContent = res.name;
-    document.getElementById('teamInfo').textContent = 'في انتظار المشرف...';
+    document.getElementById('teamInfo').textContent = lang === 'ar' ? 'في انتظار المشرف...' : 'Waiting for host...';
   });
 };
 
 socket.on('youAreInTeam', ({ teamName }) => {
-  document.getElementById('teamInfo').innerHTML = `فريقك: <strong>${teamName}</strong>`;
+  const lang = localStorage.getItem('lang') || 'ar';
+  document.getElementById('teamInfo').innerHTML = `${lang === 'ar' ? 'فريقك:' : 'Your Team:'} <strong>${teamName}</strong>`;
 });
 
 socket.on('roundStarted', ({ round, total, data }) => {
   myPick = null;
+  const lang = localStorage.getItem('lang') || 'ar';
   document.getElementById('waitBox').classList.add('hidden');
   document.getElementById('playBox').classList.remove('hidden');
   document.getElementById('reasonView').classList.add('hidden');
   document.getElementById('revealBox').classList.add('hidden');
-  document.getElementById('statusMsg').textContent = `الجولة ${round} / ${total} — اختر البطاقة`;
-  document.getElementById('roundPoints').textContent = data.points + " نقاط";
+  document.getElementById('statusMsg').textContent = `${lang === 'ar' ? 'الجولة' : 'Round'} ${round} / ${total} — ${lang === 'ar' ? 'اختر البطاقة' : 'Choose a card'}`;
+  document.getElementById('roundPoints').textContent = data.points + (lang === 'ar' ? " نقاط" : " pts");
   renderCards(data);
 });
 
 function renderCards(data) {
+  const lang = localStorage.getItem('lang') || 'ar';
   const c = document.getElementById('cardsView');
   c.innerHTML = '';
   ['A','B'].forEach(k => {
@@ -118,11 +165,11 @@ function renderCards(data) {
     div.id = 'pick' + k;
     div.onclick = () => pickCard(k);
     div.innerHTML = `
-      <div class="card-title">البطاقة ${k}</div>
-      <div class="card-field"><span>المنتج</span><b>${d.product}</b></div>
-      <div class="card-field"><span>الشدة</span><b class="severity">${d.severity}</b></div>
-      <div class="card-field"><span>الحالة</span><b>${d.condition}</b></div>
-      <div class="card-field"><span>الأثر</span><b>${d.impact}</b></div>
+      <div class="card-title">${lang === 'ar' ? 'البطاقة' : 'Card'} ${k}</div>
+      <div class="card-field"><span>${lang === 'ar' ? 'المنتج' : 'Product'}</span><b>${d.product}</b></div>
+      <div class="card-field"><span>${lang === 'ar' ? 'الشدة' : 'Severity'}</span><b class="severity">${d.severity}</b></div>
+      <div class="card-field"><span>${lang === 'ar' ? 'الحالة' : 'Condition'}</span><b>${d.condition}</b></div>
+      <div class="card-field"><span>${lang === 'ar' ? 'الأثر' : 'Impact'}</span><b>${d.impact}</b></div>
       <div class="context-box">${d.context}</div>`;
     c.appendChild(div);
   });
@@ -131,15 +178,17 @@ function renderCards(data) {
 function pickCard(k) {
   if (myPick) return;
   myPick = k;
+  const lang = localStorage.getItem('lang') || 'ar';
   document.getElementById('pickA').classList.toggle('picked', k === 'A');
   document.getElementById('pickB').classList.toggle('picked', k === 'B');
   socket.emit('pickCard', { card: k });
-  document.getElementById('statusMsg').textContent = 'جاري التحقق...';
+  document.getElementById('statusMsg').textContent = lang === 'ar' ? 'جاري التحقق...' : 'Checking...';
 }
 
 socket.on('showReasons', ({ reasons }) => {
+  const lang = localStorage.getItem('lang') || 'ar';
   document.getElementById('reasonView').classList.remove('hidden');
-  document.getElementById('statusMsg').textContent = 'اختر السبب';
+  document.getElementById('statusMsg').textContent = lang === 'ar' ? 'اختر السبب' : 'Choose reason';
   const box = document.getElementById('reasonOptions');
   box.innerHTML = '';
   reasons.forEach((r, i) => {
@@ -151,24 +200,25 @@ socket.on('showReasons', ({ reasons }) => {
       b.classList.add('selected');
       socket.emit('pickReason', { idx: i });
       document.getElementById('reasonView').classList.add('hidden');
-      document.getElementById('statusMsg').textContent = 'تم اختيار السبب — في انتظار المشرف...';
+      document.getElementById('statusMsg').textContent = lang === 'ar' ? 'تم اختيار السبب — في انتظار المشرف...' : 'Reason selected — Waiting for host...';
     };
     box.appendChild(b);
   });
 });
 
 socket.on('wrongAnswer', ({ correct, explain }) => {
+  const lang = localStorage.getItem('lang') || 'ar';
   document.getElementById('reasonView').classList.add('hidden');
-  document.getElementById('statusMsg').textContent = 'إجابة خاطئة!';
+  document.getElementById('statusMsg').textContent = lang === 'ar' ? 'إجابة خاطئة!' : 'Wrong Answer!';
   
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
   box.style.display = 'block';
   box.innerHTML = `
-    <h3 style="color: #ef4444; text-align:center;">إجابة خاطئة!</h3>
-    <p style="text-align:center;">الإجابة الصحيحة كانت: <strong style="color:#10b981;">البطاقة ${correct}</strong></p>
+    <h3 style="color: #ef4444; text-align:center;">${lang === 'ar' ? 'إجابة خاطئة!' : 'Wrong Answer!'}</h3>
+    <p style="text-align:center;">${lang === 'ar' ? 'الإجابة الصحيحة كانت:' : 'Correct answer was:'} <strong style="color:#10b981;">${lang === 'ar' ? 'البطاقة' : 'Card'} ${correct}</strong></p>
     <p class="explain" style="text-align:center; margin-top:10px;">${explain}</p>
-    <p style="text-align:center; color:#94a3b8; font-style:italic; margin-top:15px;">في انتظار المشرف للجولة التالية...</p>
+    <p style="text-align:center; color:#94a3b8; font-style:italic; margin-top:15px;">${lang === 'ar' ? 'في انتظار المشرف للجولة التالية...' : 'Waiting for host...'}</p>
   `;
 });
 
@@ -176,32 +226,34 @@ socket.on('prepareNextRound', () => {
   const box = document.getElementById('revealBox');
   box.classList.add('hidden');
   box.style.display = 'none'; 
-  document.getElementById('statusMsg').textContent = 'جاري تجهيز الجولة القادمة...';
 });
 
 socket.on('revealSoloPlayer', ({ correct, explain, mine, points }) => {
+  const lang = localStorage.getItem('lang') || 'ar';
   document.getElementById('statusMsg').textContent = '';
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
   box.style.display = 'block'; 
-  box.innerHTML = `<h3 style="color:#10b981; text-align:center;">الإجابة: ${correct} (${points} نقاط)</h3><p class="explain" style="text-align:center; margin-bottom:15px;">${explain}</p><div class="res-team ${mine.cardOk && mine.reasonOk ? 'perfect' : mine.cardOk ? 'partial' : 'wrong'}"><h4>نتيجتك</h4><p>${mine.cardOk?'البطاقة صحيحة':'البطاقة خاطئة'} | ${mine.reasonOk?'السبب صحيح':'السبب خاطئ'}</p><p class="pts">+${mine.pts}</p></div>`;
+  box.innerHTML = `<h3 style="color:#10b981; text-align:center;">${lang === 'ar' ? 'الإجابة' : 'Answer'}: ${correct} (${points} ${lang === 'ar' ? 'نقاط' : 'pts'})</h3><p class="explain" style="text-align:center; margin-bottom:15px;">${explain}</p><div class="res-team ${mine.cardOk && mine.reasonOk ? 'perfect' : mine.cardOk ? 'partial' : 'wrong'}"><h4>${lang === 'ar' ? 'نتيجتك' : 'Your Score'}</h4><p>${mine.cardOk ? (lang === 'ar'?'البطاقة صحيحة':'Card Correct') : (lang === 'ar'?'البطاقة خاطئة':'Card Wrong')} | ${mine.reasonOk ? (lang === 'ar'?'السبب صحيح':'Reason Correct') : (lang === 'ar'?'السبب خاطئ':'Reason Wrong')}</p><p class="pts">+${mine.pts}</p></div>`;
 });
 
 socket.on('revealTeamPlayer', ({ correct, explain, mine, points }) => {
+  const lang = localStorage.getItem('lang') || 'ar';
   document.getElementById('statusMsg').textContent = '';
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
   box.style.display = 'block'; 
-  box.innerHTML = `<h3 style="color:#10b981; text-align:center;">الإجابة: ${correct} (${points} نقاط)</h3><p class="explain" style="text-align:center; margin-bottom:15px;">${explain}</p><div class="res-team ${mine.pts > (points/2) ? 'perfect' : mine.pts > 0 ? 'partial' : 'wrong'}"><h4>نتيجة فريقك</h4><p>نسبة البطاقة: ${mine.cardRatio}% | نسبة السبب: ${mine.reasonRatio}%</p><p class="pts">+${mine.pts} (المجموع: ${mine.total})</p></div>`;
+  box.innerHTML = `<h3 style="color:#10b981; text-align:center;">${lang === 'ar' ? 'الإجابة' : 'Answer'}: ${correct} (${points} ${lang === 'ar' ? 'نقاط' : 'pts'})</h3><p class="explain" style="text-align:center; margin-bottom:15px;">${explain}</p><div class="res-team ${mine.pts > (points/2) ? 'perfect' : mine.pts > 0 ? 'partial' : 'wrong'}"><h4>${lang === 'ar' ? 'نتيجة فريقك' : 'Your Team Score'}</h4><p>${lang === 'ar' ? 'نسبة البطاقة' : 'Card Ratio'}: ${mine.cardRatio}% | ${lang === 'ar' ? 'نسبة السبب' : 'Reason Ratio'}: ${mine.reasonRatio}%</p><p class="pts">+${mine.pts} (${lang === 'ar' ? 'المجموع' : 'Total'}: ${mine.total})</p></div>`;
 });
 
 socket.on('gameEnded', ({ mode, finalScores }) => {
+  const lang = localStorage.getItem('lang') || 'ar';
   document.getElementById('playBox').classList.add('hidden');
   document.getElementById('endBox').classList.remove('hidden');
   if (mode === 'solo') {
-    document.getElementById('endContent').innerHTML = `<h2>نتيجتك: ${finalScores[myPlayerId] || 0} نقطة</h2>`;
+    document.getElementById('endContent').innerHTML = `<h2>${lang === 'ar' ? 'نتيجتك' : 'Your Score'}: ${finalScores[myPlayerId] || 0} ${lang === 'ar' ? 'نقطة' : 'points'}</h2>`;
   } else {
-    document.getElementById('endContent').innerHTML = `<h2>انتهت اللعبة — راجع شاشة المشرف للنتائج</h2>`;
+    document.getElementById('endContent').innerHTML = `<h2>${lang === 'ar' ? 'انتهت اللعبة — راجع شاشة المشرف للنتائج' : 'Game Over — Check host screen for results'}</h2>`;
   }
 });
 </script>
