@@ -9,6 +9,8 @@ const io = new Server(server, { cors: { origin: "*", methods: ["GET", "POST"] } 
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+const COPYRIGHT_TEXT = "محمد العقيلي HIM.PY";
+
 const PRODUCTS = ["LibraryApp", "PayPortal", "PrintServer", "VPN Gateway", "ChatApp", "StudentPortal", "Antivirus", "Backup Server", "Email Filter", "File Share", "WebServer", "HR Portal", "Router Firmware", "Cloud Storage", "Dev Tools", "Public API", "Backup Tape", "Mobile App", "Old CRM", "Wi-Fi Guest"];
 const CONDITIONS = ["تسجيل دخول الزوار مُفعّل", "الجلسة لا تنتهي بعد الخروج", "ثغرة في خدمة الطباعة", "ثغرة في المصادقة الثنائية", "رسائل غير مشفرة", "ثغرة في رفع الملفات", "ثغرة في محرك الفحص", "ثغرة في استعادة النسخ", "تجاوز فلتر البريد", "صلاحيات مفتوحة", "ثغرة تنفيذ أوامر عن بُعد", "تسريب بيانات الموظفين", "كلمة مرور افتراضية", "روابط مشاركة دائمة"];
 const IMPACTS = ["وصول غير مصرّح للبيانات", "سرقة جلسات العملاء", "تسريب مستندات داخلية", "دخول غير مصرّح للشبكة", "كشف محادثات الموظفين", "رفع ملفات خبيثة", "تجاوز الفحص الأمني", "فشل استعادة البيانات", "وصول تصيّد للموظفين", "وصول لملفات حساسة", "اختراق كامل للخادم", "كشف رواتب وبيانات شخصية"];
@@ -29,21 +31,21 @@ function generateQuestionByType(type) {
 
   if (type === 'context') {
     points = 3;
-    realSev = (Math.random() * 2.5 + 6.5).toFixed(1); // 6.5 - 9.0
-    fakeSev = (Math.random() * 2.5 + 6.5).toFixed(1); // 6.5 - 9.0
+    realSev = (Math.random() * 1.9 + 8.0).toFixed(1);
+    fakeSev = (Math.random() * 1.9 + 8.0).toFixed(1);
     realCondition = "ثغرة في خدمة الويب"; fakeCondition = "ثغرة في خدمة الويب";
     realContext = "مفتوح للإنترنت، بيانات العملاء مكشوفة، لا يوجد جدار حماية";
     fakeContext = "خادم داخلي، يستخدمه الموظفون، لكن عليه جدار حماية داخلي";
   } else if (type === 'trap') {
     points = 2; isTrap = true;
-    realSev = (Math.random() * 1.5 + 8.5).toFixed(1); // 8.5 - 10.0
-    fakeSev = (Math.random() * 1.5 + 8.5).toFixed(1); // 8.5 - 10.0
+    realSev = (Math.random() * 1.5 + 8.5).toFixed(1);
+    fakeSev = (Math.random() * 1.5 + 8.5).toFixed(1);
     realCondition = "ثغرة تنفيذ أوامر عن بُعد (RCE)"; fakeCondition = "ثغرة إفصاح عن معلومات بسيطة";
     realContext = "مثبت، يستخدمه كل الموظفين، لا يوجد بديل"; fakeContext = "مثبت، يستخدمه كل الموظفين، لا يوجد بديل";
   } else if (type === 'nature') {
     points = 3;
-    realSev = (Math.random() * 1.5 + 7.5).toFixed(1); // 7.5 - 9.0
-    fakeSev = (Math.random() * 1.5 + 7.5).toFixed(1); // 7.5 - 9.0
+    realSev = (Math.random() * 1.5 + 7.5).toFixed(1);
+    fakeSev = (Math.random() * 1.5 + 7.5).toFixed(1);
     realCondition = "ثغرة تنفيذ أوامر عن بُعد (RCE)"; fakeCondition = "ثغرة إفصاح عن معلومات حساسة (تسريب)";
     realContext = "خادم داخلي، لكن الثغرة تسمح بالتحكم الكامل"; fakeContext = "خادم داخلي، الثغرة تكشف مسارات الملفات";
   } else if (type === 'balance') {
@@ -51,17 +53,17 @@ function generateQuestionByType(type) {
     if (isTrap) {
       realSev = (Math.random() * 1.5 + 8.5).toFixed(1); fakeSev = (Math.random() * 1.5 + 7.5).toFixed(1);
     } else {
-      const base = Math.random() * 1.5 + 7.5; // 7.5 - 9.0
+      const base = Math.random() * 1.5 + 7.5;
       realSev = (base + 0.1).toFixed(1); fakeSev = base.toFixed(1);
     }
     realCondition = "ثغرة في المصادقة"; fakeCondition = "ثغرة في التسجيل";
     realContext = "خادم داخلي، الثغرة تسمح بتجاوز الحماية"; fakeContext = "خادم داخلي، الثغرة لا تؤدي إلا لكشف سجلات بسيطة";
   } else if (type === 'expert') {
     points = 4; isExpert = true;
-    realSev = (Math.random() * 1.0 + 8.5).toFixed(1); // 8.5 - 9.5
+    realSev = (Math.random() * 1.0 + 8.5).toFixed(1);
     realCondition = "ثغرة تجاوز المصادقة الثنائية (2FA Bypass)";
     realContext = "مثبت، يستخدمه الموظفون، لا يوجد جدار حماية";
-    fakeSev = (Math.random() * 0.5 + 9.5).toFixed(1); // 9.5 - 10.0
+    fakeSev = (Math.random() * 0.5 + 9.5).toFixed(1);
     fakeCondition = "ثغرة تسريب معلومات (Information Disclosure)";
     fakeContext = "مثبت، يستخدمه الموظفون، لا يوجد جدار حماية";
   }
@@ -87,6 +89,7 @@ function generateQuestionByType(type) {
     wrongExplanation = `في هذه الجولة، كلتاهما خطيرتان! لكن البطاقة ${correctLetter} طبيعتها أخطر وشدتها أعلى.`;
   }
 
+  // ✅ تعديل الأسباب ليكون الخاطئ طويلاً ومقنعاً
   const reasons = [];
 
   if (isExpert) {
@@ -97,18 +100,18 @@ function generateQuestionByType(type) {
   } else if (type === 'nature') {
     reasons.push({ text: `البطاقة ${correctLetter}: لأنها تسمح بالتحكم الكامل بالخادم (RCE)، بينما ${wrongLetter} لا تؤدي إلا لتسريب مسارات الملفات.`, correct: true });
     reasons.push({ text: `البطاقة ${correctLetter}: لأن طبيعة الثغرة (${realCard.condition}) كارثية وتؤدي للتحكم، بينما ${wrongLetter} مجرد تسريب معلومات حساسة.`, correct: true });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأنها تعمل على نظام داخلي، وهذا يجعل من الصعب اكتشافها.`, correct: false });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأن شدتها وإن كانت منخفضة، إلا أن المخترق قد يستغلها بشكل خطير.`, correct: false });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأنها تعمل على نظام داخلي، وهذا يجعل من الصعب اكتشافها من قبل فرق الأمن السيبراني المختصة.`, correct: false });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأن شدتها وإن كانت منخفضة، إلا أن المخترق قد يستغلها بشكل خطير للغاية في حال تمكن من الوصول إليها.`, correct: false });
   } else if (type === 'context') {
     reasons.push({ text: `البطاقة ${correctLetter}: لأن السياق المحلي (${realCard.context}) يجعلها مكشوفة للجميع، بينما ${wrongLetter} داخلية ومحمية.`, correct: true });
     reasons.push({ text: `البطاقة ${correctLetter}: لأنها الأكثر عرضة للهجوم من قبل أي شخص على الإنترنت، بينما ${wrongLetter} لا يمكن الوصول إليها.`, correct: true });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأن شدتها العالية تجعلها أخطر، بغض النظر عن السياق.`, correct: false });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأنها تعمل على خدمة ويب، وخدمات الويب دائماً مستهدفة.`, correct: false });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأن شدتها العالية تجعلها أخطر بغض النظر عن السياق المحلي أو الضوابط الأمنية الموجودة.`, correct: false });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأنها تعمل على خدمة ويب، وخدمات الويب دائماً مستهدفة من قبل المخترقين بشكل أكبر بكثير.`, correct: false });
   } else {
     reasons.push({ text: `البطاقة ${correctLetter}: لأن السياق المحلي (${realCard.context}) يجعلها مكشوفة للخطر أكثر من ${wrongLetter}.`, correct: true });
     reasons.push({ text: `البطاقة ${correctLetter}: لأن طبيعة الثغرة (${realCard.condition}) والأثر (${realCard.impact}) أخطر بكثير، بينما ${wrongLetter} ثغرة بسيطة.`, correct: true });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأن درجة شدتها (${realCard.severity}) هي الأعلى، والرقم الأكبر هو الأخطر دائماً.`, correct: false });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأنها الأحدث في الإصدار.`, correct: false });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأن درجة شدتها (${realCard.severity}) هي الأعلى، وفي الأمن السيبراني الرقم الأكبر هو الأخطر دائماً.`, correct: false });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأنها الأحدث في الإصدار، والنسخ الجديدة تكون أكثر عرضة للثغرات المكتشفة حديثاً.`, correct: false });
   }
 
   const correctReasons = reasons.filter(r => r.correct);
@@ -157,6 +160,8 @@ function setupTeams(room, groups) {
 }
 
 io.on('connection', (socket) => {
+  socket.emit('copyright', { text: COPYRIGHT_TEXT });
+
   socket.on('createRoom', ({ mode }, cb) => {
     const code = makeCode();
     const selectedRounds = getRandom(ROOM_BANK); 
