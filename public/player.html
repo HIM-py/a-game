@@ -23,11 +23,9 @@
     <h2>⏳ في الانتظار...</h2>
     <p>أهلاً <strong id="myName"></strong></p>
     <p id="teamInfo"></p>
-    <p id="waitMsg">في انتظار المعلم لبدء اللعبة...</p>
   </div>
 
   <div id="playBox" class="panel hidden">
-    <div class="scoreboard" id="myScoreboard"></div>
     <div id="cardsView" class="cards"></div>
     <div id="reasonView" class="hidden">
       <h3>🧠 لماذا اخترت هذه البطاقة؟</h3>
@@ -46,7 +44,6 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
 const socket = io();
-let myName = null;
 let myPick = null;
 let currentRoundData = null;
 let myPlayerId = null;
@@ -54,30 +51,20 @@ let myPlayerId = null;
 document.getElementById('joinBtn').onclick = () => {
   const code = document.getElementById('codeInput').value.trim().toUpperCase();
   const name = document.getElementById('nameInput').value.trim();
-  if (!code || !name) {
-    document.getElementById('errMsg').textContent = '❌ أدخل الكود والاسم';
-    return;
-  }
+  if (!code || !name) { document.getElementById('errMsg').textContent = '❌ أدخل الكود والاسم'; return; }
+  
   socket.emit('joinRoom', { code, name }, (res) => {
-    if (res.error) {
-      document.getElementById('errMsg').textContent = '❌ ' + res.error;
-      return;
-    }
+    if (res.error) { document.getElementById('errMsg').textContent = '❌ ' + res.error; return; }
     myPlayerId = res.playerId;
-    myName = res.name;
     document.getElementById('joinBox').classList.add('hidden');
     document.getElementById('waitBox').classList.remove('hidden');
-    document.getElementById('myName').textContent = myName;
-    document.getElementById('teamInfo').textContent = '⏳ في انتظار المعلم للتوزيع...';
+    document.getElementById('myName').textContent = res.name;
+    document.getElementById('teamInfo').textContent = '⏳ في انتظار المعلم...';
   });
 };
 
 socket.on('youAreInTeam', ({ teamName, members }) => {
-  document.getElementById('teamInfo').innerHTML = `👥 فريقك: <strong>${teamName}</strong><br>الأعضاء: ${members.join(' · ')}`;
-});
-
-socket.on('resetTeam', () => {
-  document.getElementById('teamInfo').textContent = '⏳ في انتظار التوزيع العشوائي...';
+  document.getElementById('teamInfo').innerHTML = `👥 فريقك: <strong>${teamName}</strong>`;
 });
 
 socket.on('roundStarted', ({ round, total, data }) => {
@@ -144,49 +131,34 @@ function loadReasons() {
   });
 }
 
+// ✅ إصلاح: إخفاء شاشة النتيجة عند استلام إشارة الجولة الجديدة
+socket.on('prepareNextRound', () => {
+  document.getElementById('revealBox').classList.add('hidden');
+});
+
 socket.on('revealSoloPlayer', ({ correct, explain, mine }) => {
   document.getElementById('statusMsg').textContent = '';
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
-  box.innerHTML = `
-    <h3>✅ الإجابة الصحيحة: البطاقة ${correct}</h3>
-    <p class="explain">${explain}</p>
-    <div class="res-team ${mine.cardOk && mine.reasonOk ? 'perfect' : mine.cardOk ? 'partial' : 'wrong'}">
-      <h4>نتيجتك</h4>
-      <p>${mine.cardOk?'✅ البطاقة':'❌ البطاقة'} | ${mine.reasonOk?'✅ السبب':'❌ السبب'}</p>
-      <p class="pts">+${mine.pts} (المجموع: ${mine.total})</p>
-    </div>
-    <p class="wait-msg">في انتظار المعلم للجولة التالية...</p>`;
+  box.innerHTML = `<h3>✅ الإجابة: ${correct}</h3><p class="explain">${explain}</p><div class="res-team ${mine.cardOk && mine.reasonOk ? 'perfect' : mine.cardOk ? 'partial' : 'wrong'}"><h4>نتيجتك</h4><p>${mine.cardOk?'✅ البطاقة':'❌ البطاقة'} | ${mine.reasonOk?'✅ السبب':'❌ السبب'}</p><p class="pts">+${mine.pts}</p></div>`;
 });
 
 socket.on('revealTeamPlayer', ({ correct, explain, mine }) => {
   document.getElementById('statusMsg').textContent = '';
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
-  box.innerHTML = `
-    <h3>✅ الإجابة الصحيحة: البطاقة ${correct}</h3>
-    <p class="explain">${explain}</p>
-    <div class="res-team ${mine.cardOk && mine.reasonOk ? 'perfect' : mine.cardOk ? 'partial' : 'wrong'}">
-      <h4>فريقك</h4>
-      <p>${mine.cardOk?'✅ البطاقة':'❌ البطاقة'} | ${mine.reasonOk?'✅ السبب':'❌ السبب'}</p>
-      <p class="pts">+${mine.pts} (المجموع: ${mine.total})</p>
-    </div>
-    <p class="wait-msg">في انتظار المعلم للجولة التالية...</p>`;
+  box.innerHTML = `<h3>✅ الإجابة: ${correct}</h3><p class="explain">${explain}</p><div class="res-team ${mine.pts > 1 ? 'perfect' : mine.pts > 0 ? 'partial' : 'wrong'}"><h4>نتيجة فريقك</h4><p>نسبة البطاقة: ${mine.cardRatio}% | نسبة السبب: ${mine.reasonRatio}%</p><p class="pts">+${mine.pts} (المجموع: ${mine.total})</p></div>`;
 });
 
 socket.on('gameEnded', ({ mode, finalScores }) => {
   document.getElementById('playBox').classList.add('hidden');
   document.getElementById('endBox').classList.remove('hidden');
-  const box = document.getElementById('endContent');
   if (mode === 'solo') {
-    const myScore = finalScores[myPlayerId] || 0;
-    box.innerHTML = `<h2>نتيجتك: ${myScore} نقطة</h2>`;
+    document.getElementById('endContent').innerHTML = `<h2>نتيجتك: ${finalScores[myPlayerId] || 0} نقطة</h2>`;
   } else {
-    box.innerHTML = `<h2>انتهت اللعبة — راجع شاشة المعلم للنتائج</h2>`;
+    document.getElementById('endContent').innerHTML = `<h2>انتهت اللعبة — راجع شاشة المعلم للنتائج</h2>`;
   }
 });
-
-socket.on('hostLeft', () => alert('غادر المعلم — انتهت الجلسة'));
 </script>
 </body>
 </html>
