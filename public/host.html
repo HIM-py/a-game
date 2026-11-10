@@ -50,6 +50,7 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
+console.log("🔥 شاشة المعلم V4");
 const socket = io();
 let currentMode = null;
 
@@ -100,7 +101,6 @@ socket.on('distributed', (room) => {
 document.getElementById('randomBtn').onclick = () => socket.emit('distributeRandom');
 document.getElementById('startBtn').onclick = () => socket.emit('startRound');
 
-// ✅ إظهار الحل والمربع البنفسجي في كل جولة
 socket.on('roundStartedHost', ({ round, total, data }) => {
   document.getElementById('lobby').classList.add('hidden');
   document.getElementById('gameArea').classList.remove('hidden');
@@ -169,18 +169,16 @@ socket.on('revealTeam', ({ correct, explain, results }) => {
   document.getElementById('nextBtn').classList.remove('hidden');
 });
 
-// ✅ عندما يضغط المعلم على "الجولة التالية"
 document.getElementById('nextBtn').onclick = () => {
   console.log("تم الضغط على الجولة التالية...");
   socket.emit('nextRound');
 };
 
-// ✅ استقبال إشارة الاستعداد (هنا كان الخطأ: أخفينا المربع البنفسجي ثم لم نعده)
+// هذه الدالة تعيد إخفاء النتيجة فقط، ولا تلمس المربع البنفسجي
 socket.on('readyNext', () => {
   console.log("المعلم استعد للجولة القادمة");
   document.getElementById('revealBox').classList.add('hidden');
   document.getElementById('nextBtn').classList.add('hidden');
-  // لا نخفي المربع البنفسجي هنا! سيتم إظهاره تلقائياً عندما يبدأ السيرفر الجولة الجديدة
 });
 
 socket.on('gameEnded', () => {
