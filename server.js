@@ -10,7 +10,7 @@ const io = new Server(server, { cors: { origin: "*", methods: ["GET", "POST"] } 
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ============================================================
-// بنك الأسئلة
+// بنك الأسئلة (100 سؤال)
 // ============================================================
 const PRODUCTS = ["LibraryApp", "PayPortal", "PrintServer", "VPN Gateway", "ChatApp", "StudentPortal", "Antivirus", "Backup Server", "Email Filter", "File Share", "WebServer", "HR Portal", "Router Firmware", "Cloud Storage", "Dev Tools", "Public API", "Backup Tape", "Mobile App", "Old CRM", "Wi-Fi Guest"];
 const CONDITIONS = ["تسجيل دخول الزوار مُفعّل", "الجلسة لا تنتهي بعد الخروج", "ثغرة في خدمة الطباعة", "ثغرة في المصادقة الثنائية", "رسائل غير مشفرة", "ثغرة في رفع الملفات", "ثغرة في محرك الفحص", "ثغرة في استعادة النسخ", "تجاوز فلتر البريد", "صلاحيات مفتوحة", "ثغرة تنفيذ أوامر عن بُعد", "تسريب بيانات الموظفين", "كلمة مرور افتراضية", "روابط مشاركة دائمة"];
@@ -154,17 +154,31 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ✅ الإصلاح الجذري: تصفير الحالة وإرسال السؤال الجديد فوراً
   socket.on('nextRound', () => {
     const room = rooms[socket.roomCode];
     if (!room) return;
+    
     if (room.round >= 10) {
       const finalScores = room.mode === 'solo' ? room.playerScores : room.teams.map(t => ({ name: t.name, score: t.score }));
       io.to(socket.roomCode).emit('gameEnded', { mode: room.mode, finalScores });
     } else {
       room.phase = 'waiting';
-      // ✅ إرسال أمر الانتقال للطلاب وإخفاء النتيجة
+      room.playerAnswers = {}; 
+      room.playerReasons = {};
+      
       io.to(socket.roomCode).emit('prepareNextRound');
-      io.to(room.hostSocket).emit('readyNext', publicRoom(room));
+      
+      setTimeout(() => {
+        room.round++;
+        room.phase = 'question';
+        const data = room.rounds[room.round - 1];
+        
+        io.to(room.hostSocket).emit('roundStartedHost', { round: room.round, total: 10, data, mode: room.mode });
+        room.players.forEach(p => {
+          io.to(p.socketId).emit('roundStarted', { round: room.round, total: 10, data, mode: room.mode });
+        });
+      }, 100); 
     }
   });
 });
