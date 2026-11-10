@@ -79,7 +79,6 @@ function generateQuestionByType(type) {
   const realCard = dangerInA ? cardA : cardB;
   const fakeCard = dangerInA ? cardB : cardA;
 
-  // ✅ شرح مخصص يظهر إذا جاوب غلط
   let wrongExplanation = `البطاقة ${correctLetter} هي الخطر الحقيقي لأن طبيعة الثغرة (${realCard.condition}) أو السياق المحلي (${realCard.context}) يجعلها أولوية قصوى، بينما البطاقة ${wrongLetter} أقل خطورة.`;
 
   if (isExpert) {
@@ -112,11 +111,10 @@ function generateQuestionByType(type) {
   return { 
     A: cardA, B: cardB, correct: correctLetter, 
     reasons: selectedReasons, points: points,
-    explain: wrongExplanation // نرسل الشرح
+    explain: wrongExplanation
   };
 }
 
-// بنك الغرف (توزيع عشوائي للنسب)
 function generateRoomBank() {
   const bank = [];
   const types = ['context', 'context', 'context', 'context', 'trap', 'trap', 'trap', 'trap', 'trap', 'nature', 'nature', 'nature', 'nature', 'balance', 'balance', 'balance', 'expert', 'expert']; 
@@ -193,17 +191,13 @@ io.on('connection', (socket) => {
   socket.on('pickCard', ({ card }) => {
     const room = rooms[socket.roomCode];
     if (!room || room.phase !== 'question') return;
-    
     const currentRound = room.rounds[room.round - 1];
     room.playerAnswers[socket.playerId] = card;
     
-    // ✅ نظام الشرح الفوري
     if (card !== currentRound.correct) {
-      // إذا جاوب غلط: نرسل له الشرح فوراً ولا نطلب منه اختيار سبب
       socket.emit('wrongAnswer', { correct: currentRound.correct, explain: currentRound.explain });
-      room.playerReasons[socket.playerId] = -1; // درجة صفر للسبب
+      room.playerReasons[socket.playerId] = -1;
     } else {
-      // إذا جاوب صح: نطلب منه اختيار السبب
       socket.emit('showReasons', { reasons: currentRound.reasons });
     }
 
@@ -285,10 +279,6 @@ function revealTeamFractional(room) {
   room.teams.forEach((team, idx) => {
     team.members.forEach(m => io.to(m.socketId).emit('revealTeamPlayer', { correct: r.correct, explain: r.explain, mine: results.find(x => x.teamIdx === idx), points: maxPoints }));
   });
-}
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`🚀 السيرفر يعمل على المنفذ ${PORT}`));
 }
 
 const PORT = process.env.PORT || 3000;
