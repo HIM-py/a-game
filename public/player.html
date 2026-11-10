@@ -5,6 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title id="pageTitle">انضم للعبة</title>
 <link rel="stylesheet" href="style.css">
+<style>
+  /* تنسيقات منصة التتويج */
+  .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 10px; margin: 30px 0; height: 220px; }
+  .podium-step { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 100px; background: linear-gradient(180deg, rgba(13,27,56,0.9), rgba(6,11,25,0.95)); border: 2px solid; border-radius: 10px 10px 0 0; padding: 15px 10px; }
+  .podium-step.first { height: 200px; border-color: #fbbf24; box-shadow: 0 0 20px rgba(251,191,36,0.4); }
+  .podium-step.second { height: 150px; border-color: #94a3b8; box-shadow: 0 0 15px rgba(148,163,184,0.3); }
+  .podium-step.third { height: 110px; border-color: #b45309; box-shadow: 0 0 15px rgba(180,83,9,0.3); }
+  .podium-name { font-weight: bold; color: #fff; margin-bottom: 5px; text-align: center; font-size: 0.9em; word-break: break-all; }
+  .podium-score { color: #10b981; font-size: 1em; font-weight: bold; }
+  .podium-rank { font-size: 1.8em; font-weight: bold; margin-bottom: 10px; }
+  .podium-step.first .podium-rank { color: #fbbf24; }
+  .podium-step.second .podium-rank { color: #94a3b8; }
+  .podium-step.third .podium-rank { color: #b45309; }
+  
+  .full-leaderboard { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px; margin-top: 20px; max-width: 500px; margin-left: auto; margin-right: auto; }
+  .lb-item { display: flex; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; }
+  .lb-item:last-child { border-bottom: none; }
+  .lb-item .rank { color: #0ea5e9; font-weight: bold; width: 30px; }
+  .lb-item .name { flex: 1; text-align: right; margin-right: 15px; }
+  .lb-item .score { color: #10b981; font-weight: bold; }
+</style>
 </head>
 <body>
 <div class="container">
@@ -60,9 +81,16 @@
     <div id="revealBox" class="reveal hidden"></div>
   </div>
 
-  <div id="endBox" class="panel hidden" style="text-align: center;">
-    <h2 style="color: #0ea5e9; margin-bottom: 20px;" data-i18n="gameOver">انتهت اللعبة</h2>
-    <div id="endContent"></div>
+  <!-- ✅ شاشة النهاية (المنصة) -->
+  <div id="endBox" class="panel hidden" style="text-align: center; padding: 40px 20px;">
+    <h2 style="color: #0ea5e9; font-size: 2.5em; margin-bottom: 10px;" data-i18n="gameOverTitle">🏆 انتهت اللعبة! 🏆</h2>
+    <p style="color: #94a3b8; margin-bottom: 20px;" data-i18n="gameOverDesc">إليكم منصة التتويج والترتيب النهائي</p>
+    
+    <!-- منصة التتويج -->
+    <div class="podium-container" id="podiumContainer"></div>
+
+    <!-- الترتيب الكامل -->
+    <div class="full-leaderboard" id="fullLeaderboard"></div>
   </div>
 
   <div style="text-align: center; margin-top: 40px; color: #475569; font-size: 0.9em; padding-bottom: 20px;">
@@ -78,16 +106,16 @@ const translations = {
     joinDesc: "أدخل بيانات الدخول للانضمام إلى اللعبة", roomCode: "كود الغرفة",
     yourName: "اسمك", joinBtn: "دخول", note: "يرجى الحصول على كود الغرفة من المشرف",
     waiting: "في الانتظار...", welcome: "أهلاً", roundPoints: "نقاط هذه الجولة:",
-    whyChoose: "لماذا اخترت هذه البطاقة؟", gameOver: "انتهت اللعبة",
-    copyright: "صراع النشرات الأمنية - تصميم محمد العقيلي HIM.PY © 2026"
+    whyChoose: "لماذا اخترت هذه البطاقة؟", gameOverTitle: "🏆 انتهت اللعبة! 🏆",
+    gameOverDesc: "إليكم منصة التتويج والترتيب النهائي", copyright: "صراع النشرات الأمنية - تصميم محمد العقيلي HIM.PY © 2026"
   },
   en: {
     joinTitle: "Join Game", gameTitle: "Cyber Security Duel", backHome: "Back to Home",
     joinDesc: "Enter your details to join the game", roomCode: "Room Code",
     yourName: "Your Name", joinBtn: "Join", note: "Please get the room code from the host",
     waiting: "Waiting...", welcome: "Welcome", roundPoints: "Round Points:",
-    whyChoose: "Why did you choose this card?", gameOver: "Game Over",
-    copyright: "Cyber Security Duel - Designed by Mohammed Al-Oqaili HIM.PY © 2026"
+    whyChoose: "Why did you choose this card?", gameOverTitle: "🏆 Game Over! 🏆",
+    gameOverDesc: "Here is the podium and final leaderboard", copyright: "Cyber Security Duel - Designed by Mohammed Al-Oqaili HIM.PY © 2026"
   }
 };
 
@@ -136,6 +164,7 @@ socket.on('roundStarted', ({ round, total, data }) => {
   const lang = localStorage.getItem('lang') || 'ar';
   document.getElementById('waitBox').classList.add('hidden');
   document.getElementById('playBox').classList.remove('hidden');
+  document.getElementById('endBox').classList.add('hidden');
   document.getElementById('reasonView').classList.add('hidden');
   document.getElementById('revealBox').classList.add('hidden');
   document.getElementById('statusMsg').textContent = `${lang === 'ar' ? 'الجولة' : 'Round'} ${round} / ${total} — ${lang === 'ar' ? 'اختر البطاقة' : 'Choose a card'}`;
@@ -173,7 +202,6 @@ function pickCard(k) {
   document.getElementById('statusMsg').textContent = lang === 'ar' ? 'جاري التحقق...' : 'Checking...';
 }
 
-// ✅ استقبال الأسباب باللغتين بناءً على اختيار اللغة
 socket.on('showReasons', ({ reasons_ar, reasons_en }) => {
   const lang = localStorage.getItem('lang') || 'ar';
   const reasons = lang === 'ar' ? reasons_ar : reasons_en;
@@ -197,7 +225,6 @@ socket.on('showReasons', ({ reasons_ar, reasons_en }) => {
   });
 });
 
-// ✅ استقبال الشرح عند الخطأ باللغتين
 socket.on('wrongAnswer', ({ correct, explain_ar, explain_en }) => {
   const lang = localStorage.getItem('lang') || 'ar';
   const explain = lang === 'ar' ? explain_ar : explain_en;
@@ -222,7 +249,6 @@ socket.on('prepareNextRound', () => {
   box.style.display = 'none'; 
 });
 
-// ✅ استقبال نتائج الفردي باللغتين
 socket.on('revealSoloPlayer', ({ correct, explain_ar, explain_en, mine, points }) => {
   const lang = localStorage.getItem('lang') || 'ar';
   const explain = lang === 'ar' ? explain_ar : explain_en;
@@ -234,7 +260,6 @@ socket.on('revealSoloPlayer', ({ correct, explain_ar, explain_en, mine, points }
   box.innerHTML = `<h3 style="color:#10b981; text-align:center;">${lang === 'ar' ? 'الإجابة' : 'Answer'}: ${correct} (${points} ${lang === 'ar' ? 'نقاط' : 'pts'})</h3><p class="explain" style="text-align:center; margin-bottom:15px;">${explain}</p><div class="res-team ${mine.cardOk && mine.reasonOk ? 'perfect' : mine.cardOk ? 'partial' : 'wrong'}"><h4>${lang === 'ar' ? 'نتيجتك' : 'Your Score'}</h4><p>${mine.cardOk ? (lang === 'ar'?'البطاقة صحيحة':'Card Correct') : (lang === 'ar'?'البطاقة خاطئة':'Card Wrong')} | ${mine.reasonOk ? (lang === 'ar'?'السبب صحيح':'Reason Correct') : (lang === 'ar'?'السبب خاطئ':'Reason Wrong')}</p><p class="pts">+${mine.pts}</p></div>`;
 });
 
-// ✅ استقبال نتائج الجماعي باللغتين
 socket.on('revealTeamPlayer', ({ correct, explain_ar, explain_en, mine, points }) => {
   const lang = localStorage.getItem('lang') || 'ar';
   const explain = lang === 'ar' ? explain_ar : explain_en;
@@ -246,15 +271,60 @@ socket.on('revealTeamPlayer', ({ correct, explain_ar, explain_en, mine, points }
   box.innerHTML = `<h3 style="color:#10b981; text-align:center;">${lang === 'ar' ? 'الإجابة' : 'Answer'}: ${correct} (${points} ${lang === 'ar' ? 'نقاط' : 'pts'})</h3><p class="explain" style="text-align:center; margin-bottom:15px;">${explain}</p><div class="res-team ${mine.pts > (points/2) ? 'perfect' : mine.pts > 0 ? 'partial' : 'wrong'}"><h4>${lang === 'ar' ? 'نتيجة فريقك' : 'Your Team Score'}</h4><p>${lang === 'ar' ? 'نسبة البطاقة' : 'Card Ratio'}: ${mine.cardRatio}% | ${lang === 'ar' ? 'نسبة السبب' : 'Reason Ratio'}: ${mine.reasonRatio}%</p><p class="pts">+${mine.pts} (${lang === 'ar' ? 'المجموع' : 'Total'}: ${mine.total})</p></div>`;
 });
 
-socket.on('gameEnded', ({ mode, finalScores }) => {
+// ✅ استقبال النتائج النهائية وبناء المنصة عند الطلاب
+socket.on('gameEnded', ({ mode, leaderboard }) => {
   const lang = localStorage.getItem('lang') || 'ar';
+  
   document.getElementById('playBox').classList.add('hidden');
+  document.getElementById('waitBox').classList.add('hidden');
   document.getElementById('endBox').classList.remove('hidden');
-  if (mode === 'solo') {
-    document.getElementById('endContent').innerHTML = `<h2>${lang === 'ar' ? 'نتيجتك' : 'Your Score'}: ${finalScores[myPlayerId] || 0} ${lang === 'ar' ? 'نقطة' : 'points'}</h2>`;
-  } else {
-    document.getElementById('endContent').innerHTML = `<h2>${lang === 'ar' ? 'انتهت اللعبة — راجع شاشة المشرف للنتائج' : 'Game Over — Check host screen for results'}</h2>`;
+
+  const podium = document.getElementById('podiumContainer');
+  const fullList = document.getElementById('fullLeaderboard');
+  
+  podium.innerHTML = '';
+  fullList.innerHTML = '';
+
+  // بناء المنصة
+  if (leaderboard.length > 0) {
+    // المركز الثاني (يسار)
+    if (leaderboard[1]) {
+      podium.innerHTML += `
+        <div class="podium-step second">
+          <div class="podium-rank">2</div>
+          <div class="podium-name">${leaderboard[1].name}</div>
+          <div class="podium-score">${leaderboard[1].score}</div>
+        </div>`;
+    }
+    // المركز الأول (وسط)
+    if (leaderboard[0]) {
+      podium.innerHTML += `
+        <div class="podium-step first">
+          <div class="podium-rank">1</div>
+          <div class="podium-name">${leaderboard[0].name}</div>
+          <div class="podium-score">${leaderboard[0].score}</div>
+        </div>`;
+    }
+    // المركز الثالث (يمين)
+    if (leaderboard[2]) {
+      podium.innerHTML += `
+        <div class="podium-step third">
+          <div class="podium-rank">3</div>
+          <div class="podium-name">${leaderboard[2].name}</div>
+          <div class="podium-score">${leaderboard[2].score}</div>
+        </div>`;
+    }
   }
+
+  // بناء القائمة الكاملة
+  leaderboard.forEach((p, i) => {
+    fullList.innerHTML += `
+      <div class="lb-item">
+        <span class="rank">${i+1}</span>
+        <span class="name">${p.name}</span>
+        <span class="score">${p.score}</span>
+      </div>`;
+  });
 });
 </script>
 </body>
