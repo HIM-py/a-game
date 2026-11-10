@@ -10,12 +10,8 @@
 <div class="container">
   <header>
     <div style="display: flex; align-items: center; gap: 15px;">
-      <!-- أيقونة المشرف (درع الحماية) -->
-      <svg width="45" height="45" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 10px #0ea5e9);">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-        <path d="M12 8v4"></path>
-        <path d="M12 16h.01"></path>
-      </svg>
+      <!-- صورة المشرف: host.png -->
+      <img src="/img/host.png" alt="مشرف" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%; border: 2px solid #0ea5e9; box-shadow: 0 0 10px rgba(14, 165, 233, 0.7); background-color: #060b19;">
       <div>
         <h1 style="margin: 0;">لوحة المشرف</h1>
         <p style="margin: 0; color: #94a3b8; font-size: 0.9em;">صراع النشرات الأمنية</p>
@@ -27,24 +23,16 @@
   <div id="setup" class="panel" style="text-align: center;">
     <h2 style="margin-bottom: 30px; color: #fff; font-size: 1.8em;">اختر نمط اللعب</h2>
     <div class="mode-pick">
-      <!-- نمط جماعي (أيقونة عدة أشخاص) -->
+      <!-- النمط الجماعي: صورة اللاعب -->
       <button class="mode-btn" data-mode="team">
-        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 15px; filter: drop-shadow(0 0 10px #0ea5e9);">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-          <circle cx="9" cy="7" r="4"></circle>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-        </svg>
+        <img src="/img/player.png" alt="جماعي" style="width: 70px; height: 70px; object-fit: cover; border-radius: 50%; margin-bottom: 10px; border: 2px solid #8b5cf6; box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);">
         جماعي
         <span style="font-size: 0.8em; font-weight: normal; color: #94a3b8;">لعب مع فريق من اللاعبين</span>
       </button>
       
-      <!-- نمط فردي (أيقونة شخص واحد) -->
+      <!-- النمط الفردي: صورة اللاعب -->
       <button class="mode-btn" data-mode="solo">
-        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 15px; filter: drop-shadow(0 0 10px #8b5cf6);">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
+        <img src="/img/player.png" alt="فردي" style="width: 70px; height: 70px; object-fit: cover; border-radius: 50%; margin-bottom: 10px; border: 2px solid #8b5cf6; box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);">
         فردي
         <span style="font-size: 0.8em; font-weight: normal; color: #94a3b8;">لعب بمفردك</span>
       </button>
@@ -91,7 +79,7 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-console.log("🔥 شاشة المشرف V10");
+console.log("🔥 شاشة المشرف V11");
 const socket = io();
 let currentMode = null;
 
