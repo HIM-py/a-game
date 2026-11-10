@@ -5,6 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title id="pageTitle">لوحة المشرف</title>
 <link rel="stylesheet" href="style.css">
+<style>
+  /* تنسيقات منصة التتويج */
+  .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 10px; margin: 40px 0; height: 250px; }
+  .podium-step { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 120px; background: linear-gradient(180deg, rgba(13,27,56,0.9), rgba(6,11,25,0.95)); border: 2px solid; border-radius: 10px 10px 0 0; padding: 15px; }
+  .podium-step.first { height: 220px; border-color: #fbbf24; box-shadow: 0 0 20px rgba(251,191,36,0.4); }
+  .podium-step.second { height: 170px; border-color: #94a3b8; box-shadow: 0 0 15px rgba(148,163,184,0.3); }
+  .podium-step.third { height: 130px; border-color: #b45309; box-shadow: 0 0 15px rgba(180,83,9,0.3); }
+  .podium-name { font-weight: bold; color: #fff; margin-bottom: 5px; text-align: center; font-size: 1.1em; }
+  .podium-score { color: #10b981; font-size: 1.2em; font-weight: bold; }
+  .podium-rank { font-size: 2em; font-weight: bold; margin-bottom: 10px; }
+  .podium-step.first .podium-rank { color: #fbbf24; }
+  .podium-step.second .podium-rank { color: #94a3b8; }
+  .podium-step.third .podium-rank { color: #b45309; }
+  
+  .full-leaderboard { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px; margin-top: 20px; max-width: 600px; margin-left: auto; margin-right: auto; }
+  .lb-item { display: flex; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; }
+  .lb-item:last-child { border-bottom: none; }
+  .lb-item .rank { color: #0ea5e9; font-weight: bold; width: 30px; }
+  .lb-item .name { flex: 1; text-align: right; margin-right: 15px; }
+  .lb-item .score { color: #10b981; font-weight: bold; }
+</style>
 </head>
 <body>
 <div class="container">
@@ -65,10 +86,8 @@
   <div id="gameArea" class="panel hidden">
     <div class="scoreboard" id="scoreboard" style="margin-bottom: 20px; display: flex; justify-content: center; gap: 20px;"></div>
     
-    <!-- عداد الوقت -->
     <div style="text-align: center; margin-bottom: 15px; font-size: 1.5em; font-weight: bold; color: #ef4444;" id="timerDisplay">00:35</div>
     
-    <!-- المربع البنفسجي (شاشة المشرف) -->
     <div id="hostAnswerBox" style="display:none; background:rgba(139,92,246,0.15); border:2px solid #8b5cf6; padding:20px; border-radius:15px; margin-bottom:20px; color:#e2e8f0; font-size:1.05em; text-align:right; box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);"></div>
 
     <div id="cardsView" class="cards"></div>
@@ -79,6 +98,20 @@
       <button id="forceEndBtn" class="btn hidden" style="background: linear-gradient(135deg, #ef4444, #b91c1c); box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);" data-i18n="forceEnd">إنهاء الجولة الآن</button>
       <button id="nextBtn" class="btn next-btn hidden" data-i18n="nextRound">الجولة التالية</button>
     </div>
+  </div>
+
+  <!-- ✅ شاشة النهاية (المنصة) -->
+  <div id="endScreen" class="panel hidden" style="text-align: center; padding: 40px 20px;">
+    <h2 style="color: #0ea5e9; font-size: 2.5em; margin-bottom: 10px;" data-i18n="gameOverTitle">🏆 انتهت اللعبة! 🏆</h2>
+    <p style="color: #94a3b8; margin-bottom: 30px;" data-i18n="gameOverDesc">إليكم منصة التتويج والترتيب النهائي</p>
+    
+    <!-- منصة التتويج (أعلى 3) -->
+    <div class="podium-container" id="podiumContainer"></div>
+
+    <!-- الترتيب الكامل -->
+    <div class="full-leaderboard" id="fullLeaderboard"></div>
+
+    <button class="btn" onclick="location.reload()" style="margin-top: 30px;" data-i18n="newGame">لعبة جديدة</button>
   </div>
 
   <div style="text-align: center; margin-top: 40px; color: #475569; font-size: 0.9em; padding-bottom: 20px;">
@@ -95,7 +128,9 @@ const translations = {
     soloMode: "فردي", soloModeDesc: "لعب بمفردك", createRoom: "+ إنشاء غرفة",
     roomCode: "كود الغرفة", players: "اللاعبون", randomDist: "توزيع عشوائي (فريقين)",
     startGame: "ابدأ اللعبة", forceEnd: "إنهاء الجولة الآن", nextRound: "الجولة التالية",
-    copyright: "صراع النشرات الأمنية - تصميم محمد العقيلي HIM.PY © 2026"
+    copyright: "صراع النشرات الأمنية - تصميم محمد العقيلي HIM.PY © 2026",
+    gameOverTitle: "🏆 انتهت اللعبة! 🏆", gameOverDesc: "إليكم منصة التتويج والترتيب النهائي",
+    newGame: "لعبة جديدة"
   },
   en: {
     hostPanel: "Host Panel", gameTitle: "Cyber Security Duel", backHome: "Back to Home",
@@ -103,7 +138,9 @@ const translations = {
     soloMode: "Solo", soloModeDesc: "Play by yourself", createRoom: "+ Create Room",
     roomCode: "Room Code", players: "Players", randomDist: "Random Distribution (2 Teams)",
     startGame: "Start Game", forceEnd: "End Round Now", nextRound: "Next Round",
-    copyright: "Cyber Security Duel - Designed by Mohammed Al-Oqaili HIM.PY © 2026"
+    copyright: "Cyber Security Duel - Designed by Mohammed Al-Oqaili HIM.PY © 2026",
+    gameOverTitle: "🏆 Game Over! 🏆", gameOverDesc: "Here is the podium and final leaderboard",
+    newGame: "New Game"
   }
 };
 
@@ -203,7 +240,6 @@ socket.on('roundStartedHost', ({ round, total, data }) => {
   document.getElementById('forceEndBtn').classList.remove('hidden'); 
   document.getElementById('revealBox').classList.add('hidden');
   
-  // ✅ استخدام النصوص المترجمة من السيرفر
   const box = document.getElementById('hostAnswerBox');
   box.style.display = 'block'; 
   box.innerHTML = `
@@ -244,7 +280,6 @@ socket.on('phaseChange', () => {
   document.getElementById('statusMsg').textContent = lang === 'ar' ? 'في انتظار اختيار السبب...' : 'Waiting for reasons...';
 });
 
-// ✅ كشف النتائج للفردي مع استخدام النصوص المترجمة
 socket.on('revealSolo', ({ correct, explain_ar, explain_en, leaderboard, points }) => {
   const lang = localStorage.getItem('lang') || 'ar';
   const explain = lang === 'ar' ? explain_ar : explain_en;
@@ -259,7 +294,6 @@ socket.on('revealSolo', ({ correct, explain_ar, explain_en, leaderboard, points 
   document.getElementById('nextBtn').classList.remove('hidden');
 });
 
-// ✅ كشف النتائج للجماعي مع استخدام النصوص المترجمة
 socket.on('revealTeam', ({ correct, explain_ar, explain_en, results, points }) => {
   const lang = localStorage.getItem('lang') || 'ar';
   const explain = lang === 'ar' ? explain_ar : explain_en;
@@ -295,10 +329,60 @@ socket.on('readyNext', () => {
   stopTimer();
 });
 
-socket.on('gameEnded', () => {
-  const lang = localStorage.getItem('lang') || 'ar';
+// ✅ استقبال النتائج النهائية وبناء منصة التتويج
+socket.on('gameEnded', ({ mode, leaderboard }) => {
   stopTimer();
-  document.getElementById('gameArea').innerHTML = `<div class="end-screen"><h2>${lang === 'ar' ? 'انتهت اللعبة!' : 'Game Over!'}</h2><button class="btn" onclick="location.reload()">${lang === 'ar' ? 'لعبة جديدة' : 'New Game'}</button></div>`;
+  document.getElementById('gameArea').classList.add('hidden');
+  document.getElementById('setup').classList.add('hidden');
+  document.getElementById('lobby').classList.add('hidden');
+  document.getElementById('endScreen').classList.remove('hidden');
+
+  const podium = document.getElementById('podiumContainer');
+  const fullList = document.getElementById('fullLeaderboard');
+  
+  podium.innerHTML = '';
+  fullList.innerHTML = '';
+
+  // بناء المنصة لأعلى 3
+  if (leaderboard.length > 0) {
+    // المركز الثاني (يسار)
+    if (leaderboard[1]) {
+      podium.innerHTML += `
+        <div class="podium-step second">
+          <div class="podium-rank">2</div>
+          <div class="podium-name">${leaderboard[1].name}</div>
+          <div class="podium-score">${leaderboard[1].score}</div>
+        </div>`;
+    }
+    // المركز الأول (وسط)
+    if (leaderboard[0]) {
+      podium.innerHTML += `
+        <div class="podium-step first">
+          <div class="podium-rank">1</div>
+          <div class="podium-name">${leaderboard[0].name}</div>
+          <div class="podium-score">${leaderboard[0].score}</div>
+        </div>`;
+    }
+    // المركز الثالث (يمين)
+    if (leaderboard[2]) {
+      podium.innerHTML += `
+        <div class="podium-step third">
+          <div class="podium-rank">3</div>
+          <div class="podium-name">${leaderboard[2].name}</div>
+          <div class="podium-score">${leaderboard[2].score}</div>
+        </div>`;
+    }
+  }
+
+  // بناء القائمة الكاملة
+  leaderboard.forEach((p, i) => {
+    fullList.innerHTML += `
+      <div class="lb-item">
+        <span class="rank">${i+1}</span>
+        <span class="name">${p.name}</span>
+        <span class="score">${p.score}</span>
+      </div>`;
+  });
 });
 </script>
 </body>
