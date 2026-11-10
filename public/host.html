@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة المعلم</title>
+<title>لوحة المشرف</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="container">
-  <header><h1>🎓 لوحة المعلم</h1></header>
+  <header><h1>🎓 لوحة المشرف</h1></header>
 
   <div id="setup" class="panel">
     <h3>اختر نمط اللعب:</h3>
@@ -55,7 +55,7 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-console.log("🔥 شاشة المعلم (النسخة النهائية مع النقاط)");
+console.log("🔥 شاشة المشرف (النسخة النهائية)");
 const socket = io();
 let currentMode = null;
 
@@ -117,7 +117,7 @@ socket.on('roundStartedHost', ({ round, total, data }) => {
   const box = document.getElementById('hostAnswerBox');
   box.style.display = 'block'; 
   box.innerHTML = `
-    <strong style="color:#fbbf24; font-size:1.1em;">🔒 شاشة المعلم:</strong><br><br>
+    <strong style="color:#fbbf24; font-size:1.1em;">🔒 شاشة المشرف:</strong><br><br>
     <strong>الإجابة الصحيحة:</strong> البطاقة ${data.correct} <br>
     <strong>السبب:</strong> ${data.reasons.find(r => r.correct)?.text} <br>
     <strong>الشرح:</strong> ${data.explain} <br>
@@ -152,7 +152,6 @@ socket.on('phaseChange', () => {
   document.getElementById('statusMsg').textContent = '🧠 في انتظار اختيار السبب...';
 });
 
-// ✅ عرض النقاط في كشف النتيجة للفردي
 socket.on('revealSolo', ({ correct, explain, leaderboard, points }) => {
   document.getElementById('statusMsg').textContent = '';
   document.getElementById('hostAnswerBox').style.display = 'none'; 
@@ -164,7 +163,6 @@ socket.on('revealSolo', ({ correct, explain, leaderboard, points }) => {
   document.getElementById('nextBtn').classList.remove('hidden');
 });
 
-// ✅ عرض النقاط في كشف النتيجة للجماعي
 socket.on('revealTeam', ({ correct, explain, results, points }) => {
   document.getElementById('statusMsg').textContent = '';
   document.getElementById('hostAnswerBox').style.display = 'none';
@@ -183,7 +181,7 @@ socket.on('revealTeam', ({ correct, explain, results, points }) => {
 });
 
 document.getElementById('forceEndBtn').onclick = () => {
-  if(confirm('هل أنت متأكد من إنهاء الجولة الآن؟ سيتم احتساب إجابات الطلاب الذين جاوبوا فقط.')) {
+  if(confirm('هل أنت متأكد من إنهاء الجولة الآن؟ سيتم احتساب إجابات الطلاب الذين أجابوا فقط.')) {
     socket.emit('forceEnd');
   }
 };
