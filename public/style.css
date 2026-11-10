@@ -56,34 +56,18 @@ header h1 {
   gap: 15px;
 }
 
-/* ✅ إخفاء المربعات في الهيدر */
+/* ✅ الشعار في الهيدر - سحر إخفاء الخلفية السوداء */
 header h1::before {
   content: '';
   display: inline-block;
-  width: 45px;
-  height: 45px;
-  background-image: url('/img/lock.png');
-  background-size: 130%; /* تكبير الصورة قليلاً لقص الحواف */
+  width: 50px;
+  height: 50px;
+  background-image: url('/img/shield.jpg'); /* استخدام الشعار الدائري */
+  background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-  border-radius: 50%; /* قص دائري */
-  box-shadow: 0 0 15px rgba(14, 165, 233, 0.8); /* توهج يخفي الحواف */
-  border: 2px solid var(--neon-blue);
-  /* mix-blend-mode يدمج الألوان الداكنة مع الخلفية */
-  mix-blend-mode: screen; 
-}
-
-/* ✅ إخفاء المربعات في الشعار الكبير */
-.big-shield {
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
-  object-fit: cover; /* يجعل الصورة تملأ الدائرة وتقص الزوائد */
-  border: 3px solid var(--neon-blue);
-  box-shadow: 0 0 35px rgba(14, 165, 233, 0.7);
-  margin-bottom: 20px;
-  /* السطر السحري لإخفاء الخلفية المربعة */
-  mix-blend-mode: screen; 
+  mix-blend-mode: screen; /* يجعل الأسود شفافاً */
+  filter: drop-shadow(0 0 10px var(--neon-blue)); /* توهج */
 }
 
 /* الأزرار العامة */
