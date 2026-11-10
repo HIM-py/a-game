@@ -10,8 +10,12 @@
 <div class="container">
   <header>
     <div style="display: flex; align-items: center; gap: 15px;">
-      <!-- ✅ صورة المعلم (المشرف) الحقيقية هنا -->
-      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="مشرف" style="width: 45px; height: 45px; filter: drop-shadow(0 0 10px #0ea5e9);">
+      <!-- أيقونة المشرف (درع الحماية) -->
+      <svg width="45" height="45" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 10px #0ea5e9);">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        <path d="M12 8v4"></path>
+        <path d="M12 16h.01"></path>
+      </svg>
       <div>
         <h1 style="margin: 0;">لوحة المشرف</h1>
         <p style="margin: 0; color: #94a3b8; font-size: 0.9em;">صراع النشرات الأمنية</p>
@@ -23,7 +27,7 @@
   <div id="setup" class="panel" style="text-align: center;">
     <h2 style="margin-bottom: 30px; color: #fff; font-size: 1.8em;">اختر نمط اللعب</h2>
     <div class="mode-pick">
-      <!-- نمط جماعي (أيقونة SVG، وهي تعمل بشكل ممتاز في الصورة) -->
+      <!-- نمط جماعي (أيقونة عدة أشخاص) -->
       <button class="mode-btn" data-mode="team">
         <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 15px; filter: drop-shadow(0 0 10px #0ea5e9);">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -35,7 +39,7 @@
         <span style="font-size: 0.8em; font-weight: normal; color: #94a3b8;">لعب مع فريق من اللاعبين</span>
       </button>
       
-      <!-- نمط فردي (أيقونة SVG) -->
+      <!-- نمط فردي (أيقونة شخص واحد) -->
       <button class="mode-btn" data-mode="solo">
         <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 15px; filter: drop-shadow(0 0 10px #8b5cf6);">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -87,7 +91,7 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-console.log("🔥 شاشة المشرف (النسخة النهائية مع صورة المعلم)");
+console.log("🔥 شاشة المشرف V10");
 const socket = io();
 let currentMode = null;
 
