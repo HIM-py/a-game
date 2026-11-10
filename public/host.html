@@ -44,13 +44,17 @@
     <div id="cardsView" class="cards"></div>
     <div id="statusMsg" class="status"></div>
     <div id="revealBox" class="reveal hidden"></div>
-    <button id="nextBtn" class="btn next-btn hidden">الجولة التالية ➡️</button>
+    
+    <div style="text-align: center; margin-top: 15px;">
+      <button id="forceEndBtn" class="btn hidden" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white;">🛑 إنهاء الجولة الآن</button>
+      <button id="nextBtn" class="btn next-btn hidden">الجولة التالية ➡️</button>
+    </div>
   </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-console.log("🔥 شاشة المعلم V5");
+console.log("🔥 شاشة المعلم V6 (مع زر الإنهاء)");
 const socket = io();
 let currentMode = null;
 
@@ -101,15 +105,15 @@ socket.on('distributed', (room) => {
 document.getElementById('randomBtn').onclick = () => socket.emit('distributeRandom');
 document.getElementById('startBtn').onclick = () => socket.emit('startRound');
 
-// ✅ إجبار المربع البنفسجي على الظهور
 socket.on('roundStartedHost', ({ round, total, data }) => {
   document.getElementById('lobby').classList.add('hidden');
   document.getElementById('gameArea').classList.remove('hidden');
   document.getElementById('nextBtn').classList.add('hidden');
+  document.getElementById('forceEndBtn').classList.add('hidden');
   document.getElementById('revealBox').classList.add('hidden');
   
   const box = document.getElementById('hostAnswerBox');
-  box.style.display = 'block'; // إجبار الظهور
+  box.style.display = 'block'; 
   box.innerHTML = `
     <strong style="color:#fbbf24; font-size:1.1em;">🔒 شاشة المعلم:</strong><br><br>
     <strong>الإجابة الصحيحة:</strong> البطاقة ${data.correct} <br>
@@ -147,16 +151,17 @@ socket.on('phaseChange', () => {
 
 socket.on('revealSolo', ({ correct, explain, leaderboard }) => {
   document.getElementById('statusMsg').textContent = '';
-  document.getElementById('hostAnswerBox').style.display = 'none'; // إخفاء الحل
+  document.getElementById('hostAnswerBox').style.display = 'none'; 
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
   box.innerHTML = `<h3>✅ الإجابة: ${correct}</h3><p class="explain">${explain}</p><div class="leaderboard">${leaderboard.map((p, i) => `<div class="lb-row ${i===0?'top':''}"><span class="rank">${i+1}</span><span class="name">${p.name}</span><span class="pts">${p.total}</span></div>`).join('')}</div>`;
   document.getElementById('nextBtn').classList.remove('hidden');
+  document.getElementById('forceEndBtn').classList.add('hidden');
 });
 
 socket.on('revealTeam', ({ correct, explain, results }) => {
   document.getElementById('statusMsg').textContent = '';
-  document.getElementById('hostAnswerBox').style.display = 'none'; // إخفاء الحل
+  document.getElementById('hostAnswerBox').style.display = 'none';
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
   box.innerHTML = `<h3>✅ الإجابة: ${correct}</h3><p class="explain">${explain}</p><div class="results">${results.map(r => `
@@ -167,18 +172,23 @@ socket.on('revealTeam', ({ correct, explain, results }) => {
       <p class="pts">+${r.pts} (المجموع: ${r.total})</p>
     </div>`).join('')}</div>`;
   document.getElementById('nextBtn').classList.remove('hidden');
+  document.getElementById('forceEndBtn').classList.add('hidden');
 });
 
+document.getElementById('forceEndBtn').onclick = () => {
+  if(confirm('هل أنت متأكد من إنهاء الجولة الآن؟ سيتم احتساب إجابات الطلاب الذين جاوبوا فقط.')) {
+    socket.emit('forceEnd');
+  }
+};
+
 document.getElementById('nextBtn').onclick = () => {
-  console.log("تم الضغط على الجولة التالية...");
   socket.emit('nextRound');
 };
 
 socket.on('readyNext', () => {
-  console.log("المعلم استعد للجولة القادمة");
   document.getElementById('revealBox').classList.add('hidden');
   document.getElementById('nextBtn').classList.add('hidden');
-  // لا نلمس المربع البنفسجي هنا، سيظهر في الجولة القادمة
+  document.getElementById('forceEndBtn').classList.add('hidden');
 });
 
 socket.on('gameEnded', () => {
