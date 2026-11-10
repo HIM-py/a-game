@@ -176,3 +176,35 @@ label { display: block; color: #94a3b8; font-size: 0.9em; margin-top: 10px; }
   .panel { padding: 15px; }
   .mode-btn { min-width: 100%; }
 }
+
+/* تنسيقات التوزيع اليدوي */
+.manual-dist-view {
+  background: rgba(255,255,255,0.05);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.manual-player-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.team-select {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid #fbbf24;
+  color: white;
+  font-family: inherit;
+  font-size: 0.95em;
+  cursor: pointer;
+}
+.team-select option {
+  background: #1e293b;
+  color: white;
+}
