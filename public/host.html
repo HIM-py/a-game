@@ -25,26 +25,12 @@
       <div id="roomCode" class="code"></div>
       <p class="hint" id="modeHint"></p>
     </div>
-    <div id="playersList" class="players-list">
-      <h4>اللاعبون (0):</h4>
-    </div>
-
-    <!-- واجهة التوزيع اليدوي -->
-    <div id="manualDistView" class="manual-dist-view hidden">
-      <h4>📝 التوزيع اليدوي (اختر الفريق لكل طالب):</h4>
-      <div id="manualPlayersList"></div>
-      <button id="saveManualBtn" class="btn next-btn">حفظ التوزيع وبدء</button>
-    </div>
-
+    <div id="playersList" class="players-list"><h4>اللاعبون (0):</h4></div>
     <div id="teamsView" class="teams-view hidden"></div>
-    
     <div class="actions">
-      <!-- خيارات التوزيع تظهر هنا -->
       <div id="distOptions" class="hidden">
-        <button id="randomBtn" class="btn next-btn">🎲 توزيع عشوائي</button>
-        <button id="manualBtn" class="btn">📝 توزيع يدوي</button>
+        <button id="randomBtn" class="btn next-btn">🎲 توزيع عشوائي (فريقين)</button>
       </div>
-      
       <button id="startBtn" class="btn next-btn hidden">▶️ ابدأ اللعبة</button>
     </div>
   </div>
@@ -63,7 +49,6 @@
 <script>
 const socket = io();
 let currentMode = null;
-let currentPlayers = [];
 
 document.querySelectorAll('.mode-btn').forEach(b => {
   b.onclick = () => {
@@ -77,18 +62,14 @@ document.querySelectorAll('.mode-btn').forEach(b => {
 document.getElementById('createBtn').onclick = () => {
   socket.emit('createRoom', { mode: currentMode }, ({ code, mode }) => {
     document.getElementById('roomCode').textContent = code;
-    document.getElementById('modeHint').textContent =
-      mode === 'solo' ? '🧑 نمط فردي' : '👥 نمط جماعي';
+    document.getElementById('modeHint').textContent = mode === 'solo' ? '🧑 نمط فردي' : '👥 نمط جماعي';
     document.getElementById('setup').classList.add('hidden');
     document.getElementById('lobby').classList.remove('hidden');
   });
 };
 
 socket.on('roomUpdate', (room) => {
-  currentPlayers = room.players;
-  const pl = document.getElementById('playersList');
-  pl.innerHTML = `<h4>اللاعبون (${room.players.length}):</h4>` +
-    room.players.map(p => `<span class="player-chip">👤 ${p.name}</span>`).join('');
+  document.getElementById('playersList').innerHTML = `<h4>اللاعبون (${room.players.length}):</h4>` + room.players.map(p => `<span class="player-chip">👤 ${p.name}</span>`).join('');
 
   if (room.mode === 'solo') {
     document.getElementById('distOptions').classList.add('hidden');
@@ -99,82 +80,41 @@ socket.on('roomUpdate', (room) => {
     if (!room.distributed) {
       document.getElementById('distOptions').classList.remove('hidden');
       document.getElementById('randomBtn').disabled = room.players.length < 2;
-      document.getElementById('manualBtn').disabled = room.players.length < 2;
-      document.getElementById('teamsView').classList.add('hidden');
       document.getElementById('startBtn').classList.add('hidden');
-      document.getElementById('manualDistView').classList.add('hidden');
     }
   }
 });
 
-// عند التوزيع (سواء عشوائي أو يدوي)
 socket.on('distributed', (room) => {
   document.getElementById('distOptions').classList.add('hidden');
-  document.getElementById('manualDistView').classList.add('hidden');
   document.getElementById('teamsView').classList.remove('hidden');
-  
-  const tv = document.getElementById('teamsView');
-  tv.innerHTML = '<h4>🎲 التوزيع العشوائي:</h4>' + room.teams.map(t => `
-    <div class="team-card">
-      <h5>${t.name} (${t.members.length})</h5>
-      <p>${t.members.join(' · ')}</p>
-    </div>`).join('');
-  
+  document.getElementById('teamsView').innerHTML = '<h4>🎲 تم التوزيع:</h4>' + room.teams.map(t => `
+    <div class="team-card"><h5>${t.name} (${t.members.length})</h5><p>${t.members.join(' · ')}</p></div>`).join('');
   document.getElementById('startBtn').classList.remove('hidden');
   document.getElementById('startBtn').disabled = false;
 });
 
-// عند اختيار التوزيع العشوائي
 document.getElementById('randomBtn').onclick = () => socket.emit('distributeRandom');
-
-// عند اختيار التوزيع اليدوي
-document.getElementById('manualBtn').onclick = () => {
-  document.getElementById('distOptions').classList.add('hidden');
-  document.getElementById('manualDistView').classList.remove('hidden');
-  
-  const list = document.getElementById('manualPlayersList');
-  list.innerHTML = currentPlayers.map(p => `
-    <div class="manual-player-row">
-      <span>👤 ${p.name}</span>
-      <select id="team-select-${p.id}" class="team-select">
-        <option value="1">الفريق 1</option>
-        <option value="2">الفريق 2</option>
-        <option value="3">الفريق 3</option>
-        <option value="4">الفريق 4</option>
-        <option value="5">الفريق 5</option>
-      </select>
-    </div>
-  `).join('');
-};
-
-document.getElementById('saveManualBtn').onclick = () => {
-  const assignments = currentPlayers.map(p => ({
-    playerId: p.id,
-    teamNum: document.getElementById(`team-select-${p.id}`).value
-  }));
-  socket.emit('distributeManual', { assignments });
-};
-
 document.getElementById('startBtn').onclick = () => socket.emit('startRound');
 
-// ============ اللعبة (شاشة المعلم) ============
 socket.on('roundStartedHost', ({ round, total, data }) => {
   document.getElementById('lobby').classList.add('hidden');
   document.getElementById('gameArea').classList.remove('hidden');
   document.getElementById('nextBtn').classList.add('hidden');
   document.getElementById('revealBox').classList.add('hidden');
-  document.getElementById('statusMsg').textContent = `⏳ الجولة ${round} / ${total} — في انتظار اختيارات اللاعبين...`;
   
+  // ✅ إصلاح 1: إعادة إظهار الحل في كل جولة
   const box = document.getElementById('hostAnswerBox');
   box.classList.remove('hidden');
   box.style.cssText = 'background:rgba(139,92,246,0.2); border:2px solid #a78bfa; padding:15px; border-radius:10px; margin-bottom:15px; color:#e9d5ff; font-size:1.05em; text-align:right;';
   box.innerHTML = `
-    <strong style="color:#fbbf24; font-size:1.1em;">🔒 شاشة المعلم (مخفية):</strong><br><br>
+    <strong style="color:#fbbf24; font-size:1.1em;">🔒 شاشة المعلم:</strong><br><br>
     <strong>الإجابة الصحيحة:</strong> البطاقة ${data.correct} <br>
     <strong>السبب:</strong> ${data.reasons.find(r => r.correct)?.text} <br>
     <strong>الشرح:</strong> ${data.explain}
   `;
 
+  document.getElementById('statusMsg').textContent = `⏳ الجولة ${round} / ${total} — في انتظار اختيارات اللاعبين...`;
   renderCards(data);
 });
 
@@ -183,23 +123,21 @@ function renderCards(data) {
   c.innerHTML = '';
   ['A','B'].forEach(k => {
     const d = data[k];
-    const div = document.createElement('div');
-    div.className = 'card';
-    div.innerHTML = `
-      <div class="card-title">📄 البطاقة ${k}</div>
-      <div class="card-field"><span>المنتج</span><b>${d.product}</b></div>
-      <div class="card-field"><span>الشدة</span><b class="severity">${d.severity}</b></div>
-      <div class="card-field"><span>الحالة</span><b>${d.condition}</b></div>
-      <div class="card-field"><span>الأثر</span><b>${d.impact}</b></div>
-      <div class="context-box">🏢 ${d.context}</div>`;
-    c.appendChild(div);
+    c.innerHTML += `
+      <div class="card">
+        <div class="card-title">📄 البطاقة ${k}</div>
+        <div class="card-field"><span>المنتج</span><b>${d.product}</b></div>
+        <div class="card-field"><span>الشدة</span><b class="severity">${d.severity}</b></div>
+        <div class="card-field"><span>الحالة</span><b>${d.condition}</b></div>
+        <div class="card-field"><span>الأثر</span><b>${d.impact}</b></div>
+        <div class="context-box">🏢 ${d.context}</div>
+      </div>`;
   });
 }
 
 socket.on('progressUpdate', ({ answered, total }) => {
   document.getElementById('statusMsg').textContent = `⏳ ${answered} / ${total} أجابوا...`;
 });
-
 socket.on('phaseChange', () => {
   document.getElementById('statusMsg').textContent = '🧠 في انتظار اختيار السبب...';
 });
@@ -209,10 +147,7 @@ socket.on('revealSolo', ({ correct, explain, leaderboard }) => {
   document.getElementById('hostAnswerBox').classList.add('hidden'); 
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
-  box.innerHTML = `
-    <h3>✅ الإجابة الصحيحة: البطاقة ${correct}</h3>
-    <p class="explain">${explain}</p>
-    <div class="leaderboard">${leaderboard.map((p, i) => `<div class="lb-row ${i===0?'top':''}"><span class="rank">${i+1}</span><span class="name">${p.name}</span><span class="pts">${p.total}</span></div>`).join('')}</div>`;
+  box.innerHTML = `<h3>✅ الإجابة: ${correct}</h3><p class="explain">${explain}</p><div class="leaderboard">${leaderboard.map((p, i) => `<div class="lb-row ${i===0?'top':''}"><span class="rank">${i+1}</span><span class="name">${p.name}</span><span class="pts">${p.total}</span></div>`).join('')}</div>`;
   document.getElementById('nextBtn').classList.remove('hidden');
 });
 
@@ -221,24 +156,28 @@ socket.on('revealTeam', ({ correct, explain, results }) => {
   document.getElementById('hostAnswerBox').classList.add('hidden');
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
-  box.innerHTML = `
-    <h3>✅ الإجابة الصحيحة: البطاقة ${correct}</h3>
-    <p class="explain">${explain}</p>
-    <div class="results">${results.map(r => `<div class="res-team ${r.cardOk && r.reasonOk ? 'perfect' : r.cardOk ? 'partial' : 'wrong'}"><h4>${r.name}</h4><p>${r.members.join(' · ')}</p><p class="pts">+${r.pts}</p></div>`).join('')}</div>`;
+  // ✅ عرض النسب المئوية للفريق
+  box.innerHTML = `<h3>✅ الإجابة: ${correct}</h3><p class="explain">${explain}</p><div class="results">${results.map(r => `
+    <div class="res-team ${r.pts > 1 ? 'perfect' : r.pts > 0 ? 'partial' : 'wrong'}">
+      <h4>${r.name}</h4>
+      <p>${r.members.join(' · ')}</p>
+      <p style="font-size:0.85em; color:#cbd5e1;">البطاقة: ${r.cardRatio}% | السبب: ${r.reasonRatio}%</p>
+      <p class="pts">+${r.pts} (المجموع: ${r.total})</p>
+    </div>`).join('')}</div>`;
   document.getElementById('nextBtn').classList.remove('hidden');
 });
 
 document.getElementById('nextBtn').onclick = () => socket.emit('nextRound');
 
+// ✅ إصلاح 2: استقبال إشارة الاستعداد (لا يخفي المربع البنفسجي، فقط يخفي النتيجة)
 socket.on('readyNext', () => {
   document.getElementById('revealBox').classList.add('hidden');
-  document.getElementById('hostAnswerBox').classList.add('hidden');
   document.getElementById('nextBtn').classList.add('hidden');
+  // المربع البنفسجي سيظهر في الجولة القادمة عبر roundStartedHost
 });
 
-socket.on('gameEnded', ({ mode, finalScores }) => {
-  const area = document.getElementById('gameArea');
-  area.innerHTML = `<div class="end-screen"><h2>🏁 انتهت اللعبة!</h2><button class="btn" onclick="location.reload()">🔄 لعبة جديدة</button></div>`;
+socket.on('gameEnded', () => {
+  document.getElementById('gameArea').innerHTML = `<div class="end-screen"><h2>🏁 انتهت اللعبة!</h2><button class="btn" onclick="location.reload()">🔄 لعبة جديدة</button></div>`;
 });
 </script>
 </body>
