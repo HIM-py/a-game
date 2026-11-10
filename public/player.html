@@ -8,45 +8,65 @@
 </head>
 <body>
 <div class="container">
-  <header><h1>👥 انضم للعبة</h1></header>
+  <header>
+    <div style="display: flex; align-items: center; gap: 15px;">
+      <img src="https://cdn-icons-png.flaticon.com/512/921/921071.png" alt="لاعب" style="width: 40px; filter: drop-shadow(0 0 10px #8b5cf6);">
+      <div>
+        <h1 style="margin: 0;">انضم للعبة</h1>
+        <p style="margin: 0; color: #94a3b8; font-size: 0.9em;">صراع النشرات الأمنية</p>
+      </div>
+    </div>
+    <a href="index.html" style="text-decoration: none; color: #0ea5e9; font-weight: bold; background: rgba(14, 165, 233, 0.1); padding: 10px 20px; border-radius: 20px; border: 1px solid #0ea5e9;">العودة للرئيسية</a>
+  </header>
 
-  <div id="joinBox" class="panel">
-    <label>كود الغرفة</label>
-    <input id="codeInput" class="input" maxlength="4" placeholder="مثال: AB12" style="text-transform:uppercase">
-    <label>اسمك</label>
-    <input id="nameInput" class="input" placeholder="مثال: أحمد">
-    <button id="joinBtn" class="btn">دخول</button>
+  <div id="joinBox" class="panel" style="max-width: 500px; text-align: center;">
+    <img src="https://cdn-icons-png.flaticon.com/512/921/921071.png" alt="لاعب" style="width: 100px; margin-bottom: 20px; filter: drop-shadow(0 0 15px #8b5cf6);">
+    <h2 style="color: #fff; margin-bottom: 10px;">انضم للعبة</h2>
+    <p style="color: #94a3b8; margin-bottom: 30px;">أدخل بيانات الدخول للانضمام إلى اللعبة</p>
+    
+    <div style="text-align: right;">
+      <label>كود الغرفة</label>
+      <input id="codeInput" class="input" maxlength="4" placeholder="مثال: AB12" style="text-transform:uppercase; text-align: center; letter-spacing: 5px; font-weight: bold; font-size: 1.2em;">
+      
+      <label>اسمك</label>
+      <input id="nameInput" class="input" placeholder="مثال: أحمد">
+    </div>
+    
+    <button id="joinBtn" class="btn" style="width: 100%; margin-top: 10px;">دخول</button>
     <p id="errMsg" class="err"></p>
+    
+    <div style="margin-top: 20px; padding: 15px; background: rgba(14, 165, 233, 0.1); border-radius: 10px; border: 1px solid rgba(14, 165, 233, 0.3); color: #cbd5e1; font-size: 0.9em;">
+      يرجى الحصول على كود الغرفة من المشرف
+    </div>
   </div>
 
-  <div id="waitBox" class="panel hidden">
-    <h2>⏳ في الانتظار...</h2>
-    <p>أهلاً <strong id="myName"></strong></p>
-    <p id="teamInfo"></p>
+  <div id="waitBox" class="panel hidden" style="text-align: center;">
+    <h2 style="color: #0ea5e9; margin-bottom: 15px;">في الانتظار...</h2>
+    <p style="font-size: 1.2em; margin-bottom: 10px;">أهلاً <strong id="myName" style="color: #fff;"></strong></p>
+    <p id="teamInfo" style="color: #94a3b8;"></p>
   </div>
 
-  <div id="playBox" class="panel hidden">
-    <div style="text-align: center; margin-bottom: 15px; font-weight: bold; color: #fbbf24; font-size: 1.2em;">
-      🏆 نقاط هذه الجولة: <span id="roundPoints">-</span>
+  <div id="playBox" class="panel hidden" style="max-width: 900px;">
+    <div style="text-align: center; margin-bottom: 25px; font-weight: bold; color: #10b981; font-size: 1.3em; background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.3);">
+      نقاط هذه الجولة: <span id="roundPoints">-</span>
     </div>
     
     <div id="cardsView" class="cards"></div>
     <div id="reasonView" class="hidden">
-      <h3>🧠 لماذا اخترت هذه البطاقة؟</h3>
+      <h3 style="color: #fff; margin-bottom: 15px;">لماذا اخترت هذه البطاقة؟</h3>
       <div id="reasonOptions" class="reason-options"></div>
     </div>
     <div id="statusMsg" class="status"></div>
     <div id="revealBox" class="reveal hidden"></div>
   </div>
 
-  <div id="endBox" class="panel hidden">
-    <h2>🏁 انتهت اللعبة</h2>
+  <div id="endBox" class="panel hidden" style="text-align: center;">
+    <h2 style="color: #0ea5e9; margin-bottom: 20px;">انتهت اللعبة</h2>
     <div id="endContent"></div>
   </div>
 
-  <!-- الحقوق -->
-  <div style="text-align: center; margin-top: 30px; color: #64748b; font-size: 0.8em; padding-bottom: 20px;">
-    <p>صراع النشرات الأمنية - تصميم <strong>العقيلي HIM.PY</strong> &copy; 2026</p>
+  <div style="text-align: center; margin-top: 40px; color: #475569; font-size: 0.9em; padding-bottom: 20px;">
+    <p>صراع النشرات الأمنية - تصميم <strong style="color: #64748b;">محمد العقيلي HIM.PY</strong> &copy; 2026</p>
   </div>
 </div>
 
@@ -59,20 +79,20 @@ let myPlayerId = null;
 document.getElementById('joinBtn').onclick = () => {
   const code = document.getElementById('codeInput').value.trim().toUpperCase();
   const name = document.getElementById('nameInput').value.trim();
-  if (!code || !name) { document.getElementById('errMsg').textContent = '❌ أدخل الكود والاسم'; return; }
+  if (!code || !name) { document.getElementById('errMsg').textContent = 'أدخل الكود والاسم'; return; }
   
   socket.emit('joinRoom', { code, name }, (res) => {
-    if (res.error) { document.getElementById('errMsg').textContent = '❌ ' + res.error; return; }
+    if (res.error) { document.getElementById('errMsg').textContent = res.error; return; }
     myPlayerId = res.playerId;
     document.getElementById('joinBox').classList.add('hidden');
     document.getElementById('waitBox').classList.remove('hidden');
     document.getElementById('myName').textContent = res.name;
-    document.getElementById('teamInfo').textContent = '⏳ في انتظار المشرف...';
+    document.getElementById('teamInfo').textContent = 'في انتظار المشرف...';
   });
 };
 
 socket.on('youAreInTeam', ({ teamName }) => {
-  document.getElementById('teamInfo').innerHTML = `👥 فريقك: <strong>${teamName}</strong>`;
+  document.getElementById('teamInfo').innerHTML = `فريقك: <strong>${teamName}</strong>`;
 });
 
 socket.on('roundStarted', ({ round, total, data }) => {
@@ -81,7 +101,7 @@ socket.on('roundStarted', ({ round, total, data }) => {
   document.getElementById('playBox').classList.remove('hidden');
   document.getElementById('reasonView').classList.add('hidden');
   document.getElementById('revealBox').classList.add('hidden');
-  document.getElementById('statusMsg').textContent = `👉 الجولة ${round} / ${total} — اختر البطاقة`;
+  document.getElementById('statusMsg').textContent = `الجولة ${round} / ${total} — اختر البطاقة`;
   document.getElementById('roundPoints').textContent = data.points + " نقاط";
   renderCards(data);
 });
@@ -96,12 +116,12 @@ function renderCards(data) {
     div.id = 'pick' + k;
     div.onclick = () => pickCard(k);
     div.innerHTML = `
-      <div class="card-title">📄 البطاقة ${k}</div>
+      <div class="card-title">البطاقة ${k}</div>
       <div class="card-field"><span>المنتج</span><b>${d.product}</b></div>
       <div class="card-field"><span>الشدة</span><b class="severity">${d.severity}</b></div>
       <div class="card-field"><span>الحالة</span><b>${d.condition}</b></div>
       <div class="card-field"><span>الأثر</span><b>${d.impact}</b></div>
-      <div class="context-box">🏢 ${d.context}</div>`;
+      <div class="context-box">${d.context}</div>`;
     c.appendChild(div);
   });
 }
@@ -112,12 +132,12 @@ function pickCard(k) {
   document.getElementById('pickA').classList.toggle('picked', k === 'A');
   document.getElementById('pickB').classList.toggle('picked', k === 'B');
   socket.emit('pickCard', { card: k });
-  document.getElementById('statusMsg').textContent = '⏳ جاري التحقق...';
+  document.getElementById('statusMsg').textContent = 'جاري التحقق...';
 }
 
 socket.on('showReasons', ({ reasons }) => {
   document.getElementById('reasonView').classList.remove('hidden');
-  document.getElementById('statusMsg').textContent = '🧠 اختر السبب';
+  document.getElementById('statusMsg').textContent = 'اختر السبب';
   const box = document.getElementById('reasonOptions');
   box.innerHTML = '';
   reasons.forEach((r, i) => {
@@ -129,7 +149,7 @@ socket.on('showReasons', ({ reasons }) => {
       b.classList.add('selected');
       socket.emit('pickReason', { idx: i });
       document.getElementById('reasonView').classList.add('hidden');
-      document.getElementById('statusMsg').textContent = '✅ تم اختيار السبب — في انتظار المشرف...';
+      document.getElementById('statusMsg').textContent = 'تم اختيار السبب — في انتظار المشرف...';
     };
     box.appendChild(b);
   });
@@ -137,16 +157,16 @@ socket.on('showReasons', ({ reasons }) => {
 
 socket.on('wrongAnswer', ({ correct, explain }) => {
   document.getElementById('reasonView').classList.add('hidden');
-  document.getElementById('statusMsg').textContent = '❌ إجابة خاطئة!';
+  document.getElementById('statusMsg').textContent = 'إجابة خاطئة!';
   
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
   box.style.display = 'block';
   box.innerHTML = `
-    <h3 style="color: #ef4444;">❌ إجابة خاطئة!</h3>
-    <p>الإجابة الصحيحة كانت: <strong>البطاقة ${correct}</strong></p>
-    <p class="explain">${explain}</p>
-    <p class="wait-msg">في انتظار المشرف للجولة التالية...</p>
+    <h3 style="color: #ef4444; text-align:center;">إجابة خاطئة!</h3>
+    <p style="text-align:center;">الإجابة الصحيحة كانت: <strong style="color:#10b981;">البطاقة ${correct}</strong></p>
+    <p class="explain" style="text-align:center; margin-top:10px;">${explain}</p>
+    <p style="text-align:center; color:#94a3b8; font-style:italic; margin-top:15px;">في انتظار المشرف للجولة التالية...</p>
   `;
 });
 
@@ -154,7 +174,7 @@ socket.on('prepareNextRound', () => {
   const box = document.getElementById('revealBox');
   box.classList.add('hidden');
   box.style.display = 'none'; 
-  document.getElementById('statusMsg').textContent = '⏳ جاري تجهيز الجولة القادمة...';
+  document.getElementById('statusMsg').textContent = 'جاري تجهيز الجولة القادمة...';
 });
 
 socket.on('revealSoloPlayer', ({ correct, explain, mine, points }) => {
@@ -162,7 +182,7 @@ socket.on('revealSoloPlayer', ({ correct, explain, mine, points }) => {
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
   box.style.display = 'block'; 
-  box.innerHTML = `<h3>✅ الإجابة: ${correct} (${points} نقاط)</h3><p class="explain">${explain}</p><div class="res-team ${mine.cardOk && mine.reasonOk ? 'perfect' : mine.cardOk ? 'partial' : 'wrong'}"><h4>نتيجتك</h4><p>${mine.cardOk?'✅ البطاقة':'❌ البطاقة'} | ${mine.reasonOk?'✅ السبب':'❌ السبب'}</p><p class="pts">+${mine.pts}</p></div>`;
+  box.innerHTML = `<h3 style="color:#10b981; text-align:center;">الإجابة: ${correct} (${points} نقاط)</h3><p class="explain" style="text-align:center; margin-bottom:15px;">${explain}</p><div class="res-team ${mine.cardOk && mine.reasonOk ? 'perfect' : mine.cardOk ? 'partial' : 'wrong'}"><h4>نتيجتك</h4><p>${mine.cardOk?'البطاقة صحيحة':'البطاقة خاطئة'} | ${mine.reasonOk?'السبب صحيح':'السبب خاطئ'}</p><p class="pts">+${mine.pts}</p></div>`;
 });
 
 socket.on('revealTeamPlayer', ({ correct, explain, mine, points }) => {
@@ -170,7 +190,7 @@ socket.on('revealTeamPlayer', ({ correct, explain, mine, points }) => {
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
   box.style.display = 'block'; 
-  box.innerHTML = `<h3>✅ الإجابة: ${correct} (${points} نقاط)</h3><p class="explain">${explain}</p><div class="res-team ${mine.pts > (points/2) ? 'perfect' : mine.pts > 0 ? 'partial' : 'wrong'}"><h4>نتيجة فريقك</h4><p>نسبة البطاقة: ${mine.cardRatio}% | نسبة السبب: ${mine.reasonRatio}%</p><p class="pts">+${mine.pts} (المجموع: ${mine.total})</p></div>`;
+  box.innerHTML = `<h3 style="color:#10b981; text-align:center;">الإجابة: ${correct} (${points} نقاط)</h3><p class="explain" style="text-align:center; margin-bottom:15px;">${explain}</p><div class="res-team ${mine.pts > (points/2) ? 'perfect' : mine.pts > 0 ? 'partial' : 'wrong'}"><h4>نتيجة فريقك</h4><p>نسبة البطاقة: ${mine.cardRatio}% | نسبة السبب: ${mine.reasonRatio}%</p><p class="pts">+${mine.pts} (المجموع: ${mine.total})</p></div>`;
 });
 
 socket.on('gameEnded', ({ mode, finalScores }) => {
