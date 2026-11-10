@@ -10,7 +10,11 @@
 <div class="container">
   <header>
     <div style="display: flex; align-items: center; gap: 15px;">
-      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="مشرف" style="width: 40px; filter: drop-shadow(0 0 10px #0ea5e9);">
+      <!-- أيقونة المشرف المدمجة (SVG) -->
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px #0ea5e9);">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
       <div>
         <h1 style="margin: 0;">لوحة المشرف</h1>
         <p style="margin: 0; color: #94a3b8; font-size: 0.9em;">صراع النشرات الأمنية</p>
@@ -22,13 +26,24 @@
   <div id="setup" class="panel" style="text-align: center;">
     <h2 style="margin-bottom: 30px; color: #fff; font-size: 1.8em;">اختر نمط اللعب</h2>
     <div class="mode-pick">
+      <!-- نمط جماعي: أيقونة مدمجة (عدة أشخاص) -->
       <button class="mode-btn" data-mode="team">
-        <img src="https://cdn-icons-png.flaticon.com/512/921/921071.png" alt="جماعي" style="width: 50px; margin-bottom: 10px;">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 15px; filter: drop-shadow(0 0 10px #0ea5e9);">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
         جماعي
         <span style="font-size: 0.8em; font-weight: normal; color: #94a3b8;">لعب مع فريق من اللاعبين</span>
       </button>
+      
+      <!-- نمط فردي: أيقونة مدمجة (شخص واحد) -->
       <button class="mode-btn" data-mode="solo">
-        <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="فردي" style="width: 50px; margin-bottom: 10px;">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 15px; filter: drop-shadow(0 0 10px #8b5cf6);">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
         فردي
         <span style="font-size: 0.8em; font-weight: normal; color: #94a3b8;">لعب بمفردك</span>
       </button>
@@ -75,7 +90,7 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-console.log("🔥 شاشة المشرف V9");
+console.log("🔥 شاشة المشرف (النسخة النهائية مع SVG)");
 const socket = io();
 let currentMode = null;
 
