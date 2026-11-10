@@ -16,10 +16,7 @@
         <p style="margin: 0; color: #94a3b8; font-size: 0.9em;" data-i18n="gameTitle">صراع النشرات الأمنية</p>
       </div>
     </div>
-    <div style="display: flex; gap: 10px;">
-      <button onclick="toggleLanguage()" style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9; border: 1px solid #0ea5e9; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-family: inherit; font-weight: bold;" id="langBtn">🌐 English</button>
-      <a href="index.html" style="text-decoration: none; color: #0ea5e9; font-weight: bold; background: rgba(14, 165, 233, 0.1); padding: 10px 20px; border-radius: 20px; border: 1px solid #0ea5e9;" data-i18n="backHome">العودة للرئيسية</a>
-    </div>
+    <a href="index.html" style="text-decoration: none; color: #0ea5e9; font-weight: bold; background: rgba(14, 165, 233, 0.1); padding: 10px 20px; border-radius: 20px; border: 1px solid #0ea5e9;" data-i18n="backHome">العودة للرئيسية</a>
   </header>
 
   <div id="joinBox" class="panel" style="max-width: 500px; text-align: center;">
@@ -27,7 +24,7 @@
     <h2 style="color: #fff; margin-bottom: 10px;" data-i18n="joinTitle">انضم للعبة</h2>
     <p style="color: #94a3b8; margin-bottom: 30px;" data-i18n="joinDesc">أدخل بيانات الدخول للانضمام إلى اللعبة</p>
     
-    <div style="text-align: right;">
+    <div style="text-align: right;" id="formInputs">
       <label data-i18n="roomCode">كود الغرفة</label>
       <input id="codeInput" class="input" maxlength="4" placeholder="AB12" style="text-transform:uppercase; text-align: center; letter-spacing: 5px; font-weight: bold; font-size: 1.2em;">
       
@@ -82,8 +79,7 @@ const translations = {
     yourName: "اسمك", joinBtn: "دخول", note: "يرجى الحصول على كود الغرفة من المشرف",
     waiting: "في الانتظار...", welcome: "أهلاً", roundPoints: "نقاط هذه الجولة:",
     whyChoose: "لماذا اخترت هذه البطاقة؟", gameOver: "انتهت اللعبة",
-    copyright: "صراع النشرات الأمنية - تصميم محمد العقيلي HIM.PY © 2026",
-    langBtn: "🌐 English", pageTitle: "انضم للعبة"
+    copyright: "صراع النشرات الأمنية - تصميم محمد العقيلي HIM.PY © 2026"
   },
   en: {
     joinTitle: "Join Game", gameTitle: "Cyber Security Duel", backHome: "Back to Home",
@@ -91,17 +87,9 @@ const translations = {
     yourName: "Your Name", joinBtn: "Join", note: "Please get the room code from the host",
     waiting: "Waiting...", welcome: "Welcome", roundPoints: "Round Points:",
     whyChoose: "Why did you choose this card?", gameOver: "Game Over",
-    copyright: "Cyber Security Duel - Designed by Mohammed Al-Oqaili HIM.PY © 2026",
-    langBtn: "🌐 عربي", pageTitle: "Join Game"
+    copyright: "Cyber Security Duel - Designed by Mohammed Al-Oqaili HIM.PY © 2026"
   }
 };
-
-function toggleLanguage() {
-  const currentLang = localStorage.getItem('lang') || 'ar';
-  const newLang = currentLang === 'ar' ? 'en' : 'ar';
-  localStorage.setItem('lang', newLang);
-  applyLanguage(newLang);
-}
 
 function applyLanguage(lang) {
   document.documentElement.lang = lang;
@@ -110,13 +98,14 @@ function applyLanguage(lang) {
     const key = el.getAttribute('data-i18n');
     if (translations[lang][key]) el.innerHTML = translations[lang][key];
   });
-  document.getElementById('langBtn').innerHTML = translations[lang].langBtn;
-  document.getElementById('pageTitle').innerText = translations[lang].pageTitle;
+  document.getElementById('formInputs').style.textAlign = lang === 'ar' ? 'right' : 'left';
 }
 
-window.onload = () => { applyLanguage(localStorage.getItem('lang') || 'ar'); };
+window.onload = () => {
+  const savedLang = localStorage.getItem('lang') || 'ar';
+  applyLanguage(savedLang);
+};
 
-// Socket logic (same as before)
 const socket = io();
 let myPick = null;
 let myPlayerId = null;
@@ -151,11 +140,10 @@ socket.on('roundStarted', ({ round, total, data }) => {
   document.getElementById('revealBox').classList.add('hidden');
   document.getElementById('statusMsg').textContent = `${lang === 'ar' ? 'الجولة' : 'Round'} ${round} / ${total} — ${lang === 'ar' ? 'اختر البطاقة' : 'Choose a card'}`;
   document.getElementById('roundPoints').textContent = data.points + (lang === 'ar' ? " نقاط" : " pts");
-  renderCards(data);
+  renderCards(data, lang);
 });
 
-function renderCards(data) {
-  const lang = localStorage.getItem('lang') || 'ar';
+function renderCards(data, lang) {
   const c = document.getElementById('cardsView');
   c.innerHTML = '';
   ['A','B'].forEach(k => {
