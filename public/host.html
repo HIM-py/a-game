@@ -39,7 +39,7 @@
     <div class="scoreboard" id="scoreboard"></div>
     
     <!-- المربع البنفسجي -->
-    <div id="hostAnswerBox" class="hidden"></div>
+    <div id="hostAnswerBox" style="display:none; background:rgba(139,92,246,0.2); border:2px solid #a78bfa; padding:15px; border-radius:10px; margin-bottom:15px; color:#e9d5ff; font-size:1.05em; text-align:right;"></div>
 
     <div id="cardsView" class="cards"></div>
     <div id="statusMsg" class="status"></div>
@@ -50,7 +50,7 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-console.log("🔥 شاشة المعلم V4");
+console.log("🔥 شاشة المعلم V5");
 const socket = io();
 let currentMode = null;
 
@@ -101,6 +101,7 @@ socket.on('distributed', (room) => {
 document.getElementById('randomBtn').onclick = () => socket.emit('distributeRandom');
 document.getElementById('startBtn').onclick = () => socket.emit('startRound');
 
+// ✅ إجبار المربع البنفسجي على الظهور
 socket.on('roundStartedHost', ({ round, total, data }) => {
   document.getElementById('lobby').classList.add('hidden');
   document.getElementById('gameArea').classList.remove('hidden');
@@ -108,8 +109,7 @@ socket.on('roundStartedHost', ({ round, total, data }) => {
   document.getElementById('revealBox').classList.add('hidden');
   
   const box = document.getElementById('hostAnswerBox');
-  box.classList.remove('hidden');
-  box.style.cssText = 'background:rgba(139,92,246,0.2); border:2px solid #a78bfa; padding:15px; border-radius:10px; margin-bottom:15px; color:#e9d5ff; font-size:1.05em; text-align:right;';
+  box.style.display = 'block'; // إجبار الظهور
   box.innerHTML = `
     <strong style="color:#fbbf24; font-size:1.1em;">🔒 شاشة المعلم:</strong><br><br>
     <strong>الإجابة الصحيحة:</strong> البطاقة ${data.correct} <br>
@@ -147,7 +147,7 @@ socket.on('phaseChange', () => {
 
 socket.on('revealSolo', ({ correct, explain, leaderboard }) => {
   document.getElementById('statusMsg').textContent = '';
-  document.getElementById('hostAnswerBox').classList.add('hidden'); 
+  document.getElementById('hostAnswerBox').style.display = 'none'; // إخفاء الحل
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
   box.innerHTML = `<h3>✅ الإجابة: ${correct}</h3><p class="explain">${explain}</p><div class="leaderboard">${leaderboard.map((p, i) => `<div class="lb-row ${i===0?'top':''}"><span class="rank">${i+1}</span><span class="name">${p.name}</span><span class="pts">${p.total}</span></div>`).join('')}</div>`;
@@ -156,7 +156,7 @@ socket.on('revealSolo', ({ correct, explain, leaderboard }) => {
 
 socket.on('revealTeam', ({ correct, explain, results }) => {
   document.getElementById('statusMsg').textContent = '';
-  document.getElementById('hostAnswerBox').classList.add('hidden');
+  document.getElementById('hostAnswerBox').style.display = 'none'; // إخفاء الحل
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
   box.innerHTML = `<h3>✅ الإجابة: ${correct}</h3><p class="explain">${explain}</p><div class="results">${results.map(r => `
@@ -174,11 +174,11 @@ document.getElementById('nextBtn').onclick = () => {
   socket.emit('nextRound');
 };
 
-// هذه الدالة تعيد إخفاء النتيجة فقط، ولا تلمس المربع البنفسجي
 socket.on('readyNext', () => {
   console.log("المعلم استعد للجولة القادمة");
   document.getElementById('revealBox').classList.add('hidden');
   document.getElementById('nextBtn').classList.add('hidden');
+  // لا نلمس المربع البنفسجي هنا، سيظهر في الجولة القادمة
 });
 
 socket.on('gameEnded', () => {
