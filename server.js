@@ -9,6 +9,9 @@ const io = new Server(server, { cors: { origin: "*", methods: ["GET", "POST"] } 
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ============================================================
+// بنك الأسئلة (100 سؤال)
+// ============================================================
 const PRODUCTS = ["LibraryApp", "PayPortal", "PrintServer", "VPN Gateway", "ChatApp", "StudentPortal", "Antivirus", "Backup Server", "Email Filter", "File Share", "WebServer", "HR Portal", "Router Firmware", "Cloud Storage", "Dev Tools", "Public API", "Backup Tape", "Mobile App", "Old CRM", "Wi-Fi Guest"];
 const CONDITIONS = ["تسجيل دخول الزوار مُفعّل", "الجلسة لا تنتهي بعد الخروج", "ثغرة في خدمة الطباعة", "ثغرة في المصادقة الثنائية", "رسائل غير مشفرة", "ثغرة في رفع الملفات", "ثغرة في محرك الفحص", "ثغرة في استعادة النسخ", "تجاوز فلتر البريد", "صلاحيات مفتوحة", "ثغرة تنفيذ أوامر عن بُعد", "تسريب بيانات الموظفين", "كلمة مرور افتراضية", "روابط مشاركة دائمة"];
 const IMPACTS = ["وصول غير مصرّح للبيانات", "سرقة جلسات العملاء", "تسريب مستندات داخلية", "دخول غير مصرّح للشبكة", "كشف محادثات الموظفين", "رفع ملفات خبيثة", "تجاوز الفحص الأمني", "فشل استعادة البيانات", "وصول تصيّد للموظفين", "وصول لملفات حساسة", "اختراق كامل للخادم", "كشف رواتب وبيانات شخصية"];
@@ -28,17 +31,20 @@ function generate100Rounds() {
     let realSev, fakeSev;
     let realContext, fakeContext;
 
-    if (pattern < 0.5) {
+    if (pattern < 0.4) {
+      // 40%: السياق يغلب الشدة (الخطر الحقيقي هو الأقل شدة)
       realSev = (Math.random() * 2 + 4).toFixed(1);
       fakeSev = (Math.random() * 2 + 8).toFixed(1);
       realContext = getRandom(CONTEXT_HIGH);
       fakeContext = getRandom(CONTEXT_LOW);
     } else if (pattern < 0.8) {
+      // 40%: الشدة والسياق معاً (الخطر الحقيقي هو الأعلى شدة)
       realSev = (Math.random() * 2 + 8).toFixed(1); 
       fakeSev = (Math.random() * 2 + 4).toFixed(1); 
       realContext = getRandom(CONTEXT_HIGH);
       fakeContext = getRandom(CONTEXT_LOW);
     } else {
+      // 20%: الشدتان متقاربتان جداً (السياق هو الفيصل)
       const base = Math.random() * 2 + 7; 
       realSev = (base + 0.1).toFixed(1);
       fakeSev = base.toFixed(1);
@@ -64,24 +70,58 @@ function generate100Rounds() {
     const correctLetter = dangerInA ? "A" : "B";
     const wrongLetter = dangerInA ? "B" : "A";
     const realCard = dangerInA ? cardA : cardB;
+    const fakeCard = dangerInA ? cardB : cardA;
 
+    // ✅ الأسباب المطورة (Optimized Reasons)
     const reasonTemplates = [
-      { text: `البطاقة ${correctLetter}: لأنها مُعرّضة للجمهور/الإنترنت، بينما ${wrongLetter} داخلية أو محدودة`, correct: true },
-      { text: `البطاقة ${correctLetter}: لأنها بلا أي ضوابط حماية، بينما ${wrongLetter} لديها إجراءات وقائية`, correct: true },
-      { text: `البطاقة ${correctLetter}: لأن الأثر المترتب عليها كارثي (${realCard.impact})، بينما ${wrongLetter} أثره محدود`, correct: true },
-      { text: `البطاقة ${wrongLetter}: لأن درجة شدتها أعلى، والرقم الأكبر يفوز دائماً`, correct: false },
-      { text: `البطاقة ${wrongLetter}: لأنها الأحدث في الإصدار، والأحدث دائماً أخطر`, correct: false },
-      { text: "كلتاهما لهما نفس الأولوية تماماً، لا فرق بينهما", correct: false },
-      { text: "لا يمكن تحديد الأولوية إلا بمعرفة من سيهجم ومتى", correct: false }
+      // 1. السبب الصحيح الأول (يجمع بين التعرض وغياب الضوابط - وهو الأقوى دائماً)
+      { 
+        text: `البطاقة ${correctLetter}: لأنها مُعرّضة للإنترنت/الجمهور وتفتقر تماماً لضوابط الحماية، بينما ${wrongLetter} محمية أو محدودة الوصول.`, 
+        correct: true 
+      },
+      // 2. السبب الصحيح الثاني (يركز على الأثر)
+      { 
+        text: `البطاقة ${correctLetter}: لأن الأثر المترتب عليها كارثي (${realCard.impact})، بينما ${wrongLetter} أثره محدود ولا يؤثر على البيانات الحساسة.`, 
+        correct: true 
+      },
+      // 3. سبب خاطئ (فخ الشدة العالية)
+      { 
+        text: `البطاقة ${wrongLetter}: لأن درجة شدتها (${fakeCard.severity}) هي الأعلى، وفي الأمن السيبراني الرقم الأكبر هو الأخطر دائماً.`, 
+        correct: false 
+      },
+      // 4. سبب خاطئ (فخ الإصدار)
+      { 
+        text: `البطاقة ${wrongLetter}: لأنها النسخة الأحدث (${fakeCard.product})، والنسخ الجديدة تكون أكثر عرضة للثغرات المكتشفة حديثاً.`, 
+        correct: false 
+      },
+      // 5. سبب خاطئ (فخ تجاهل السياق)
+      { 
+        text: `البطاقة ${wrongLetter}: لأنها تعمل في بيئة داخلية معقدة، وهذا يجعل من الصعب اكتشاف الاختراقات فيها.`, 
+        correct: false 
+      },
+      // 6. سبب خاطئ (فخ التعميم)
+      { 
+        text: "كلتاهما لهما نفس الأولوية، لأن الشدة الفنية (الرقم) هي المعيار الوحيد الذي يجب الاعتماد عليه.", 
+        correct: false 
+      }
     ];
 
-    const selectedReasons = shuffleArray(reasonTemplates).slice(0, 4);
-    if (!selectedReasons.some(r => r.correct)) selectedReasons[0] = reasonTemplates[0];
+    // نختار سببين صحيحين + سببين خاطئين عشوائياً
+    const correctReasons = reasonTemplates.filter(r => r.correct);
+    const wrongReasons = reasonTemplates.filter(r => !r.correct);
+    
+    // خلط الأسباب واختيار 4 منها
+    const selectedReasons = shuffleArray([
+      getRandom(correctReasons),
+      getRandom(wrongReasons),
+      getRandom(wrongReasons),
+      getRandom(wrongReasons)
+    ]);
 
     rounds.push({ 
       A: cardA, B: cardB, correct: correctLetter, 
-      reasons: shuffleArray(selectedReasons), 
-      explain: `البطاقة ${correctLetter} هي الخطر الحقيقي. السياق المحلي (${realCard.context}) يجعلها أولوية قصوى.` 
+      reasons: selectedReasons, 
+      explain: `البطاقة ${correctLetter} هي الخطر الحقيقي. السياق المحلي (${realCard.context}) يجعلها أولوية قصوى رغم أن شدتها ${realCard.severity}، بينما البطاقة الأخرى محمية.` 
     });
   }
   return rounds;
