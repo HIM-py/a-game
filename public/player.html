@@ -173,7 +173,7 @@ function pickCard(k) {
   document.getElementById('statusMsg').textContent = lang === 'ar' ? 'جاري التحقق...' : 'Checking...';
 }
 
-// ✅ استقبال الأسباب باللغتين واختيار المناسب
+// ✅ استقبال الأسباب باللغتين بناءً على اختيار اللغة
 socket.on('showReasons', ({ reasons_ar, reasons_en }) => {
   const lang = localStorage.getItem('lang') || 'ar';
   const reasons = lang === 'ar' ? reasons_ar : reasons_en;
