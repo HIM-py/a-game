@@ -38,7 +38,7 @@
   <div id="gameArea" class="panel hidden">
     <div class="scoreboard" id="scoreboard"></div>
     
-    <!-- ✅ المربع البنفسجي (شاشة المعلم) -->
+    <!-- ✅ المربع البنفسجي -->
     <div id="hostAnswerBox" class="hidden"></div>
 
     <div id="cardsView" class="cards"></div>
@@ -100,7 +100,7 @@ socket.on('distributed', (room) => {
 document.getElementById('randomBtn').onclick = () => socket.emit('distributeRandom');
 document.getElementById('startBtn').onclick = () => socket.emit('startRound');
 
-// ✅ إصلاح: إعادة إظهار الحل في كل جولة
+// ✅ إظهار الحل
 socket.on('roundStartedHost', ({ round, total, data }) => {
   document.getElementById('lobby').classList.add('hidden');
   document.getElementById('gameArea').classList.remove('hidden');
@@ -159,7 +159,6 @@ socket.on('revealTeam', ({ correct, explain, results }) => {
   document.getElementById('hostAnswerBox').classList.add('hidden');
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
-  // ✅ عرض النسب المئوية للفريق
   box.innerHTML = `<h3>✅ الإجابة: ${correct}</h3><p class="explain">${explain}</p><div class="results">${results.map(r => `
     <div class="res-team ${r.pts > 1 ? 'perfect' : r.pts > 0 ? 'partial' : 'wrong'}">
       <h4>${r.name}</h4>
@@ -172,7 +171,7 @@ socket.on('revealTeam', ({ correct, explain, results }) => {
 
 document.getElementById('nextBtn').onclick = () => socket.emit('nextRound');
 
-// ✅ إصلاح 2: استقبال إشارة الاستعداد (لا يخفي المربع البنفسجي، فقط يخفي النتيجة)
+// ✅ استقبال إشارة الاستعداد
 socket.on('readyNext', () => {
   document.getElementById('revealBox').classList.add('hidden');
   document.getElementById('nextBtn').classList.add('hidden');
