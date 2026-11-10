@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" id="htmlRoot">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة المشرف</title>
+<title id="pageTitle">لوحة المشرف</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,15 +12,18 @@
     <div style="display: flex; align-items: center; gap: 15px;">
       <img src="/img/host.png" alt="مشرف" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%; border: 2px solid #0ea5e9; box-shadow: 0 0 10px rgba(14, 165, 233, 0.7); background-color: #060b19;">
       <div>
-        <h1 style="margin: 0;">لوحة المشرف</h1>
-        <p style="margin: 0; color: #94a3b8; font-size: 0.9em;">صراع النشرات الأمنية</p>
+        <h1 style="margin: 0;" data-i18n="hostPanel">لوحة المشرف</h1>
+        <p style="margin: 0; color: #94a3b8; font-size: 0.9em;" data-i18n="gameTitle">صراع النشرات الأمنية</p>
       </div>
     </div>
-    <a href="index.html" style="text-decoration: none; color: #0ea5e9; font-weight: bold; background: rgba(14, 165, 233, 0.1); padding: 10px 20px; border-radius: 20px; border: 1px solid #0ea5e9;">العودة للرئيسية</a>
+    <div style="display: flex; gap: 10px;">
+      <button onclick="toggleLanguage()" style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9; border: 1px solid #0ea5e9; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-family: inherit; font-weight: bold;" id="langBtn">🌐 English</button>
+      <a href="index.html" style="text-decoration: none; color: #0ea5e9; font-weight: bold; background: rgba(14, 165, 233, 0.1); padding: 10px 20px; border-radius: 20px; border: 1px solid #0ea5e9;" data-i18n="backHome">العودة للرئيسية</a>
+    </div>
   </header>
 
   <div id="setup" class="panel" style="text-align: center;">
-    <h2 style="margin-bottom: 30px; color: #fff; font-size: 1.8em;">اختر نمط اللعب</h2>
+    <h2 style="margin-bottom: 30px; color: #fff; font-size: 1.8em;" data-i18n="chooseMode">اختر نمط اللعب</h2>
     <div class="mode-pick">
       <button class="mode-btn" data-mode="team">
         <svg width="70" height="70" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 15px; filter: drop-shadow(0 0 10px #0ea5e9);">
@@ -29,8 +32,8 @@
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
           <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
         </svg>
-        جماعي
-        <span style="font-size: 0.8em; font-weight: normal; color: #94a3b8;">لعب مع فريق من اللاعبين</span>
+        <span data-i18n="teamMode">جماعي</span>
+        <span style="font-size: 0.8em; font-weight: normal; color: #94a3b8;" data-i18n="teamModeDesc">لعب مع فريق من اللاعبين</span>
       </button>
       
       <button class="mode-btn" data-mode="solo">
@@ -38,34 +41,33 @@
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
-        فردي
-        <span style="font-size: 0.8em; font-weight: normal; color: #94a3b8;">لعب بمفردك</span>
+        <span data-i18n="soloMode">فردي</span>
+        <span style="font-size: 0.8em; font-weight: normal; color: #94a3b8;" data-i18n="soloModeDesc">لعب بمفردك</span>
       </button>
     </div>
-    <button id="createBtn" class="btn" disabled style="width: 100%; max-width: 400px;">+ إنشاء غرفة</button>
+    <button id="createBtn" class="btn" disabled style="width: 100%; max-width: 400px;" data-i18n="createRoom">+ إنشاء غرفة</button>
   </div>
 
   <div id="lobby" class="panel hidden">
     <div class="room-code-box">
-      <p>كود الغرفة</p>
+      <p data-i18n="roomCode">كود الغرفة</p>
       <div id="roomCode" class="code">----</div>
       <p class="hint" id="modeHint" style="margin-top: 10px;"></p>
     </div>
-    <div id="playersList" class="players-list" style="text-align: center;"><h4>اللاعبون (0):</h4></div>
+    <div id="playersList" class="players-list" style="text-align: center;"><h4 data-i18n="players">اللاعبون (0):</h4></div>
     <div id="teamsView" class="teams-view hidden"></div>
     
     <div class="actions" style="text-align: center; margin-top: 30px;">
       <div id="distOptions" class="hidden" style="margin-bottom: 20px;">
-        <button id="randomBtn" class="btn" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">توزيع عشوائي (فريقين)</button>
+        <button id="randomBtn" class="btn" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);" data-i18n="randomDist">توزيع عشوائي (فريقين)</button>
       </div>
-      <button id="startBtn" class="btn next-btn hidden" style="width: 100%; max-width: 400px;">ابدأ اللعبة</button>
+      <button id="startBtn" class="btn next-btn hidden" style="width: 100%; max-width: 400px;" data-i18n="startGame">ابدأ اللعبة</button>
     </div>
   </div>
 
   <div id="gameArea" class="panel hidden">
     <div class="scoreboard" id="scoreboard" style="margin-bottom: 20px; display: flex; justify-content: center; gap: 20px;"></div>
     
-    <!-- ✅ عداد الوقت -->
     <div style="text-align: center; margin-bottom: 15px; font-size: 1.5em; font-weight: bold; color: #ef4444;" id="timerDisplay">00:35</div>
     
     <div id="hostAnswerBox" style="display:none; background:rgba(139,92,246,0.15); border:2px solid #8b5cf6; padding:20px; border-radius:15px; margin-bottom:20px; color:#e2e8f0; font-size:1.05em; text-align:right; box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);"></div>
@@ -75,19 +77,60 @@
     <div id="revealBox" class="reveal hidden"></div>
     
     <div style="text-align: center; margin-top: 30px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
-      <button id="forceEndBtn" class="btn hidden" style="background: linear-gradient(135deg, #ef4444, #b91c1c); box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);">إنهاء الجولة الآن</button>
-      <button id="nextBtn" class="btn next-btn hidden">الجولة التالية</button>
+      <button id="forceEndBtn" class="btn hidden" style="background: linear-gradient(135deg, #ef4444, #b91c1c); box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);" data-i18n="forceEnd">إنهاء الجولة الآن</button>
+      <button id="nextBtn" class="btn next-btn hidden" data-i18n="nextRound">الجولة التالية</button>
     </div>
   </div>
 
   <div style="text-align: center; margin-top: 40px; color: #475569; font-size: 0.9em; padding-bottom: 20px;">
-    <p>صراع النشرات الأمنية - تصميم <strong style="color: #64748b;">محمد العقيلي HIM.PY</strong> &copy; 2026</p>
+    <p data-i18n="copyright">صراع النشرات الأمنية - تصميم محمد العقيلي HIM.PY &copy; 2026</p>
   </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-console.log("🔥 شاشة المشرف V12 (مع المؤقت)");
+const translations = {
+  ar: {
+    hostPanel: "لوحة المشرف", gameTitle: "صراع النشرات الأمنية", backHome: "العودة للرئيسية",
+    chooseMode: "اختر نمط اللعب", teamMode: "جماعي", teamModeDesc: "لعب مع فريق من اللاعبين",
+    soloMode: "فردي", soloModeDesc: "لعب بمفردك", createRoom: "+ إنشاء غرفة",
+    roomCode: "كود الغرفة", players: "اللاعبون (0):", randomDist: "توزيع عشوائي (فريقين)",
+    startGame: "ابدأ اللعبة", forceEnd: "إنهاء الجولة الآن", nextRound: "الجولة التالية",
+    copyright: "صراع النشرات الأمنية - تصميم محمد العقيلي HIM.PY © 2026", langBtn: "🌐 English",
+    pageTitle: "لوحة المشرف"
+  },
+  en: {
+    hostPanel: "Host Panel", gameTitle: "Cyber Security Duel", backHome: "Back to Home",
+    chooseMode: "Choose Game Mode", teamMode: "Team", teamModeDesc: "Play with a team of players",
+    soloMode: "Solo", soloModeDesc: "Play by yourself", createRoom: "+ Create Room",
+    roomCode: "Room Code", players: "Players (0):", randomDist: "Random Distribution (2 Teams)",
+    startGame: "Start Game", forceEnd: "End Round Now", nextRound: "Next Round",
+    copyright: "Cyber Security Duel - Designed by Mohammed Al-Oqaili HIM.PY © 2026", langBtn: "🌐 عربي",
+    pageTitle: "Host Panel"
+  }
+};
+
+function toggleLanguage() {
+  const currentLang = localStorage.getItem('lang') || 'ar';
+  const newLang = currentLang === 'ar' ? 'en' : 'ar';
+  localStorage.setItem('lang', newLang);
+  applyLanguage(newLang);
+}
+
+function applyLanguage(lang) {
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (translations[lang][key]) el.innerHTML = translations[lang][key];
+  });
+  document.getElementById('langBtn').innerHTML = translations[lang].langBtn;
+  document.getElementById('pageTitle').innerText = translations[lang].pageTitle;
+}
+
+window.onload = () => { applyLanguage(localStorage.getItem('lang') || 'ar'); };
+
+// باقي كود السوكيت
 const socket = io();
 let currentMode = null;
 let timerInterval = null;
@@ -98,7 +141,6 @@ function startTimer() {
   timeLeft = 35;
   document.getElementById('timerDisplay').textContent = `00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`;
   document.getElementById('timerDisplay').style.display = 'block';
-
   timerInterval = setInterval(() => {
     timeLeft--;
     if (timeLeft <= 0) {
@@ -127,15 +169,14 @@ document.querySelectorAll('.mode-btn').forEach(b => {
 document.getElementById('createBtn').onclick = () => {
   socket.emit('createRoom', { mode: currentMode }, ({ code, mode }) => {
     document.getElementById('roomCode').textContent = code;
-    document.getElementById('modeHint').textContent = mode === 'solo' ? 'نمط فردي' : 'نمط جماعي';
+    document.getElementById('modeHint').textContent = mode === 'solo' ? translations[localStorage.getItem('lang')||'ar'].soloMode : translations[localStorage.getItem('lang')||'ar'].teamMode;
     document.getElementById('setup').classList.add('hidden');
     document.getElementById('lobby').classList.remove('hidden');
   });
 };
 
 socket.on('roomUpdate', (room) => {
-  document.getElementById('playersList').innerHTML = `<h4>اللاعبون (${room.players.length}):</h4>` + room.players.map(p => `<span class="player-chip">${p.name}</span>`).join('');
-
+  document.getElementById('playersList').innerHTML = `<h4>${translations[localStorage.getItem('lang')||'ar'].players.split('(')[0]}(${room.players.length}):</h4>` + room.players.map(p => `<span class="player-chip">${p.name}</span>`).join('');
   if (room.mode === 'solo') {
     document.getElementById('distOptions').classList.add('hidden');
     document.getElementById('teamsView').classList.add('hidden');
@@ -153,7 +194,7 @@ socket.on('roomUpdate', (room) => {
 socket.on('distributed', (room) => {
   document.getElementById('distOptions').classList.add('hidden');
   document.getElementById('teamsView').classList.remove('hidden');
-  document.getElementById('teamsView').innerHTML = '<h4 style="width:100%; text-align:center; margin-bottom:15px; color:#fff;">تم التوزيع:</h4>' + room.teams.map(t => `
+  document.getElementById('teamsView').innerHTML = '<h4 style="width:100%; text-align:center; margin-bottom:15px; color:#fff;">---</h4>' + room.teams.map(t => `
     <div class="team-card"><h5>${t.name} (${t.members.length})</h5><p>${t.members.join(' · ')}</p></div>`).join('');
   document.getElementById('startBtn').classList.remove('hidden');
   document.getElementById('startBtn').disabled = false;
@@ -165,7 +206,6 @@ document.getElementById('startBtn').onclick = () => socket.emit('startRound');
 socket.on('roundStartedHost', ({ round, total, data }) => {
   document.getElementById('lobby').classList.add('hidden');
   document.getElementById('gameArea').classList.remove('hidden');
-  
   document.getElementById('nextBtn').classList.add('hidden');
   document.getElementById('forceEndBtn').classList.remove('hidden'); 
   document.getElementById('revealBox').classList.add('hidden');
@@ -173,14 +213,13 @@ socket.on('roundStartedHost', ({ round, total, data }) => {
   const box = document.getElementById('hostAnswerBox');
   box.style.display = 'block'; 
   box.innerHTML = `
-    <strong style="color:#a78bfa; font-size:1.1em;">شاشة المشرف:</strong><br><br>
-    <strong>الإجابة الصحيحة:</strong> البطاقة ${data.correct} <br>
-    <strong>السبب:</strong> ${data.reasons.find(r => r.correct)?.text} <br>
-    <strong>الشرح:</strong> ${data.explain} <br>
-    <strong style="color:#10b981;">(قيمة هذه الجولة: ${data.points} نقاط)</strong>
+    <strong style="color:#a78bfa; font-size:1.1em;">---</strong><br><br>
+    <strong>Correct:</strong> ${data.correct} <br>
+    <strong>Reason:</strong> ${data.reasons.find(r => r.correct)?.text} <br>
+    <strong>Explanation:</strong> ${data.explain} <br>
+    <strong style="color:#10b981;">(Points: ${data.points})</strong>
   `;
-
-  document.getElementById('statusMsg').textContent = `الجولة ${round} / ${total} — في انتظار اختيارات اللاعبين...`;
+  document.getElementById('statusMsg').textContent = `Round ${round} / ${total} — Waiting...`;
   renderCards(data);
   startTimer(); 
 });
@@ -192,33 +231,29 @@ function renderCards(data) {
     const d = data[k];
     c.innerHTML += `
       <div class="card">
-        <div class="card-title">البطاقة ${k}</div>
-        <div class="card-field"><span>المنتج</span><b>${d.product}</b></div>
-        <div class="card-field"><span>الشدة</span><b class="severity">${d.severity}</b></div>
-        <div class="card-field"><span>الحالة</span><b>${d.condition}</b></div>
-        <div class="card-field"><span>الأثر</span><b>${d.impact}</b></div>
+        <div class="card-title">Card ${k}</div>
+        <div class="card-field"><span>Product</span><b>${d.product}</b></div>
+        <div class="card-field"><span>Severity</span><b class="severity">${d.severity}</b></div>
+        <div class="card-field"><span>Condition</span><b>${d.condition}</b></div>
+        <div class="card-field"><span>Impact</span><b>${d.impact}</b></div>
         <div class="context-box">${d.context}</div>
       </div>`;
   });
 }
 
-// ✅ استقبال أسماء من أجاب
 socket.on('progressUpdate', ({ answeredNames, total }) => {
-  document.getElementById('statusMsg').textContent = `${answeredNames.length} / ${total} أجابوا: ${answeredNames.join(' - ')}`;
+  document.getElementById('statusMsg').textContent = `${answeredNames.length} / ${total}: ${answeredNames.join(' - ')}`;
 });
-socket.on('phaseChange', () => {
-  document.getElementById('statusMsg').textContent = 'في انتظار اختيار السبب...';
-});
+socket.on('phaseChange', () => { document.getElementById('statusMsg').textContent = 'Waiting for reason...'; });
 
 socket.on('revealSolo', ({ correct, explain, leaderboard, points }) => {
   stopTimer();
   document.getElementById('statusMsg').textContent = '';
   document.getElementById('hostAnswerBox').style.display = 'none'; 
   document.getElementById('forceEndBtn').classList.add('hidden'); 
-  
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
-  box.innerHTML = `<h3 style="color:#10b981; text-align:center;">الإجابة: ${correct} (${points} نقاط)</h3><p class="explain" style="text-align:center; margin-bottom:20px;">${explain}</p><div class="leaderboard">${leaderboard.map((p, i) => `<div class="lb-row ${i===0?'top':''}"><span class="rank">${i+1}</span><span class="name">${p.name}</span><span class="pts">${p.total}</span></div>`).join('')}</div>`;
+  box.innerHTML = `<h3 style="color:#10b981; text-align:center;">Answer: ${correct} (${points} pts)</h3><p class="explain" style="text-align:center; margin-bottom:20px;">${explain}</p><div class="leaderboard">${leaderboard.map((p, i) => `<div class="lb-row ${i===0?'top':''}"><span class="rank">${i+1}</span><span class="name">${p.name}</span><span class="pts">${p.total}</span></div>`).join('')}</div>`;
   document.getElementById('nextBtn').classList.remove('hidden');
 });
 
@@ -227,39 +262,31 @@ socket.on('revealTeam', ({ correct, explain, results, points }) => {
   document.getElementById('statusMsg').textContent = '';
   document.getElementById('hostAnswerBox').style.display = 'none';
   document.getElementById('forceEndBtn').classList.add('hidden');
-
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
-  box.innerHTML = `<h3 style="color:#10b981; text-align:center;">الإجابة: ${correct} (${points} نقاط)</h3><p class="explain" style="text-align:center; margin-bottom:20px;">${explain}</p><div class="results">${results.map(r => `
+  box.innerHTML = `<h3 style="color:#10b981; text-align:center;">Answer: ${correct} (${points} pts)</h3><p class="explain" style="text-align:center; margin-bottom:20px;">${explain}</p><div class="results">${results.map(r => `
     <div class="res-team ${r.pts > (points/2) ? 'perfect' : r.pts > 0 ? 'partial' : 'wrong'}">
       <h4>${r.name}</h4>
       <p>${r.members.join(' · ')}</p>
-      <p style="font-size:0.85em; color:#cbd5e1; margin-top:10px;">البطاقة: ${r.cardRatio}% | السبب: ${r.reasonRatio}%</p>
-      <p class="pts">+${r.pts} (المجموع: ${r.total})</p>
+      <p style="font-size:0.85em; color:#cbd5e1; margin-top:10px;">Card: ${r.cardRatio}% | Reason: ${r.reasonRatio}%</p>
+      <p class="pts">+${r.pts} (Total: ${r.total})</p>
     </div>`).join('')}</div>`;
   document.getElementById('nextBtn').classList.remove('hidden');
 });
 
 document.getElementById('forceEndBtn').onclick = () => {
-  if(confirm('هل أنت متأكد من إنهاء الجولة الآن؟')) {
-    socket.emit('forceEnd');
-  }
+  if(confirm('Are you sure?')) socket.emit('forceEnd');
 };
-
-document.getElementById('nextBtn').onclick = () => {
-  socket.emit('nextRound');
-};
-
+document.getElementById('nextBtn').onclick = () => socket.emit('nextRound');
 socket.on('readyNext', () => {
   document.getElementById('revealBox').classList.add('hidden');
   document.getElementById('nextBtn').classList.add('hidden');
   document.getElementById('forceEndBtn').classList.add('hidden');
   stopTimer();
 });
-
 socket.on('gameEnded', () => {
   stopTimer();
-  document.getElementById('gameArea').innerHTML = `<div class="end-screen"><h2>انتهت اللعبة!</h2><button class="btn" onclick="location.reload()">لعبة جديدة</button></div>`;
+  document.getElementById('gameArea').innerHTML = `<div class="end-screen"><h2>Game Over!</h2><button class="btn" onclick="location.reload()">New Game</button></div>`;
 });
 </script>
 </body>
