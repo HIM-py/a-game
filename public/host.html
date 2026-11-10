@@ -45,16 +45,17 @@
     <div id="statusMsg" class="status"></div>
     <div id="revealBox" class="reveal hidden"></div>
     
-    <div style="text-align: center; margin-top: 15px;">
-      <button id="forceEndBtn" class="btn hidden" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white;">🛑 إنهاء الجولة الآن</button>
-      <button id="nextBtn" class="btn next-btn hidden">الجولة التالية ➡️</button>
+    <!-- أزرار التحكم -->
+    <div style="text-align: center; margin-top: 20px;">
+      <button id="forceEndBtn" class="btn hidden" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; margin: 5px;">🛑 إنهاء الجولة الآن</button>
+      <button id="nextBtn" class="btn next-btn hidden" style="margin: 5px;">الجولة التالية ➡️</button>
     </div>
   </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-console.log("🔥 شاشة المعلم V6 (مع زر الإنهاء)");
+console.log("🔥 شاشة المعلم V7 (مع زر الإنهاء الصريح)");
 const socket = io();
 let currentMode = null;
 
@@ -108,8 +109,10 @@ document.getElementById('startBtn').onclick = () => socket.emit('startRound');
 socket.on('roundStartedHost', ({ round, total, data }) => {
   document.getElementById('lobby').classList.add('hidden');
   document.getElementById('gameArea').classList.remove('hidden');
+  
+  // ✅ إظهار زر الإنهاء، وإخفاء زر الجولة التالية
   document.getElementById('nextBtn').classList.add('hidden');
-  document.getElementById('forceEndBtn').classList.add('hidden');
+  document.getElementById('forceEndBtn').classList.remove('hidden'); 
   document.getElementById('revealBox').classList.add('hidden');
   
   const box = document.getElementById('hostAnswerBox');
@@ -152,16 +155,19 @@ socket.on('phaseChange', () => {
 socket.on('revealSolo', ({ correct, explain, leaderboard }) => {
   document.getElementById('statusMsg').textContent = '';
   document.getElementById('hostAnswerBox').style.display = 'none'; 
+  document.getElementById('forceEndBtn').classList.add('hidden'); // إخفاء زر الإنهاء
+  
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
   box.innerHTML = `<h3>✅ الإجابة: ${correct}</h3><p class="explain">${explain}</p><div class="leaderboard">${leaderboard.map((p, i) => `<div class="lb-row ${i===0?'top':''}"><span class="rank">${i+1}</span><span class="name">${p.name}</span><span class="pts">${p.total}</span></div>`).join('')}</div>`;
   document.getElementById('nextBtn').classList.remove('hidden');
-  document.getElementById('forceEndBtn').classList.add('hidden');
 });
 
 socket.on('revealTeam', ({ correct, explain, results }) => {
   document.getElementById('statusMsg').textContent = '';
   document.getElementById('hostAnswerBox').style.display = 'none';
+  document.getElementById('forceEndBtn').classList.add('hidden'); // إخفاء زر الإنهاء
+
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
   box.innerHTML = `<h3>✅ الإجابة: ${correct}</h3><p class="explain">${explain}</p><div class="results">${results.map(r => `
@@ -172,9 +178,9 @@ socket.on('revealTeam', ({ correct, explain, results }) => {
       <p class="pts">+${r.pts} (المجموع: ${r.total})</p>
     </div>`).join('')}</div>`;
   document.getElementById('nextBtn').classList.remove('hidden');
-  document.getElementById('forceEndBtn').classList.add('hidden');
 });
 
+// ✅ زر الإنهاء الإجباري
 document.getElementById('forceEndBtn').onclick = () => {
   if(confirm('هل أنت متأكد من إنهاء الجولة الآن؟ سيتم احتساب إجابات الطلاب الذين جاوبوا فقط.')) {
     socket.emit('forceEnd');
