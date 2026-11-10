@@ -55,7 +55,7 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-console.log("🔥 شاشة المعلم (النسخة النهائية)");
+console.log("🔥 شاشة المعلم (النسخة النهائية مع النقاط)");
 const socket = io();
 let currentMode = null;
 
@@ -110,7 +110,6 @@ socket.on('roundStartedHost', ({ round, total, data }) => {
   document.getElementById('lobby').classList.add('hidden');
   document.getElementById('gameArea').classList.remove('hidden');
   
-  // إظهار زر الإنهاء، وإخفاء زر الجولة التالية
   document.getElementById('nextBtn').classList.add('hidden');
   document.getElementById('forceEndBtn').classList.remove('hidden'); 
   document.getElementById('revealBox').classList.add('hidden');
@@ -121,7 +120,8 @@ socket.on('roundStartedHost', ({ round, total, data }) => {
     <strong style="color:#fbbf24; font-size:1.1em;">🔒 شاشة المعلم:</strong><br><br>
     <strong>الإجابة الصحيحة:</strong> البطاقة ${data.correct} <br>
     <strong>السبب:</strong> ${data.reasons.find(r => r.correct)?.text} <br>
-    <strong>الشرح:</strong> ${data.explain}
+    <strong>الشرح:</strong> ${data.explain} <br>
+    <strong style="color:#4ade80;">(قيمة هذه الجولة: ${data.points} نقاط)</strong>
   `;
 
   document.getElementById('statusMsg').textContent = `⏳ الجولة ${round} / ${total} — في انتظار اختيارات اللاعبين...`;
@@ -152,26 +152,28 @@ socket.on('phaseChange', () => {
   document.getElementById('statusMsg').textContent = '🧠 في انتظار اختيار السبب...';
 });
 
-socket.on('revealSolo', ({ correct, explain, leaderboard }) => {
+// ✅ عرض النقاط في كشف النتيجة للفردي
+socket.on('revealSolo', ({ correct, explain, leaderboard, points }) => {
   document.getElementById('statusMsg').textContent = '';
   document.getElementById('hostAnswerBox').style.display = 'none'; 
   document.getElementById('forceEndBtn').classList.add('hidden'); 
   
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
-  box.innerHTML = `<h3>✅ الإجابة: ${correct}</h3><p class="explain">${explain}</p><div class="leaderboard">${leaderboard.map((p, i) => `<div class="lb-row ${i===0?'top':''}"><span class="rank">${i+1}</span><span class="name">${p.name}</span><span class="pts">${p.total}</span></div>`).join('')}</div>`;
+  box.innerHTML = `<h3>✅ الإجابة: ${correct} (الجولة بقيمة ${points} نقاط)</h3><p class="explain">${explain}</p><div class="leaderboard">${leaderboard.map((p, i) => `<div class="lb-row ${i===0?'top':''}"><span class="rank">${i+1}</span><span class="name">${p.name}</span><span class="pts">${p.total}</span></div>`).join('')}</div>`;
   document.getElementById('nextBtn').classList.remove('hidden');
 });
 
-socket.on('revealTeam', ({ correct, explain, results }) => {
+// ✅ عرض النقاط في كشف النتيجة للجماعي
+socket.on('revealTeam', ({ correct, explain, results, points }) => {
   document.getElementById('statusMsg').textContent = '';
   document.getElementById('hostAnswerBox').style.display = 'none';
   document.getElementById('forceEndBtn').classList.add('hidden');
 
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
-  box.innerHTML = `<h3>✅ الإجابة: ${correct}</h3><p class="explain">${explain}</p><div class="results">${results.map(r => `
-    <div class="res-team ${r.pts > 1 ? 'perfect' : r.pts > 0 ? 'partial' : 'wrong'}">
+  box.innerHTML = `<h3>✅ الإجابة: ${correct} (الجولة بقيمة ${points} نقاط)</h3><p class="explain">${explain}</p><div class="results">${results.map(r => `
+    <div class="res-team ${r.pts > (points/2) ? 'perfect' : r.pts > 0 ? 'partial' : 'wrong'}">
       <h4>${r.name}</h4>
       <p>${r.members.join(' · ')}</p>
       <p style="font-size:0.85em; color:#cbd5e1;">البطاقة: ${r.cardRatio}% | السبب: ${r.reasonRatio}%</p>
@@ -180,7 +182,6 @@ socket.on('revealTeam', ({ correct, explain, results }) => {
   document.getElementById('nextBtn').classList.remove('hidden');
 });
 
-// زر الإنهاء الإجباري
 document.getElementById('forceEndBtn').onclick = () => {
   if(confirm('هل أنت متأكد من إنهاء الجولة الآن؟ سيتم احتساب إجابات الطلاب الذين جاوبوا فقط.')) {
     socket.emit('forceEnd');
