@@ -79,6 +79,15 @@ function generateQuestionByType(type) {
   const realCard = dangerInA ? cardA : cardB;
   const fakeCard = dangerInA ? cardB : cardA;
 
+  // ✅ شرح مخصص يظهر إذا جاوب غلط
+  let wrongExplanation = `البطاقة ${correctLetter} هي الخطر الحقيقي لأن طبيعة الثغرة (${realCard.condition}) أو السياق المحلي (${realCard.context}) يجعلها أولوية قصوى، بينما البطاقة ${wrongLetter} أقل خطورة.`;
+
+  if (isExpert) {
+    wrongExplanation = `درس مهم جداً! البطاقة ${wrongLetter} شدتها ${fakeCard.severity}، لكنها ثغرة بسيطة (${fakeCard.condition}). البطاقة ${correctLetter} شدتها ${realCard.severity}، لكنها تسمح باختراق كامل. الشدة وحدها لا تكفي!`;
+  } else if (isTrap) {
+    wrongExplanation = `في هذه الجولة، كلتاهما خطيرتان! لكن البطاقة ${correctLetter} طبيعتها أخطر (${realCard.condition}) وشدتها أعلى (${realCard.severity}).`;
+  }
+
   const reasonTemplates = isExpert ? [
     { text: `البطاقة ${correctLetter}: لأن طبيعة الثغرة (${realCard.condition}) كارثية، بينما ${wrongLetter} رغم أن شدتها ${fakeCard.severity}، إلا أنها ثغرة بسيطة.`, correct: true },
     { text: `البطاقة ${correctLetter}: لأن الأثر المترتب عليها (${realCard.impact}) أسوأ بكثير، والتركيز على الشدة فقط يضللنا.`, correct: true },
@@ -103,19 +112,16 @@ function generateQuestionByType(type) {
   return { 
     A: cardA, B: cardB, correct: correctLetter, 
     reasons: selectedReasons, points: points,
-    explain: isExpert ? `درس مهم جداً! البطاقة ${wrongLetter} شدتها ${fakeCard.severity}، لكنها ثغرة بسيطة. البطاقة ${correctLetter} شدتها ${realCard.severity}، لكنها تسمح باختراق كامل. الشدة وحدها لا تكفي!` : isTrap ? `في هذه الجولة، كلتاهما خطيرتان! لكن البطاقة ${correctLetter} طبيعتها أخطر (تنفيذ أوامر) وشدتها أعلى (${realCard.severity}).` : `البطاقة ${correctLetter} هي الخطر الحقيقي. طبيعة الثغرة (${realCard.condition}) أو السياق المحلي (${realCard.context}) يجعلها أولوية قصوى.` 
+    explain: wrongExplanation // نرسل الشرح
   };
 }
 
-// دالة لإنشاء بنك غرف يضمن النسب الإجمالية والتنوع في كل غرفة
+// بنك الغرف (توزيع عشوائي للنسب)
 function generateRoomBank() {
   const bank = [];
   const types = ['context', 'context', 'context', 'context', 'trap', 'trap', 'trap', 'trap', 'trap', 'nature', 'nature', 'nature', 'nature', 'balance', 'balance', 'balance', 'expert', 'expert']; 
-  // المجموع 18 (3 سياق، 5 فخ، 4 ثغرة، 3 موازنة، 2 خبير). سنوزعها على غرفتين لضمان التنوع.
-  
-  for (let i = 0; i < 5; i++) { // نصنع 5 نسخ عشوائية
-    const roomTypes = shuffleArray(types).slice(0, 10); // نأخذ 10 أنواع عشوائية لكل غرفة
-    bank.push(roomTypes.map(t => generateQuestionByType(t)));
+  for (let i = 0; i < 5; i++) { 
+    bank.push(shuffleArray(types).slice(0, 10).map(t => generateQuestionByType(t)));
   }
   return bank;
 }
@@ -187,9 +193,22 @@ io.on('connection', (socket) => {
   socket.on('pickCard', ({ card }) => {
     const room = rooms[socket.roomCode];
     if (!room || room.phase !== 'question') return;
+    
+    const currentRound = room.rounds[room.round - 1];
     room.playerAnswers[socket.playerId] = card;
-    socket.emit('showReasons', { reasons: room.rounds[room.round - 1].reasons });
-    io.to(room.hostSocket).emit('progressUpdate', { answered: Object.keys(room.playerAnswers).length, total: room.players.length });
+    
+    // ✅ نظام الشرح الفوري
+    if (card !== currentRound.correct) {
+      // إذا جاوب غلط: نرسل له الشرح فوراً ولا نطلب منه اختيار سبب
+      socket.emit('wrongAnswer', { correct: currentRound.correct, explain: currentRound.explain });
+      room.playerReasons[socket.playerId] = -1; // درجة صفر للسبب
+    } else {
+      // إذا جاوب صح: نطلب منه اختيار السبب
+      socket.emit('showReasons', { reasons: currentRound.reasons });
+    }
+
+    const totalAnswered = Object.keys(room.playerAnswers).length;
+    io.to(room.hostSocket).emit('progressUpdate', { answered: totalAnswered, total: room.players.length });
   });
 
   socket.on('pickReason', ({ idx }) => {
@@ -266,6 +285,10 @@ function revealTeamFractional(room) {
   room.teams.forEach((team, idx) => {
     team.members.forEach(m => io.to(m.socketId).emit('revealTeamPlayer', { correct: r.correct, explain: r.explain, mine: results.find(x => x.teamIdx === idx), points: maxPoints }));
   });
+}
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`🚀 السيرفر يعمل على المنفذ ${PORT}`));
 }
 
 const PORT = process.env.PORT || 3000;
