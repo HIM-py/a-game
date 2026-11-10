@@ -89,7 +89,6 @@ function generateQuestionByType(type) {
     wrongExplanation = `في هذه الجولة، كلتاهما خطيرتان! لكن البطاقة ${correctLetter} طبيعتها أخطر وشدتها أعلى.`;
   }
 
-  // ✅ تعديل الأسباب ليكون الخاطئ طويلاً ومقنعاً
   const reasons = [];
 
   if (isExpert) {
@@ -140,6 +139,7 @@ function generateRoomBank() {
 
 const ROOM_BANK = generateRoomBank();
 const rooms = {};
+
 function makeCode() { return Math.random().toString(36).substring(2, 6).toUpperCase(); }
 
 function publicRoom(room) {
@@ -157,6 +157,16 @@ function setupTeams(room, groups) {
   });
   io.to(room.hostSocket).emit('roomUpdate', publicRoom(room));
   io.to(room.hostSocket).emit('distributed', publicRoom(room));
+}
+
+// دالة مساعدة لإنهاء الجولة وتصفير المؤقت
+function finishRound(room) {
+  if (room.roundTimeout) clearTimeout(room.roundTimeout);
+  room.players.forEach(p => {
+    if (!room.playerAnswers[p.id]) room.playerAnswers[p.id] = "None";
+    if (room.playerReasons[p.id] === undefined) room.playerReasons[p.id] = -1;
+  });
+  if (room.mode === 'solo') revealSolo(room); else revealTeamFractional(room);
 }
 
 io.on('connection', (socket) => {
@@ -200,10 +210,21 @@ io.on('connection', (socket) => {
     room.phase = 'question';
     room.playerAnswers = {}; room.playerReasons = {};
     const data = room.rounds[room.round - 1];
+    
     io.to(room.hostSocket).emit('roundStartedHost', { round: room.round, total: 10, data, mode: room.mode });
     room.players.forEach(p => io.to(p.socketId).emit('roundStarted', { round: room.round, total: 10, data, mode: room.mode }));
+
+    // ✅ مؤقت 35 ثانية لإنهاء الجولة تلقائياً
+    if (room.roundTimeout) clearTimeout(room.roundTimeout);
+    room.roundTimeout = setTimeout(() => {
+      const currentRoom = rooms[socket.roomCode];
+      if (currentRoom && currentRoom.phase !== 'reveal') {
+        finishRound(currentRoom);
+      }
+    }, 35000);
   });
 
+  // ✅ إرسال أسماء من أجاب للمشرف
   socket.on('pickCard', ({ card }) => {
     const room = rooms[socket.roomCode];
     if (!room || room.phase !== 'question') return;
@@ -217,28 +238,30 @@ io.on('connection', (socket) => {
       socket.emit('showReasons', { reasons: currentRound.reasons });
     }
 
-    const totalAnswered = Object.keys(room.playerAnswers).length;
-    io.to(room.hostSocket).emit('progressUpdate', { answered: totalAnswered, total: room.players.length });
+    const answeredNames = room.players.filter(p => room.playerAnswers[p.id]).map(p => p.name);
+    io.to(room.hostSocket).emit('progressUpdate', { answeredNames, total: room.players.length });
+
+    // إذا جاوب الكل، نكشف النتيجة فوراً
+    if (Object.keys(room.playerAnswers).length === room.players.length) {
+      finishRound(room);
+    }
   });
 
   socket.on('pickReason', ({ idx }) => {
     const room = rooms[socket.roomCode];
     if (!room || room.phase === 'reveal') return;
     room.playerReasons[socket.playerId] = idx;
-    io.to(room.hostSocket).emit('progressUpdate', { answered: Object.keys(room.playerReasons).length, total: room.players.length });
+    
+    // بما أن الجميع أجاب على البطاقة، هنا فقط نتابع اختيار الأسباب
     if (Object.keys(room.playerReasons).length === room.players.length) {
-      if (room.mode === 'solo') revealSolo(room); else revealTeamFractional(room);
+      finishRound(room);
     }
   });
 
   socket.on('forceEnd', () => {
     const room = rooms[socket.roomCode];
     if (!room || room.phase === 'reveal') return;
-    room.players.forEach(p => {
-      if (!room.playerAnswers[p.id]) room.playerAnswers[p.id] = "None";
-      if (room.playerReasons[p.id] === undefined) room.playerReasons[p.id] = -1;
-    });
-    if (room.mode === 'solo') revealSolo(room); else revealTeamFractional(room);
+    finishRound(room);
   });
 
   socket.on('nextRound', () => {
@@ -255,11 +278,20 @@ io.on('connection', (socket) => {
         const data = room.rounds[room.round - 1];
         io.to(room.hostSocket).emit('roundStartedHost', { round: room.round, total: 10, data, mode: room.mode });
         room.players.forEach(p => io.to(p.socketId).emit('roundStarted', { round: room.round, total: 10, data, mode: room.mode }));
+
+        // مؤقت جديد للجولة القادمة
+        if (room.roundTimeout) clearTimeout(room.roundTimeout);
+        room.roundTimeout = setTimeout(() => {
+          const currentRoom = rooms[socket.roomCode];
+          if (currentRoom && currentRoom.phase !== 'reveal') finishRound(currentRoom);
+        }, 35000);
+
       }, 100); 
     }
   });
 });
 
+// باقي الدوال كما هي
 function revealSolo(room) {
   room.phase = 'reveal';
   const r = room.rounds[room.round - 1];
