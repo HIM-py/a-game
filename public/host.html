@@ -51,7 +51,7 @@
       <div id="roomCode" class="code">----</div>
       <p class="hint" id="modeHint" style="margin-top: 10px;"></p>
     </div>
-    <div id="playersList" class="players-list" style="text-align: center;"><h4 data-i18n="players">اللاعبون (0):</h4></div>
+    <div id="playersList" class="players-list" style="text-align: center;"><h4 data-i18n="players">اللاعبون</h4></div>
     <div id="teamsView" class="teams-view hidden"></div>
     
     <div class="actions" style="text-align: center; margin-top: 30px;">
@@ -65,8 +65,10 @@
   <div id="gameArea" class="panel hidden">
     <div class="scoreboard" id="scoreboard" style="margin-bottom: 20px; display: flex; justify-content: center; gap: 20px;"></div>
     
+    <!-- عداد الوقت -->
     <div style="text-align: center; margin-bottom: 15px; font-size: 1.5em; font-weight: bold; color: #ef4444;" id="timerDisplay">00:35</div>
     
+    <!-- المربع البنفسجي (شاشة المشرف) -->
     <div id="hostAnswerBox" style="display:none; background:rgba(139,92,246,0.15); border:2px solid #8b5cf6; padding:20px; border-radius:15px; margin-bottom:20px; color:#e2e8f0; font-size:1.05em; text-align:right; box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);"></div>
 
     <div id="cardsView" class="cards"></div>
@@ -182,7 +184,6 @@ socket.on('roomUpdate', (room) => {
 });
 
 socket.on('distributed', (room) => {
-  const lang = localStorage.getItem('lang') || 'ar';
   document.getElementById('distOptions').classList.add('hidden');
   document.getElementById('teamsView').classList.remove('hidden');
   document.getElementById('teamsView').innerHTML = '<h4 style="width:100%; text-align:center; margin-bottom:15px; color:#fff;">---</h4>' + room.teams.map(t => `
@@ -202,13 +203,14 @@ socket.on('roundStartedHost', ({ round, total, data }) => {
   document.getElementById('forceEndBtn').classList.remove('hidden'); 
   document.getElementById('revealBox').classList.add('hidden');
   
+  // ✅ استخدام النصوص المترجمة من السيرفر
   const box = document.getElementById('hostAnswerBox');
   box.style.display = 'block'; 
   box.innerHTML = `
     <strong style="color:#a78bfa; font-size:1.1em;">---</strong><br><br>
     <strong>${lang === 'ar' ? 'الإجابة الصحيحة' : 'Correct Answer'}:</strong> ${lang === 'ar' ? 'البطاقة' : 'Card'} ${data.correct} <br>
-    <strong>${lang === 'ar' ? 'السبب' : 'Reason'}:</strong> ${data.reasons.find(r => r.correct)?.text} <br>
-    <strong>${lang === 'ar' ? 'الشرح' : 'Explanation'}:</strong> ${data.explain} <br>
+    <strong>${lang === 'ar' ? 'السبب' : 'Reason'}:</strong> ${lang === 'ar' ? data.reasons_ar.find(r => r.correct)?.text : data.reasons_en.find(r => r.correct)?.text} <br>
+    <strong>${lang === 'ar' ? 'الشرح' : 'Explanation'}:</strong> ${lang === 'ar' ? data.explain_ar : data.explain_en} <br>
     <strong style="color:#10b981;">(${lang === 'ar' ? 'قيمة الجولة' : 'Round Points'}: ${data.points})</strong>
   `;
   document.getElementById('statusMsg').textContent = `${lang === 'ar' ? 'الجولة' : 'Round'} ${round} / ${total} — ${lang === 'ar' ? 'في انتظار اللاعبين...' : 'Waiting for players...'}`;
@@ -242,8 +244,11 @@ socket.on('phaseChange', () => {
   document.getElementById('statusMsg').textContent = lang === 'ar' ? 'في انتظار اختيار السبب...' : 'Waiting for reasons...';
 });
 
-socket.on('revealSolo', ({ correct, explain, leaderboard, points }) => {
+// ✅ كشف النتائج للفردي مع استخدام النصوص المترجمة
+socket.on('revealSolo', ({ correct, explain_ar, explain_en, leaderboard, points }) => {
   const lang = localStorage.getItem('lang') || 'ar';
+  const explain = lang === 'ar' ? explain_ar : explain_en;
+  
   stopTimer();
   document.getElementById('statusMsg').textContent = '';
   document.getElementById('hostAnswerBox').style.display = 'none'; 
@@ -254,8 +259,11 @@ socket.on('revealSolo', ({ correct, explain, leaderboard, points }) => {
   document.getElementById('nextBtn').classList.remove('hidden');
 });
 
-socket.on('revealTeam', ({ correct, explain, results, points }) => {
+// ✅ كشف النتائج للجماعي مع استخدام النصوص المترجمة
+socket.on('revealTeam', ({ correct, explain_ar, explain_en, results, points }) => {
   const lang = localStorage.getItem('lang') || 'ar';
+  const explain = lang === 'ar' ? explain_ar : explain_en;
+  
   stopTimer();
   document.getElementById('statusMsg').textContent = '';
   document.getElementById('hostAnswerBox').style.display = 'none';
