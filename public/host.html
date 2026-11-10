@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة المعلم</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+  <header><h1>🎓 لوحة المعلم</h1></header>
+
+  <div id="setup" class="panel">
+    <h3>اختر نمط اللعب:</h3>
+    <div class="mode-pick">
+      <button class="mode-btn" data-mode="solo">🧑 فردي — كل طالب بنفسه</button>
+      <button class="mode-btn" data-mode="team">👥 جماعي — توزيع عشوائي على فرق من 2</button>
+    </div>
+    <button id="createBtn" class="btn" disabled>➕ إنشاء غرفة</button>
+  </div>
+
+  <div id="lobby" class="panel hidden">
+    <div class="room-code-box">
+      <p>كود الغرفة:</p>
+      <div id="roomCode" class="code"></div>
+      <p class="hint" id="modeHint"></p>
+    </div>
+    <div id="playersList" class="players-list"></div>
+    <div id="teamsView" class="teams-view hidden"></div>
+    <div class="actions">
+      <button id="distributeBtn" class="btn next-btn hidden">🎲 توزيع عشوائي</button>
+      <button id="redistributeBtn" class="btn hidden">🔄 إعادة التوزيع</button>
+      <button id="startBtn" class="btn next-btn hidden">▶️ ابدأ اللعبة</button>
+    </div>
+  </div>
+
+  <div id="gameArea" class="panel hidden">
+    <div class="scoreboard" id="scoreboard"></div>
+    <div id="cardsView" class="cards"></div>
+    <div id="statusMsg" class="status"></div>
+    <div id="revealBox" class="reveal hidden"></div>
+    <button id="nextBtn" class="btn next-btn hidden">الجولة التالية ➡️</button>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+let currentMode = null;
+let roomState = null;
+
+document.querySelectorAll('.mode-btn').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.mode-btn').forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected');
+    currentMode = b.dataset.mode;
+    document.getElementById('createBtn').disabled = false;
+  };
+});
+
+document.getElementById('createBtn').onclick = () => {
+  socket.emit('createRoom', { mode: currentMode }, ({ code, mode }) => {
+    document.getElementById('roomCode').textContent = code;
+    document.getElementById('modeHint').textContent =
+      mode === 'solo' ? '🧑 نمط فردي — كل طالب يلعب بنفسه'
+                      : '👥 نمط جماعي — التوزيع عشوائي على فرق من 2';
+    document.getElementById('setup').classList.add('hidden');
+    document.getElementById('lobby').classList.remove('hidden');
+  });
+};
+
+socket.on('roomUpdate', (room) => {
+  roomState = room;
+  const pl = document.getElementById('playersList');
+  pl.innerHTML = `<h4>اللاعبون (${room.players.length}):</h4>` +
+    room.players.map(p => `<span class="player-chip">👤 ${p.name}</span>`).join('');
+
+  if (room.mode === 'solo') {
+    document.getElementById('distributeBtn').classList.add('hidden');
+    document.getElementById('redistributeBtn').classList.add('hidden');
+    document.getElementById('teamsView').classList.add('hidden');
+    document.getElementById('startBtn').classList.remove('hidden');
+    document.getElementById('startBtn').disabled = room.players.length === 0;
+  } else {
+    if (!room.distributed) {
+      document.getElementById('distributeBtn').classList.remove('hidden');
+      document.getElementById('distributeBtn').disabled = room.players.length < 2;
+      document.getElementById('teamsView').classList.add('hidden');
+      document.getElementById('startBtn').classList.add('hidden');
+      document.getElementById('redistributeBtn').classList.add('hidden');
+    }
+  }
+});
+
+socket.on('distributed', (room) => {
+  roomState = room;
+  document.getElementById('distributeBtn').classList.add('hidden');
+  document.getElementById('teamsView').classList.remove('hidden');
+  const tv = document.getElementById('teamsView');
+  tv.innerHTML = '<h4>🎲 التوزيع العشوائي:</h4>' + room.teams.map(t => `
+    <div class="team-card">
+      <h5>${t.name} (${t.members.length})</h5>
+      <p>${t.members.join(' · ')}</p>
+    </div>`).join('');
+  document.getElementById('redistributeBtn').classList.remove('hidden');
+  document.getElementById('startBtn').classList.remove('hidden');
+  document.getElementById('startBtn').disabled = false;
+});
+
+document.getElementById('distributeBtn').onclick = () => socket.emit('distribute');
+document.getElementById('redistributeBtn').onclick = () => socket.emit('redistribute');
+document.getElementById('startBtn').onclick = () => socket.emit('startRound');
+
+socket.on('roundStarted', ({ round, total, data }) => {
+  document.getElementById('lobby').classList.add('hidden');
+  document.getElementById('gameArea').classList.remove('hidden');
+  document.getElementById('nextBtn').classList.add('hidden');
+  document.getElementById('revealBox').classList.add('hidden');
+  document.getElementById('statusMsg').textContent = `⏳ الجولة ${round} / ${total} — في انتظار اختيارات اللاعبين...`;
+  renderCards(data);
+  renderScoreboard(roomState);
+});
+
+function renderCards(data) {
+  const c = document.getElementById('cardsView');
+  c.innerHTML = '';
+  ['A','B'].forEach(k => {
+    const d = data[k];
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.innerHTML = `
+      <div class="card-title">📄 البطاقة ${k}</div>
+      <div class="card-field"><span>المنتج</span><b>${d.product}</b></div>
+      <div class="card-field"><span>الشدة</span><b class="severity">${d.severity}</b></div>
+      <div class="card-field"><span>الحالة</span><b>${d.condition}</b></div>
+      <div class="card-field"><span>الأثر</span><b>${d.impact}</b></div>
+      <div class="context-box">🏢 ${d.context}</div>`;
+    c.appendChild(div);
+  });
+}
+
+function renderScoreboard(room) {
+  if (!room) return;
+  const sb = document.getElementById('scoreboard');
+  if (room.mode === 'solo') {
+    const entries = Object.entries(room.scores || {})
+      .map(([id, s]) => ({ name: (room.players.find(p => p.id === id) || {}).name || '?', score: s }))
+      .sort((a, b) => b.score - a.score).slice(0, 5);
+    sb.innerHTML = '<h4>🏆 أعلى 5:</h4>' + entries.map((e, i) =>
+      `<div class="lb-row ${i===0?'top':''}"><span class="rank">${i+1}</span><span class="name">${e.name}</span><span class="pts">${e.score}</span></div>`
+    ).join('');
+  } else {
+    sb.innerHTML = (room.teams || []).map(t =>
+      `<div class="team-score"><span>${t.name}</span><span class="score">${t.score}</span></div>`
+    ).join('');
+  }
+}
+
+socket.on('progressUpdate', ({ answered, total }) => {
+  document.getElementById('statusMsg').textContent = `⏳ ${answered} / ${total} أجابوا...`;
+});
+
+socket.on('phaseChange', () => {
+  document.getElementById('statusMsg').textContent = '🧠 في انتظار اختيار السبب...';
+});
+
+socket.on('revealSolo', ({ correct, explain, leaderboard, round, total }) => {
+  document.getElementById('statusMsg').textContent = '';
+  const box = document.getElementById('revealBox');
+  box.classList.remove('hidden');
+  box.innerHTML = `
+    <h3>✅ الإجابة الصحيحة: البطاقة ${correct}</h3>
+    <p class="explain">${explain}</p>
+    <h4>🏆 لوحة الصدارة:</h4>
+    <div class="leaderboard">
+      ${leaderboard.map((p, i) => `
+        <div class="lb-row ${i===0?'top':''}">
+          <span class="rank">${i+1}</span>
+          <span class="name">${p.name}</span>
+          <span class="badge">${p.cardOk?'✅':'❌'} ${p.reasonOk?'✅':'❌'}</span>
+          <span class="pts">${p.total}</span>
+        </div>`).join('')}
+    </div>`;
+  showNext(round, total);
+});
+
+socket.on('revealTeam', ({ correct, explain, results, round, total }) => {
+  document.getElementById('statusMsg').textContent = '';
+  const box = document.getElementById('revealBox');
+  box.classList.remove('hidden');
+  box.innerHTML = `
+    <h3>✅ الإجابة الصحيحة: البطاقة ${correct}</h3>
+    <p class="explain">${explain}</p>
+    <div class="results">
+      ${results.map(r => `
+        <div class="res-team ${r.cardOk && r.reasonOk ? 'perfect' : r.cardOk ? 'partial' : 'wrong'}">
+          <h4>${r.name}</h4>
+          <p>${r.members.join(' · ')}</p>
+          <p>${r.cardOk?'✅ البطاقة':'❌ البطاقة'} | ${r.reasonOk?'✅ السبب':'❌ السبب'}</p>
+          <p class="pts">+${r.pts} (المجموع: ${r.total})</p>
+        </div>`).join('')}
+    </div>`;
+  showNext(round, total);
+});
+
+function showNext(round, total) {
+  document.getElementById('nextBtn').classList.remove('hidden');
+  document.getElementById('nextBtn').textContent = round < total ? 'الجولة التالية ➡️' : '🏁 النتيجة النهائية';
+}
+
+document.getElementById('nextBtn').onclick = () => socket.emit('nextRound');
+
+socket.on('readyNext', (room) => {
+  roomState = room;
+  document.getElementById('revealBox').classList.add('hidden');
+  document.getElementById('nextBtn').classList.add('hidden');
+  renderScoreboard(room);
+});
+
+socket.on('gameEnded', ({ mode, finalScores }) => {
+  const area = document.getElementById('gameArea');
+  if (mode === 'solo') {
+    const entries = Object.entries(finalScores)
+      .map(([id, s]) => ({ name: (roomState.players.find(p => p.id === id) || {}).name || '?', score: s }))
+      .sort((a, b) => b.score - a.score);
+    area.innerHTML = `
+      <div class="end-screen">
+        <h2>🏁 انتهت اللعبة!</h2>
+        <h3>🏆 لوحة الصدارة النهائية:</h3>
+        <div class="leaderboard">
+          ${entries.map((e, i) => `
+            <div class="lb-row ${i===0?'top':''}">
+              <span class="rank">${i+1}</span>
+              <span class="name">${e.name}</span>
+              <span class="pts">${e.score}</span>
+            </div>`).join('')}
+        </div>
+        <button class="btn" onclick="location.reload()">🔄 لعبة جديدة</button>
+      </div>`;
+  } else {
+    const sorted = finalScores.slice().sort((a, b) => b.score - a.score);
+    area.innerHTML = `
+      <div class="end-screen">
+        <h2>🏁 انتهت اللعبة!</h2>
+        <div class="leaderboard">
+          ${sorted.map((t, i) => `
+            <div class="lb-row ${i===0?'top':''}">
+              <span class="rank">${i+1}</span>
+              <span class="name">${t.name}</span>
+              <span class="pts">${t.score}</span>
+            </div>`).join('')}
+        </div>
+        <button class="btn" onclick="location.reload()">🔄 لعبة جديدة</button>
+      </div>`;
+  }
+});
+</script>
+</body>
+</html>

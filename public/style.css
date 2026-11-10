@@ -1,0 +1,178 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  color: #f1f5f9; min-height: 100vh; padding: 20px;
+}
+.container { max-width: 1100px; margin: 0 auto; }
+header {
+  text-align: center; margin-bottom: 25px; padding: 18px;
+  background: rgba(255,255,255,0.05); border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+h1 { color: #fbbf24; font-size: 1.9em; }
+h2, h3, h4, h5 { color: #fbbf24; margin-bottom: 10px; }
+.subtitle { color: #94a3b8; margin-top: 6px; }
+.hidden { display: none !important; }
+
+.panel {
+  background: rgba(255,255,255,0.05); padding: 25px; border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;
+}
+
+.btn {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #0f172a;
+  border: none; padding: 12px 28px; border-radius: 10px;
+  font-size: 1em; font-weight: bold; cursor: pointer;
+  font-family: inherit; transition: 0.2s; margin: 5px;
+}
+.btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(251,191,36,0.4); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.next-btn { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
+
+/* الصفحة الرئيسية */
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 700px) { .choices { grid-template-columns: 1fr; } }
+.choice-card {
+  background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 16px; padding: 40px 20px; text-align: center;
+  text-decoration: none; color: inherit; transition: 0.3s;
+}
+.choice-card:hover { border-color: #fbbf24; transform: translateY(-5px); }
+.choice-card .icon { font-size: 3em; margin-bottom: 15px; }
+.choice-card h2 { color: #fbbf24; margin-bottom: 10px; }
+.choice-card p { color: #94a3b8; }
+
+/* اختيار النمط */
+.mode-pick { display: flex; gap: 12px; flex-wrap: wrap; margin: 15px 0; }
+.mode-btn {
+  flex: 1; min-width: 200px; padding: 20px; background: rgba(255,255,255,0.08);
+  border: 2px solid rgba(255,255,255,0.2); border-radius: 12px;
+  color: #f1f5f9; font-size: 1em; cursor: pointer; font-family: inherit;
+  transition: 0.2s;
+}
+.mode-btn:hover { border-color: #fbbf24; }
+.mode-btn.selected { background: rgba(34,197,94,0.2); border-color: #22c55e; color: #86efac; }
+
+/* غرفة الانتظار */
+.room-code-box { text-align: center; margin-bottom: 25px; }
+.code {
+  font-size: 3em; font-weight: bold; color: #fbbf24;
+  letter-spacing: 8px; padding: 15px;
+  background: rgba(251,191,36,0.1); border-radius: 12px;
+  border: 2px dashed #fbbf24; margin: 10px 0;
+}
+.hint { font-size: 0.9em; color: #64748b !important; }
+
+.players-list { margin-bottom: 20px; }
+.player-chip {
+  display: inline-block; background: rgba(255,255,255,0.1);
+  padding: 6px 14px; border-radius: 20px; margin: 5px; font-size: 0.9em;
+}
+
+.teams-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.team-card {
+  background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.4);
+  border-radius: 10px; padding: 15px;
+}
+.team-card h5 { color: #86efac; margin-bottom: 6px; }
+.team-card p { color: #cbd5e1; font-size: 0.9em; }
+
+.actions { text-align: center; margin-top: 20px; }
+
+/* لوحة النتائج */
+.scoreboard {
+  display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;
+  background: rgba(0,0,0,0.3); padding: 15px 20px; border-radius: 12px;
+  margin-bottom: 20px;
+}
+.team-score { display: flex; align-items: center; gap: 10px; font-weight: bold; }
+.team-score .score { font-size: 1.6em; color: #fbbf24; }
+
+/* البطاقات */
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+@media (max-width: 700px) { .cards { grid-template-columns: 1fr; } }
+.card {
+  background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 14px; padding: 18px; transition: 0.3s; cursor: pointer;
+}
+.card:hover { border-color: #fbbf24; transform: translateY(-3px); }
+.card.picked { border-color: #22c55e; background: rgba(34,197,94,0.15); }
+.card-title { font-size: 1.1em; font-weight: bold; color: #fbbf24; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.15); }
+.card-field { display: flex; justify-content: space-between; padding: 7px 0; font-size: 0.95em; border-bottom: 1px dashed rgba(255,255,255,0.08); }
+.card-field:last-of-type { border-bottom: none; }
+.card-field span { color: #94a3b8; }
+.card-field b { color: #f1f5f9; }
+.severity { color: #f87171 !important; font-size: 1.1em; }
+.context-box {
+  background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.4);
+  border-radius: 8px; padding: 10px; margin-top: 12px;
+  font-size: 0.9em; color: #cbd5e1;
+}
+
+/* الحالة والنتائج */
+.status { text-align: center; padding: 12px; color: #fbbf24; font-weight: 500; margin: 10px 0; }
+.reveal {
+  background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.4);
+  border-radius: 12px; padding: 20px; margin-top: 15px;
+}
+.reveal .explain { color: #cbd5e1; margin: 10px 0 15px; line-height: 1.7; }
+
+.results { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 15px; }
+.res-team { padding: 12px; border-radius: 10px; text-align: center; }
+.res-team h4 { margin-bottom: 8px; }
+.res-team p { font-size: 0.9em; color: #cbd5e1; margin-bottom: 5px; }
+.res-team .pts { font-size: 1.3em; font-weight: bold; margin-top: 8px; }
+.res-team.perfect { background: rgba(34,197,94,0.2); border: 1px solid #22c55e; }
+.res-team.perfect .pts { color: #86efac; }
+.res-team.partial { background: rgba(251,191,36,0.2); border: 1px solid #fbbf24; }
+.res-team.partial .pts { color: #fde68a; }
+.res-team.wrong { background: rgba(239,68,68,0.2); border: 1px solid #ef4444; }
+.res-team.wrong .pts { color: #fca5a5; }
+.wait-msg { text-align: center; color: #94a3b8; margin-top: 15px; font-style: italic; }
+
+/* لوحة الصدارة */
+.leaderboard { margin-top: 15px; }
+.lb-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 15px; background: rgba(255,255,255,0.05);
+  border-radius: 8px; margin-bottom: 6px;
+}
+.lb-row.top { background: rgba(251,191,36,0.15); border: 1px solid #fbbf24; }
+.lb-row .rank { font-weight: bold; color: #fbbf24; width: 30px; }
+.lb-row .name { flex: 1; margin: 0 10px; }
+.lb-row .pts { font-weight: bold; color: #86efac; }
+.lb-row .badge { font-size: 0.85em; margin: 0 5px; }
+
+/* نموذج اللاعب */
+.input {
+  width: 100%; padding: 12px 15px; margin: 8px 0 15px;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px; color: #f1f5f9; font-size: 1em; font-family: inherit;
+}
+.input:focus { outline: none; border-color: #fbbf24; }
+label { display: block; color: #94a3b8; font-size: 0.9em; margin-top: 10px; }
+.err { color: #f87171; margin-top: 10px; min-height: 20px; }
+
+/* أسئلة السبب */
+.reason-options { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.reason-option {
+  background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15);
+  padding: 12px 15px; border-radius: 8px; cursor: pointer;
+  color: #f1f5f9; text-align: right; font-family: inherit; font-size: 0.95em;
+  transition: 0.2s;
+}
+.reason-option:hover:not(:disabled) { border-color: #a78bfa; background: rgba(139,92,246,0.15); }
+.reason-option.selected { border-color: #22c55e; background: rgba(34,197,94,0.2); }
+.reason-option:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* النهاية */
+.end-screen { text-align: center; padding: 20px; }
+.end-screen h2 { color: #fbbf24; margin: 20px 0; font-size: 1.8em; }
+
+@media (max-width: 500px) {
+  h1 { font-size: 1.4em; }
+  .code { font-size: 2em; letter-spacing: 5px; }
+  .panel { padding: 15px; }
+  .mode-btn { min-width: 100%; }
+}

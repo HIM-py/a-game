@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>انضم للعبة</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+  <header><h1>👥 انضم للعبة</h1></header>
+
+  <div id="joinBox" class="panel">
+    <label>كود الغرفة</label>
+    <input id="codeInput" class="input" maxlength="4" placeholder="مثال: AB12" style="text-transform:uppercase">
+    <label>اسمك</label>
+    <input id="nameInput" class="input" placeholder="مثال: أحمد">
+    <button id="joinBtn" class="btn">دخول</button>
+    <p id="errMsg" class="err"></p>
+  </div>
+
+  <div id="waitBox" class="panel hidden">
+    <h2>⏳ في الانتظار...</h2>
+    <p>أهلاً <strong id="myName"></strong></p>
+    <p id="teamInfo"></p>
+    <p id="waitMsg">في انتظار المعلم لبدء اللعبة...</p>
+  </div>
+
+  <div id="playBox" class="panel hidden">
+    <div class="scoreboard" id="myScoreboard"></div>
+    <div id="cardsView" class="cards"></div>
+    <div id="reasonView" class="hidden">
+      <h3>🧠 لماذا اخترت هذه البطاقة؟</h3>
+      <div id="reasonOptions" class="reason-options"></div>
+    </div>
+    <div id="statusMsg" class="status"></div>
+    <div id="revealBox" class="reveal hidden"></div>
+  </div>
+
+  <div id="endBox" class="panel hidden">
+    <h2>🏁 انتهت اللعبة</h2>
+    <div id="endContent"></div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+let myName = null;
+let myTeamIdx = null;
+let myTeamName = null;
+let myPick = null;
+let currentRoundData = null;
+let myPlayerId = null;
+let gameMode = null;
+
+document.getElementById('joinBtn').onclick = () => {
+  const code = document.getElementById('codeInput').value.trim().toUpperCase();
+  const name = document.getElementById('nameInput').value.trim();
+  if (!code || !name) {
+    document.getElementById('errMsg').textContent = '❌ أدخل الكود والاسم';
+    return;
+  }
+  socket.emit('joinRoom', { code, name }, (res) => {
+    if (res.error) {
+      document.getElementById('errMsg').textContent = '❌ ' + res.error;
+      return;
+    }
+    myPlayerId = res.playerId;
+    myName = res.name;
+    gameMode = res.mode;
+    document.getElementById('joinBox').classList.add('hidden');
+    document.getElementById('waitBox').classList.remove('hidden');
+    document.getElementById('myName').textContent = myName;
+    document.getElementById('teamInfo').textContent =
+      gameMode === 'solo' ? '🧑 نمط فردي' : '👥 في انتظار التوزيع العشوائي...';
+  });
+};
+
+socket.on('youAreInTeam', ({ teamIdx, teamName, members }) => {
+  myTeamIdx = teamIdx;
+  myTeamName = teamName;
+  document.getElementById('teamInfo').innerHTML =
+    `👥 فريقك: <strong>${teamName}</strong><br>الأعضاء: ${members.join(' · ')}`;
+});
+
+socket.on('resetTeam', () => {
+  myTeamIdx = null;
+  myTeamName = null;
+  document.getElementById('teamInfo').textContent = '👥 في انتظار التوزيع العشوائي...';
+});
+
+socket.on('roomUpdate', (room) => {
+  if (room.mode === 'team' && !room.distributed) {
+    document.getElementById('waitMsg').textContent = 'في انتظار التوزيع العشوائي...';
+  } else {
+    document.getElementById('waitMsg').textContent = 'في انتظار المعلم لبدء اللعبة...';
+  }
+});
+
+socket.on('roundStarted', ({ round, total, data }) => {
+  currentRoundData = data;
+  myPick = null;
+  document.getElementById('waitBox').classList.add('hidden');
+  document.getElementById('playBox').classList.remove('hidden');
+  document.getElementById('reasonView').classList.add('hidden');
+  document.getElementById('revealBox').classList.add('hidden');
+  document.getElementById('statusMsg').textContent = `👉 الجولة ${round} / ${total} — اختر البطاقة`;
+  renderCards(data);
+});
+
+function renderCards(data) {
+  const c = document.getElementById('cardsView');
+  c.innerHTML = '';
+  ['A','B'].forEach(k => {
+    const d = data[k];
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.id = 'pick' + k;
+    div.onclick = () => pickCard(k);
+    div.innerHTML = `
+      <div class="card-title">📄 البطاقة ${k}</div>
+      <div class="card-field"><span>المنتج</span><b>${d.product}</b></div>
+      <div class="card-field"><span>الشدة</span><b class="severity">${d.severity}</b></div>
+      <div class="card-field"><span>الحالة</span><b>${d.condition}</b></div>
+      <div class="card-field"><span>الأثر</span><b>${d.impact}</b></div>
+      <div class="context-box">🏢 ${d.context}</div>`;
+    c.appendChild(div);
+  });
+}
+
+function pickCard(k) {
+  if (myPick) return;
+  myPick = k;
+  document.getElementById('pickA').classList.toggle('picked', k === 'A');
+  document.getElementById('pickB').classList.toggle('picked', k === 'B');
+  socket.emit('pickCard', { card: k });
+  document.getElementById('statusMsg').textContent = '✅ اخترت البطاقة ' + k + ' — في انتظار الباقين...';
+}
+
+socket.on('phaseChange', () => {
+  document.getElementById('reasonView').classList.remove('hidden');
+  document.getElementById('statusMsg').textContent = '🧠 اختر السبب';
+  loadReasons();
+});
+
+function loadReasons() {
+  const box = document.getElementById('reasonOptions');
+  box.innerHTML = '';
+  currentRoundData.reasons.forEach((r, i) => {
+    const b = document.createElement('button');
+    b.className = 'reason-option';
+    b.textContent = r.text;
+    b.onclick = () => {
+      document.querySelectorAll('.reason-option').forEach(x => x.disabled = true);
+      b.classList.add('selected');
+      socket.emit('pickReason', { idx: i });
+      document.getElementById('reasonView').classList.add('hidden');
+      document.getElementById('statusMsg').textContent = '✅ اخترت السبب — في انتظار الباقين...';
+    };
+    box.appendChild(b);
+  });
+}
+
+socket.on('revealSoloPlayer', ({ correct, explain, mine, leaderboard }) => {
+  showReveal(correct, explain, mine, leaderboard, 'solo');
+});
+
+socket.on('revealTeamPlayer', ({ correct, explain, mine, results }) => {
+  showReveal(correct, explain, mine, results, 'team');
+});
+
+function showReveal(correct, explain, mine, list, mode) {
+  document.getElementById('statusMsg').textContent = '';
+  const box = document.getElementById('revealBox');
+  box.classList.remove('hidden');
+  if (mode === 'solo') {
+    box.innerHTML = `
+      <h3>✅ الإجابة الصحيحة: البطاقة ${correct}</h3>
+      <p class="explain">${explain}</p>
+      <div class="res-team ${mine.cardOk && mine.reasonOk ? 'perfect' : mine.cardOk ? 'partial' : 'wrong'}">
+        <h4>نتيجتك</h4>
+        <p>${mine.cardOk?'✅ البطاقة':'❌ البطاقة'} | ${mine.reasonOk?'✅ السبب':'❌ السبب'}</p>
+        <p class="pts">+${mine.pts} (المجموع: ${mine.total})</p>
+      </div>
+      <h4>🏆 لوحة الصدارة:</h4>
+      <div class="leaderboard">
+        ${list.slice(0,5).map((p, i) => `
+          <div class="lb-row ${i===0?'top':''}">
+            <span class="rank">${i+1}</span>
+            <span class="name">${p.name}</span>
+            <span class="pts">${p.total}</span>
+          </div>`).join('')}
+      </div>
+      <p class="wait-msg">في انتظار المعلم للجولة التالية...</p>`;
+  } else {
+    box.innerHTML = `
+      <h3>✅ الإجابة الصحيحة: البطاقة ${correct}</h3>
+      <p class="explain">${explain}</p>
+      <div class="res-team ${mine.cardOk && mine.reasonOk ? 'perfect' : mine.cardOk ? 'partial' : 'wrong'}">
+        <h4>فريقك</h4>
+        <p>${mine.cardOk?'✅ البطاقة':'❌ البطاقة'} | ${mine.reasonOk?'✅ السبب':'❌ السبب'}</p>
+        <p class="pts">+${mine.pts} (المجموع: ${mine.total})</p>
+      </div>
+      <p class="wait-msg">في انتظار المعلم للجولة التالية...</p>`;
+  }
+}
+
+socket.on('readyNext', () => {
+  document.getElementById('revealBox').classList.add('hidden');
+});
+
+socket.on('gameEnded', ({ mode, finalScores }) => {
+  document.getElementById('playBox').classList.add('hidden');
+  document.getElementById('endBox').classList.remove('hidden');
+  const box = document.getElementById('endContent');
+  if (mode === 'solo') {
+    const myScore = finalScores[myPlayerId] || 0;
+    box.innerHTML = `<h2>نتيجتك: ${myScore} نقطة</h2>`;
+  } else {
+    box.innerHTML = `<h2>انتهت اللعبة — راجع شاشة المعلم للنتائج</h2>`;
+  }
+});
+
+socket.on('hostLeft', () => alert('غادر المعلم — انتهت الجلسة'));
+</script>
+</body>
+</html>
