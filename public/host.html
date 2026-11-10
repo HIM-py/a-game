@@ -71,12 +71,14 @@ document.getElementById('createBtn').onclick = () => {
   });
 };
 
-// تحديث القائمة عند دخول أي طالب
+// ✅ التحديث الفوري عند دخول أي لاعب
 socket.on('roomUpdate', (room) => {
+  // تحديث قائمة اللاعبين
   const pl = document.getElementById('playersList');
   pl.innerHTML = `<h4>اللاعبون (${room.players.length}):</h4>` +
     room.players.map(p => `<span class="player-chip">👤 ${p.name}</span>`).join('');
 
+  // إدارة الأزرار بناءً على النمط
   if (room.mode === 'solo') {
     document.getElementById('distributeBtn').classList.add('hidden');
     document.getElementById('redistributeBtn').classList.add('hidden');
@@ -85,8 +87,8 @@ socket.on('roomUpdate', (room) => {
     document.getElementById('startBtn').disabled = room.players.length === 0;
   } else {
     if (!room.distributed) {
+      // في الجماعي: إظهار زر التوزيع فوراً إذا كان هناك لاعبان على الأقل
       document.getElementById('distributeBtn').classList.remove('hidden');
-      // زر التوزيع يعمل فقط إذا كان هناك طالبان على الأقل
       document.getElementById('distributeBtn').disabled = room.players.length < 2;
       document.getElementById('teamsView').classList.add('hidden');
       document.getElementById('startBtn').classList.add('hidden');
@@ -95,7 +97,7 @@ socket.on('roomUpdate', (room) => {
   }
 });
 
-// بعد التوزيع
+// ✅ بعد التوزيع
 socket.on('distributed', (room) => {
   document.getElementById('distributeBtn').classList.add('hidden');
   document.getElementById('teamsView').classList.remove('hidden');
