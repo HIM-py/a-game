@@ -29,38 +29,39 @@ function generateQuestionByType(type) {
 
   if (type === 'context') {
     points = 3;
-    realSev = (Math.random() * 1.9 + 8.0).toFixed(1);
-    fakeSev = (Math.random() * 1.9 + 8.0).toFixed(1);
+    realSev = (Math.random() * 2.5 + 6.5).toFixed(1); // 6.5 - 9.0
+    fakeSev = (Math.random() * 2.5 + 6.5).toFixed(1); // 6.5 - 9.0
     realCondition = "ثغرة في خدمة الويب"; fakeCondition = "ثغرة في خدمة الويب";
     realContext = "مفتوح للإنترنت، بيانات العملاء مكشوفة، لا يوجد جدار حماية";
     fakeContext = "خادم داخلي، يستخدمه الموظفون، لكن عليه جدار حماية داخلي";
   } else if (type === 'trap') {
     points = 2; isTrap = true;
-    realSev = (Math.random() * 2 + 8).toFixed(1);
-    fakeSev = (Math.random() * 2 + 5).toFixed(1);
+    realSev = (Math.random() * 1.5 + 8.5).toFixed(1); // 8.5 - 10.0
+    fakeSev = (Math.random() * 1.5 + 8.5).toFixed(1); // 8.5 - 10.0
     realCondition = "ثغرة تنفيذ أوامر عن بُعد (RCE)"; fakeCondition = "ثغرة إفصاح عن معلومات بسيطة";
     realContext = "مثبت، يستخدمه كل الموظفين، لا يوجد بديل"; fakeContext = "مثبت، يستخدمه كل الموظفين، لا يوجد بديل";
   } else if (type === 'nature') {
     points = 3;
-    realSev = (Math.random() * 2 + 4).toFixed(1); fakeSev = (Math.random() * 2 + 4).toFixed(1);
-    realCondition = "ثغرة تنفيذ أوامر عن بُعد (RCE)"; fakeCondition = "ثغرة إفصاح عن معلومات بسيطة";
-    realContext = "خادم داخلي، لكن الثغرة تسمح بالتحكم الكامل"; fakeContext = "خادم داخلي، الثغرة لا تؤدي إلا لكشف أسماء الملفات";
+    realSev = (Math.random() * 1.5 + 7.5).toFixed(1); // 7.5 - 9.0
+    fakeSev = (Math.random() * 1.5 + 7.5).toFixed(1); // 7.5 - 9.0
+    realCondition = "ثغرة تنفيذ أوامر عن بُعد (RCE)"; fakeCondition = "ثغرة إفصاح عن معلومات حساسة (تسريب)";
+    realContext = "خادم داخلي، لكن الثغرة تسمح بالتحكم الكامل"; fakeContext = "خادم داخلي، الثغرة تكشف مسارات الملفات";
   } else if (type === 'balance') {
     points = 2; isTrap = Math.random() < 0.5;
     if (isTrap) {
-      realSev = (Math.random() * 2 + 8).toFixed(1); fakeSev = (Math.random() * 2 + 5).toFixed(1);
+      realSev = (Math.random() * 1.5 + 8.5).toFixed(1); fakeSev = (Math.random() * 1.5 + 7.5).toFixed(1);
     } else {
-      const base = Math.random() * 2 + 7;
+      const base = Math.random() * 1.5 + 7.5; // 7.5 - 9.0
       realSev = (base + 0.1).toFixed(1); fakeSev = base.toFixed(1);
     }
     realCondition = "ثغرة في المصادقة"; fakeCondition = "ثغرة في التسجيل";
     realContext = "خادم داخلي، الثغرة تسمح بتجاوز الحماية"; fakeContext = "خادم داخلي، الثغرة لا تؤدي إلا لكشف سجلات بسيطة";
   } else if (type === 'expert') {
     points = 4; isExpert = true;
-    realSev = (Math.random() * 1.0 + 8.0).toFixed(1);
+    realSev = (Math.random() * 1.0 + 8.5).toFixed(1); // 8.5 - 9.5
     realCondition = "ثغرة تجاوز المصادقة الثنائية (2FA Bypass)";
     realContext = "مثبت، يستخدمه الموظفون، لا يوجد جدار حماية";
-    fakeSev = (Math.random() * 0.5 + 9.5).toFixed(1);
+    fakeSev = (Math.random() * 0.5 + 9.5).toFixed(1); // 9.5 - 10.0
     fakeCondition = "ثغرة تسريب معلومات (Information Disclosure)";
     fakeContext = "مثبت، يستخدمه الموظفون، لا يوجد جدار حماية";
   }
@@ -89,13 +90,13 @@ function generateQuestionByType(type) {
   const reasons = [];
 
   if (isExpert) {
-    reasons.push({ text: `البطاقة ${correctLetter}: لأن طبيعتها تسمح بالتحكم الكامل، بينما ${wrongLetter} مجرد تسريب معلومات لا يسمح بالدخول.`, correct: true });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأنها رغم أن شدتها أقل، إلا أنها تفتح ثغرة للمخترق للدخول كمدير، بينما ${wrongLetter} لا تفعل.`, correct: true });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأنها تفتح ثغرة للمخترق للدخول كمدير (تجاوز 2FA)، بينما ${wrongLetter} مجرد تسريب معلومات لا يسمح بالدخول.`, correct: true });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأنها رغم أن شدتها أقل بقليل، إلا أن طبيعتها تسمح بالتحكم الكامل، بينما ${wrongLetter} لا تفعل.`, correct: true });
     reasons.push({ text: `البطاقة ${correctLetter}: لأنها تعمل على مستوى المصادقة، بينما ${wrongLetter} تعمل على مستوى الإفصاح فقط.`, correct: false });
     reasons.push({ text: `البطاقة ${correctLetter}: لأن البطاقة ${wrongLetter} قد تكون خطيرة أيضاً، لكن الأثر المباشر لـ ${correctLetter} أخطر بكثير.`, correct: false });
   } else if (type === 'nature') {
-    reasons.push({ text: `البطاقة ${correctLetter}: لأنها تسمح بالتحكم الكامل بالخادم، بينما ${wrongLetter} لا تؤدي إلا لكشف أسماء الملفات.`, correct: true });
-    reasons.push({ text: `البطاقة ${correctLetter}: لأن طبيعة الثغرة (${realCard.condition}) كارثية وتؤدي للتحكم، بينما ${wrongLetter} مجرد إفصاح بسيط.`, correct: true });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأنها تسمح بالتحكم الكامل بالخادم (RCE)، بينما ${wrongLetter} لا تؤدي إلا لتسريب مسارات الملفات.`, correct: true });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأن طبيعة الثغرة (${realCard.condition}) كارثية وتؤدي للتحكم، بينما ${wrongLetter} مجرد تسريب معلومات حساسة.`, correct: true });
     reasons.push({ text: `البطاقة ${correctLetter}: لأنها تعمل على نظام داخلي، وهذا يجعل من الصعب اكتشافها.`, correct: false });
     reasons.push({ text: `البطاقة ${correctLetter}: لأن شدتها وإن كانت منخفضة، إلا أن المخترق قد يستغلها بشكل خطير.`, correct: false });
   } else if (type === 'context') {
