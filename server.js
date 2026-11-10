@@ -15,8 +15,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 const PRODUCTS = ["LibraryApp", "PayPortal", "PrintServer", "VPN Gateway", "ChatApp", "StudentPortal", "Antivirus", "Backup Server", "Email Filter", "File Share", "WebServer", "HR Portal", "Router Firmware", "Cloud Storage", "Dev Tools", "Public API", "Backup Tape", "Mobile App", "Old CRM", "Wi-Fi Guest"];
 const CONDITIONS = ["تسجيل دخول الزوار مُفعّل", "الجلسة لا تنتهي بعد الخروج", "ثغرة في خدمة الطباعة", "ثغرة في المصادقة الثنائية", "رسائل غير مشفرة", "ثغرة في رفع الملفات", "ثغرة في محرك الفحص", "ثغرة في استعادة النسخ", "تجاوز فلتر البريد", "صلاحيات مفتوحة", "ثغرة تنفيذ أوامر عن بُعد", "تسريب بيانات الموظفين", "كلمة مرور افتراضية", "روابط مشاركة دائمة"];
 const IMPACTS = ["وصول غير مصرّح للبيانات", "سرقة جلسات العملاء", "تسريب مستندات داخلية", "دخول غير مصرّح للشبكة", "كشف محادثات الموظفين", "رفع ملفات خبيثة", "تجاوز الفحص الأمني", "فشل استعادة البيانات", "وصول تصيّد للموظفين", "وصول لملفات حساسة", "اختراق كامل للخادم", "كشف رواتب وبيانات شخصية"];
-const CONTEXT_LOW = ["غير مثبت لدينا", "نسخة اختبارية معزولة بلا بيانات", "داخل شبكة الموظفين + جدار حماية", "8 موظفين فقط، لا بيانات حساسة", "التحديث طُبّق تلقائياً أمس", "توعية + نظام كشف ثانٍ", "تم تغيير كلمة المرور بالفعل"];
-const CONTEXT_HIGH = ["صفحة عامة يومية — لا ضوابط", "مثبت، يستخدمه الكل عن بُعد، لا بديل", "2000 طالب يومياً + لا فحص للملفات", "لا نسخة بديلة، لا اختبار منذ 6 أشهر", "الجميع يستخدمه، لا تدقيق منذ سنة", "مثبت، يستخدمه كل الموظفين، بلا تشفير", "مفتوح للإنترنت، يستخدمه آلاف العملاء"];
+const CONTEXT_LOW = ["غير مثبت لدينا", "نسخة اختبارية معزولة بلا بيانات", "داخل شبكة الموظفين + جدار حماية", "8 موظفين فقط، لا بيانات حساسة", "التحديث طُبّق تلقائياً أمس", "توعية + نظام كشف ثانٍ", "تم تغيير كلمة المرور بالفعل", "خادم داخلي مغلق، لا يوجد اتصال بالإنترنت، وصول محصور بموظف واحد"];
+const CONTEXT_HIGH = ["صفحة عامة يومية — لا ضوابط", "مثبت، يستخدمه الكل عن بُعد، لا بديل", "2000 طالب يومياً + لا فحص للملفات", "لا نسخة بديلة، لا اختبار منذ 6 أشهر", "الجميع يستخدمه، لا تدقيق منذ سنة", "مثبت، يستخدمه كل الموظفين، بلا تشفير", "مفتوح للإنترنت، يستخدمه آلاف العملاء", "مفتوح للإنترنت بالكامل، بيانات العملاء الحساسة مكشوفة، لا يوجد أي جدار حماية"];
 
 function getRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
@@ -38,7 +38,7 @@ function generate100Rounds() {
       realContext = getRandom(CONTEXT_HIGH);
       fakeContext = getRandom(CONTEXT_LOW);
     } else if (pattern < 0.8) {
-      // 30%: الصح هو الأعلى شدة (لأن السياق خطير جداً أيضاً)
+      // 30%: الصح هو الأعلى شدة (لتفادي الحفظ)
       realSev = (Math.random() * 2 + 8).toFixed(1); 
       fakeSev = (Math.random() * 2 + 4).toFixed(1); 
       realContext = getRandom(CONTEXT_HIGH);
@@ -48,7 +48,7 @@ function generate100Rounds() {
       const base = Math.random() * 2 + 7; 
       realSev = (base + 0.1).toFixed(1);
       fakeSev = base.toFixed(1);
-      // نجعل السياق متطرفاً جداً لصالح الصح
+      // سياق متطرف جداً للتوضيح
       realContext = "مفتوح للإنترنت بالكامل، بيانات العملاء الحساسة مكشوفة، لا يوجد أي جدار حماية";
       fakeContext = "خادم داخلي مغلق، لا يوجد اتصال بالإنترنت، وصول محصور بموظف واحد";
     }
@@ -73,11 +73,9 @@ function generate100Rounds() {
     const realCard = dangerInA ? cardA : cardB;
     const fakeCard = dangerInA ? cardB : cardA;
 
-    // توليد أسباب متنوعة
     const reasonTemplates = [
       { text: `البطاقة ${correctLetter}: لأنها مُعرّضة للجمهور/الإنترنت، بينما ${wrongLetter} داخلية أو محدودة`, correct: true },
       { text: `البطاقة ${correctLetter}: لأنها بلا أي ضوابط حماية، بينما ${wrongLetter} لديها إجراءات وقائية`, correct: true },
-      { text: `البطاقة ${correctLetter}: لأن عدد المستخدمين المعرضين للخطر هائل، بينما ${wrongLetter} يخدم فئة محدودة`, correct: true },
       { text: `البطاقة ${correctLetter}: لأن الأثر المترتب عليها كارثي (${realCard.impact})، بينما ${wrongLetter} أثره محدود`, correct: true },
       { text: `البطاقة ${wrongLetter}: لأن درجة شدتها (${fakeCard.severity}) أعلى، والرقم الأكبر يفوز دائماً`, correct: false },
       { text: `البطاقة ${wrongLetter}: لأنها الأحدث في الإصدار، والأحدث دائماً أخطر`, correct: false },
@@ -89,9 +87,7 @@ function generate100Rounds() {
     if (!selectedReasons.some(r => r.correct)) selectedReasons[0] = reasonTemplates[0];
 
     rounds.push({ 
-      A: cardA, 
-      B: cardB, 
-      correct: correctLetter, 
+      A: cardA, B: cardB, correct: correctLetter, 
       reasons: shuffleArray(selectedReasons), 
       explain: `البطاقة ${correctLetter} هي الخطر الحقيقي. السياق المحلي (${realCard.context}) يجعلها أولوية قصوى.` 
     });
@@ -169,40 +165,39 @@ io.on('connection', (socket) => {
     });
   });
 
+  // ✅ اللاعب يختار البطاقة، ويظهر له السبب فوراً
   socket.on('pickCard', ({ card }) => {
     const room = rooms[socket.roomCode];
     if (!room || room.phase !== 'question') return;
-    if (room.playerAnswers[socket.playerId]) return;
+    
     room.playerAnswers[socket.playerId] = card;
+    socket.emit('showReasons', { reasons: room.rounds[room.round - 1].reasons });
     
     const totalAnswered = Object.keys(room.playerAnswers).length;
     io.to(room.hostSocket).emit('progressUpdate', { answered: totalAnswered, total: room.players.length });
-
-    if (totalAnswered === room.players.length) {
-      room.phase = 'reason';
-      io.to(socket.roomCode).emit('phaseChange', { phase: 'reason' });
-    }
   });
 
+  // ✅ اللاعب يختار السبب (هنا ننتظر الجميع)
   socket.on('pickReason', ({ idx }) => {
     const room = rooms[socket.roomCode];
-    if (!room || room.phase !== 'reason') return;
-    if (room.playerReasons[socket.playerId] !== undefined) return;
+    if (!room || room.phase === 'reveal') return;
+    
     room.playerReasons[socket.playerId] = idx;
     
     const totalReasons = Object.keys(room.playerReasons).length;
+    io.to(room.hostSocket).emit('progressUpdate', { answered: totalReasons, total: room.players.length });
+
+    // إذا أجاب كل الطلاب (بطاقة + سبب)، نكشف النتيجة
     if (totalReasons === room.players.length) {
       if (room.mode === 'solo') revealSolo(room);
       else revealTeamFractional(room);
     }
   });
 
-  // زر الإنهاء الإجباري (Force End)
   socket.on('forceEnd', () => {
     const room = rooms[socket.roomCode];
     if (!room || room.phase === 'reveal') return;
     
-    // إعطاء إجابات فارغة للذين لم يجيبوا
     room.players.forEach(p => {
       if (!room.playerAnswers[p.id]) room.playerAnswers[p.id] = "None";
       if (room.playerReasons[p.id] === undefined) room.playerReasons[p.id] = -1;
@@ -278,6 +273,10 @@ function revealTeamFractional(room) {
   room.teams.forEach((team, idx) => {
     team.members.forEach(m => io.to(m.socketId).emit('revealTeamPlayer', { correct: r.correct, explain: r.explain, mine: results.find(x => x.teamIdx === idx) }));
   });
+}
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`🚀 السيرفر يعمل على المنفذ ${PORT}`));
 }
 
 const PORT = process.env.PORT || 3000;
