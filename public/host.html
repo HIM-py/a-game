@@ -14,7 +14,7 @@
     <h3>اختر نمط اللعب:</h3>
     <div class="mode-pick">
       <button class="mode-btn" data-mode="solo">🧑 فردي — كل طالب بنفسه</button>
-      <button class="mode-btn" data-mode="team">👥 جماعي — توزيع عشوائي على فرق من 2</button>
+      <button class="mode-btn" data-mode="team">👥 جماعي — توزيع عشوائي على فرق</button>
     </div>
     <button id="createBtn" class="btn" disabled>➕ إنشاء غرفة</button>
   </div>
@@ -36,6 +36,10 @@
 
   <div id="gameArea" class="panel hidden">
     <div class="scoreboard" id="scoreboard"></div>
+    
+    <!-- هنا سيظهر المربع البنفسجي الخاص بالمعلم -->
+    <div id="hostAnswerBox" class="hidden"></div>
+
     <div id="cardsView" class="cards"></div>
     <div id="statusMsg" class="status"></div>
     <div id="revealBox" class="reveal hidden"></div>
@@ -111,12 +115,25 @@ document.getElementById('distributeBtn').onclick = () => socket.emit('distribute
 document.getElementById('redistributeBtn').onclick = () => socket.emit('redistribute');
 document.getElementById('startBtn').onclick = () => socket.emit('startRound');
 
-socket.on('roundStarted', ({ round, total, data }) => {
+// استقبال السؤال مع الحل من السيرفر (للمعلم فقط)
+socket.on('roundStartedHost', ({ round, total, data }) => {
   document.getElementById('lobby').classList.add('hidden');
   document.getElementById('gameArea').classList.remove('hidden');
   document.getElementById('nextBtn').classList.add('hidden');
   document.getElementById('revealBox').classList.add('hidden');
   document.getElementById('statusMsg').textContent = `⏳ الجولة ${round} / ${total} — في انتظار اختيارات اللاعبين...`;
+  
+  // عرض المربع البنفسجي للمعلم
+  const box = document.getElementById('hostAnswerBox');
+  box.classList.remove('hidden');
+  box.style.cssText = 'background:rgba(139,92,246,0.2); border:2px solid #a78bfa; padding:15px; border-radius:10px; margin-bottom:15px; color:#e9d5ff; font-size:1.05em; text-align:right;';
+  box.innerHTML = `
+    <strong style="color:#fbbf24; font-size:1.1em;">🔒 شاشة المعلم (مخفية عن الطلاب):</strong><br><br>
+    <strong>الإجابة الصحيحة:</strong> البطاقة ${data.correct} <br>
+    <strong>السبب:</strong> ${data.reasons.find(r => r.correct)?.text} <br>
+    <strong>الشرح:</strong> ${data.explain}
+  `;
+
   renderCards(data);
   renderScoreboard(roomState);
 });
@@ -166,6 +183,8 @@ socket.on('phaseChange', () => {
 
 socket.on('revealSolo', ({ correct, explain, leaderboard, round, total }) => {
   document.getElementById('statusMsg').textContent = '';
+  document.getElementById('hostAnswerBox').classList.add('hidden'); // إخفاء الحل بعد كشف النتيجة
+  
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
   box.innerHTML = `
@@ -186,6 +205,8 @@ socket.on('revealSolo', ({ correct, explain, leaderboard, round, total }) => {
 
 socket.on('revealTeam', ({ correct, explain, results, round, total }) => {
   document.getElementById('statusMsg').textContent = '';
+  document.getElementById('hostAnswerBox').classList.add('hidden'); // إخفاء الحل بعد كشف النتيجة
+
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
   box.innerHTML = `
@@ -213,6 +234,7 @@ document.getElementById('nextBtn').onclick = () => socket.emit('nextRound');
 socket.on('readyNext', (room) => {
   roomState = room;
   document.getElementById('revealBox').classList.add('hidden');
+  document.getElementById('hostAnswerBox').classList.add('hidden');
   document.getElementById('nextBtn').classList.add('hidden');
   renderScoreboard(room);
 });
