@@ -80,33 +80,49 @@ function generateQuestionByType(type) {
   const fakeCard = dangerInA ? cardB : cardA;
 
   let wrongExplanation = `البطاقة ${correctLetter} هي الخطر الحقيقي لأن طبيعة الثغرة (${realCard.condition}) أو السياق المحلي (${realCard.context}) يجعلها أولوية قصوى، بينما البطاقة ${wrongLetter} أقل خطورة.`;
-
   if (isExpert) {
-    wrongExplanation = `درس مهم جداً! البطاقة ${wrongLetter} شدتها ${fakeCard.severity}، لكنها ثغرة بسيطة (${fakeCard.condition}). البطاقة ${correctLetter} شدتها ${realCard.severity}، لكنها تسمح باختراق كامل. الشدة وحدها لا تكفي!`;
+    wrongExplanation = `انتبه! البطاقة ${wrongLetter} شدتها ${fakeCard.severity}، لكنها لا تسمح بالدخول. بينما البطاقة ${correctLetter} شدتها ${realCard.severity}، لكنها تسمح بالدخول كمدير. الشدة وحدها لا تكفي!`;
   } else if (isTrap) {
-    wrongExplanation = `في هذه الجولة، كلتاهما خطيرتان! لكن البطاقة ${correctLetter} طبيعتها أخطر (${realCard.condition}) وشدتها أعلى (${realCard.severity}).`;
+    wrongExplanation = `في هذه الجولة، كلتاهما خطيرتان! لكن البطاقة ${correctLetter} طبيعتها أخطر وشدتها أعلى.`;
   }
 
-  const reasonTemplates = isExpert ? [
-    { text: `البطاقة ${correctLetter}: لأن طبيعة الثغرة (${realCard.condition}) كارثية، بينما ${wrongLetter} رغم أن شدتها ${fakeCard.severity}، إلا أنها ثغرة بسيطة.`, correct: true },
-    { text: `البطاقة ${correctLetter}: لأن الأثر المترتب عليها (${realCard.impact}) أسوأ بكثير، والتركيز على الشدة فقط يضللنا.`, correct: true },
-    { text: `البطاقة ${wrongLetter}: لأن شدتها (${fakeCard.severity}) هي الأعلى، وفي الأمن السيبراني الرقم الأكبر هو الأخطر دائماً.`, correct: false },
-    { text: `البطاقة ${wrongLetter}: لأنها تعمل على نظام داخلي، والأنظمة الداخلية دائماً أقل أمناً.`, correct: false }
-  ] : isTrap ? [
-    { text: `البطاقة ${correctLetter}: لأن كلتاهما لهما سياق خطير، ولكن درجة الشدة (${realCard.severity}) وطبيعة الثغرة تجعلها الأكثر فتكاً.`, correct: true },
-    { text: `البطاقة ${correctLetter}: لأن الأثر المترتب عليها كارثي (${realCard.impact})، بينما ${wrongLetter} أثره محدود.`, correct: true },
-    { text: `البطاقة ${wrongLetter}: لأن سياقها يبدو آمناً أكثر للوهلة الأولى.`, correct: false },
-    { text: "كلتاهما آمنتان، لا يوجد خطر حقيقي.", correct: false }
-  ] : [
-    { text: `البطاقة ${correctLetter}: لأن السياق المحلي (${realCard.context}) يجعلها مكشوفة للخطر أكثر من ${wrongLetter}.`, correct: true },
-    { text: `البطاقة ${correctLetter}: لأن طبيعة الثغرة (${realCard.condition}) والأثر (${realCard.impact}) أخطر بكثير، بينما ${wrongLetter} ثغرة بسيطة.`, correct: true },
-    { text: `البطاقة ${wrongLetter}: لأن درجة شدتها (${fakeCard.severity}) هي الأعلى، وفي الأمن السيبراني الرقم الأكبر هو الأخطر دائماً.`, correct: false },
-    { text: `البطاقة ${wrongLetter}: لأنها الأحدث في الإصدار، والنسخ الجديدة تكون أكثر عرضة للثغرات المكتشفة حديثاً.`, correct: false }
-  ];
+  // ✅ الأسباب المخصصة والصعبة (كلها تتحدث عن البطاقة الصح)
+  const reasons = [];
 
-  const correctReasons = reasonTemplates.filter(r => r.correct);
-  const wrongReasons = reasonTemplates.filter(r => !r.correct);
-  const selectedReasons = shuffleArray([getRandom(correctReasons), getRandom(wrongReasons), getRandom(wrongReasons), getRandom(wrongReasons)]);
+  if (isExpert) {
+    // 4 نقاط: أسباب متشابهة جداً
+    reasons.push({ text: `البطاقة ${correctLetter}: لأن طبيعتها تسمح بالتحكم الكامل، بينما ${wrongLetter} مجرد تسريب معلومات لا يسمح بالدخول.`, correct: true });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأنها رغم أن شدتها أقل، إلا أنها تفتح ثغرة للمخترق للدخول كمدير، بينما ${wrongLetter} لا تفعل.`, correct: true });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأنها تعمل على مستوى المصادقة، بينما ${wrongLetter} تعمل على مستوى الإفصاح فقط.`, correct: false });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأن البطاقة ${wrongLetter} قد تكون خطيرة أيضاً، لكن الأثر المباشر لـ ${correctLetter} أخطر بكثير.`, correct: false });
+  } else if (type === 'nature') {
+    // 3 نقاط: أسباب متقاربة
+    reasons.push({ text: `البطاقة ${correctLetter}: لأنها تسمح بالتحكم الكامل بالخادم، بينما ${wrongLetter} لا تؤدي إلا لكشف أسماء الملفات.`, correct: true });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأن طبيعة الثغرة (${realCard.condition}) كارثية وتؤدي للتحكم، بينما ${wrongLetter} مجرد إفصاح بسيط.`, correct: true });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأنها تعمل على نظام داخلي، وهذا يجعل من الصعب اكتشافها.`, correct: false });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأن شدتها وإن كانت منخفضة، إلا أن المخترق قد يستغلها بشكل خطير.`, correct: false });
+  } else if (type === 'context') {
+    // 3 نقاط: أسباب متقاربة
+    reasons.push({ text: `البطاقة ${correctLetter}: لأن السياق المحلي (${realCard.context}) يجعلها مكشوفة للجميع، بينما ${wrongLetter} داخلية ومحمية.`, correct: true });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأنها الأكثر عرضة للهجوم من قبل أي شخص على الإنترنت، بينما ${wrongLetter} لا يمكن الوصول إليها.`, correct: true });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأن شدتها العالية تجعلها أخطر، بغض النظر عن السياق.`, correct: false });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأنها تعمل على خدمة ويب، وخدمات الويب دائماً مستهدفة.`, correct: false });
+  } else {
+    // 2 نقاط: أسباب عادية
+    reasons.push({ text: `البطاقة ${correctLetter}: لأن السياق المحلي (${realCard.context}) يجعلها مكشوفة للخطر أكثر من ${wrongLetter}.`, correct: true });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأن طبيعة الثغرة (${realCard.condition}) والأثر (${realCard.impact}) أخطر بكثير، بينما ${wrongLetter} ثغرة بسيطة.`, correct: true });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأن درجة شدتها (${realCard.severity}) هي الأعلى، والرقم الأكبر هو الأخطر دائماً.`, correct: false });
+    reasons.push({ text: `البطاقة ${correctLetter}: لأنها الأحدث في الإصدار.`, correct: false });
+  }
+
+  // نختار سببين صحيحين + سببين خاطئين عشوائياً
+  const correctReasons = reasons.filter(r => r.correct);
+  const wrongReasons = reasons.filter(r => !r.correct);
+  
+  const selectedReasons = shuffleArray([
+    ...shuffleArray(correctReasons).slice(0, 2),
+    ...shuffleArray(wrongReasons).slice(0, 2)
+  ]);
 
   return { 
     A: cardA, B: cardB, correct: correctLetter, 
