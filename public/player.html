@@ -47,12 +47,9 @@
 <script>
 const socket = io();
 let myName = null;
-let myTeamIdx = null;
-let myTeamName = null;
 let myPick = null;
 let currentRoundData = null;
 let myPlayerId = null;
-let gameMode = null;
 
 document.getElementById('joinBtn').onclick = () => {
   const code = document.getElementById('codeInput').value.trim().toUpperCase();
@@ -68,34 +65,19 @@ document.getElementById('joinBtn').onclick = () => {
     }
     myPlayerId = res.playerId;
     myName = res.name;
-    gameMode = res.mode;
     document.getElementById('joinBox').classList.add('hidden');
     document.getElementById('waitBox').classList.remove('hidden');
     document.getElementById('myName').textContent = myName;
-    document.getElementById('teamInfo').textContent =
-      gameMode === 'solo' ? '🧑 نمط فردي' : '👥 في انتظار التوزيع العشوائي...';
+    document.getElementById('teamInfo').textContent = '⏳ في انتظار المعلم للتوزيع...';
   });
 };
 
-socket.on('youAreInTeam', ({ teamIdx, teamName, members }) => {
-  myTeamIdx = teamIdx;
-  myTeamName = teamName;
-  document.getElementById('teamInfo').innerHTML =
-    `👥 فريقك: <strong>${teamName}</strong><br>الأعضاء: ${members.join(' · ')}`;
+socket.on('youAreInTeam', ({ teamName, members }) => {
+  document.getElementById('teamInfo').innerHTML = `👥 فريقك: <strong>${teamName}</strong><br>الأعضاء: ${members.join(' · ')}`;
 });
 
 socket.on('resetTeam', () => {
-  myTeamIdx = null;
-  myTeamName = null;
-  document.getElementById('teamInfo').textContent = '👥 في انتظار التوزيع العشوائي...';
-});
-
-socket.on('roomUpdate', (room) => {
-  if (room.mode === 'team' && !room.distributed) {
-    document.getElementById('waitMsg').textContent = 'في انتظار التوزيع العشوائي...';
-  } else {
-    document.getElementById('waitMsg').textContent = 'في انتظار المعلم لبدء اللعبة...';
-  }
+  document.getElementById('teamInfo').textContent = '⏳ في انتظار التوزيع العشوائي...';
 });
 
 socket.on('roundStarted', ({ round, total, data }) => {
@@ -162,52 +144,34 @@ function loadReasons() {
   });
 }
 
-socket.on('revealSoloPlayer', ({ correct, explain, mine, leaderboard }) => {
-  showReveal(correct, explain, mine, leaderboard, 'solo');
-});
-
-socket.on('revealTeamPlayer', ({ correct, explain, mine, results }) => {
-  showReveal(correct, explain, mine, results, 'team');
-});
-
-function showReveal(correct, explain, mine, list, mode) {
+socket.on('revealSoloPlayer', ({ correct, explain, mine }) => {
   document.getElementById('statusMsg').textContent = '';
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
-  if (mode === 'solo') {
-    box.innerHTML = `
-      <h3>✅ الإجابة الصحيحة: البطاقة ${correct}</h3>
-      <p class="explain">${explain}</p>
-      <div class="res-team ${mine.cardOk && mine.reasonOk ? 'perfect' : mine.cardOk ? 'partial' : 'wrong'}">
-        <h4>نتيجتك</h4>
-        <p>${mine.cardOk?'✅ البطاقة':'❌ البطاقة'} | ${mine.reasonOk?'✅ السبب':'❌ السبب'}</p>
-        <p class="pts">+${mine.pts} (المجموع: ${mine.total})</p>
-      </div>
-      <h4>🏆 لوحة الصدارة:</h4>
-      <div class="leaderboard">
-        ${list.slice(0,5).map((p, i) => `
-          <div class="lb-row ${i===0?'top':''}">
-            <span class="rank">${i+1}</span>
-            <span class="name">${p.name}</span>
-            <span class="pts">${p.total}</span>
-          </div>`).join('')}
-      </div>
-      <p class="wait-msg">في انتظار المعلم للجولة التالية...</p>`;
-  } else {
-    box.innerHTML = `
-      <h3>✅ الإجابة الصحيحة: البطاقة ${correct}</h3>
-      <p class="explain">${explain}</p>
-      <div class="res-team ${mine.cardOk && mine.reasonOk ? 'perfect' : mine.cardOk ? 'partial' : 'wrong'}">
-        <h4>فريقك</h4>
-        <p>${mine.cardOk?'✅ البطاقة':'❌ البطاقة'} | ${mine.reasonOk?'✅ السبب':'❌ السبب'}</p>
-        <p class="pts">+${mine.pts} (المجموع: ${mine.total})</p>
-      </div>
-      <p class="wait-msg">في انتظار المعلم للجولة التالية...</p>`;
-  }
-}
+  box.innerHTML = `
+    <h3>✅ الإجابة الصحيحة: البطاقة ${correct}</h3>
+    <p class="explain">${explain}</p>
+    <div class="res-team ${mine.cardOk && mine.reasonOk ? 'perfect' : mine.cardOk ? 'partial' : 'wrong'}">
+      <h4>نتيجتك</h4>
+      <p>${mine.cardOk?'✅ البطاقة':'❌ البطاقة'} | ${mine.reasonOk?'✅ السبب':'❌ السبب'}</p>
+      <p class="pts">+${mine.pts} (المجموع: ${mine.total})</p>
+    </div>
+    <p class="wait-msg">في انتظار المعلم للجولة التالية...</p>`;
+});
 
-socket.on('readyNext', () => {
-  document.getElementById('revealBox').classList.add('hidden');
+socket.on('revealTeamPlayer', ({ correct, explain, mine }) => {
+  document.getElementById('statusMsg').textContent = '';
+  const box = document.getElementById('revealBox');
+  box.classList.remove('hidden');
+  box.innerHTML = `
+    <h3>✅ الإجابة الصحيحة: البطاقة ${correct}</h3>
+    <p class="explain">${explain}</p>
+    <div class="res-team ${mine.cardOk && mine.reasonOk ? 'perfect' : mine.cardOk ? 'partial' : 'wrong'}">
+      <h4>فريقك</h4>
+      <p>${mine.cardOk?'✅ البطاقة':'❌ البطاقة'} | ${mine.reasonOk?'✅ السبب':'❌ السبب'}</p>
+      <p class="pts">+${mine.pts} (المجموع: ${mine.total})</p>
+    </div>
+    <p class="wait-msg">في انتظار المعلم للجولة التالية...</p>`;
 });
 
 socket.on('gameEnded', ({ mode, finalScores }) => {
