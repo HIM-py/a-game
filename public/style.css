@@ -56,17 +56,20 @@ header h1 {
   gap: 15px;
 }
 
-/* ✅ الشعار الشفاف 100% (بدون أي مربعات) */
+/* ✅ إصلاح الشعار: قص دائري وإطار لإخفاء المربعات */
 header h1::before {
   content: '';
   display: inline-block;
-  width: 50px;
-  height: 50px;
-  background-image: url('https://cdn-icons-png.flaticon.com/512/2885/2885232.png'); /* صورة شفافة */
-  background-size: contain;
+  width: 55px;
+  height: 55px;
+  background-image: url('/img/shield.png');
+  background-size: 130%; /* تكبير الصورة قليلاً لملء الدائرة */
   background-position: center;
   background-repeat: no-repeat;
-  filter: drop-shadow(0 0 10px var(--neon-blue)); /* توهج أزرق */
+  border-radius: 50%; /* القص الدائري */
+  border: 2px solid var(--neon-blue);
+  box-shadow: 0 0 15px rgba(14, 165, 233, 0.8);
+  background-color: #060b19; /* لون خلفية داكن لضمان عدم ظهور أي شوائب */
 }
 
 /* الأزرار العامة */
