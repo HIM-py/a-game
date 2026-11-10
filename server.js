@@ -12,7 +12,7 @@ const io = new Server(server, {
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ============================================================
-// مولد بنك الأسئلة (100 سؤال)
+// بنك الأسئلة (100 سؤال)
 // ============================================================
 const PRODUCTS = [
   "LibraryApp", "PayPortal", "PrintServer", "VPN Gateway", "ChatApp",
@@ -71,7 +71,6 @@ function shuffleArray(arr) {
 function generate100Rounds() {
   const rounds = [];
   const used = new Set();
-  
   while (rounds.length < 100) {
     const dangerInA = Math.random() < 0.5;
     const realProduct = `${getRandom(PRODUCTS)} ${getRandomInt(1,5)}.${getRandomInt(0,9)}`;
@@ -107,26 +106,12 @@ function generate100Rounds() {
 
     const shuffledReasons = shuffleArray(reasons);
     const correctLetter = dangerInA ? "A" : "B";
-    const explainReal = dangerInA ? `البطاقة A` : `البطاقة B`;
-    const explainFake = dangerInA ? `البطاقة B` : `البطاقة A`;
-
-    rounds.push({
-      A: cardA,
-      B: cardB,
-      correct: correctLetter,
-      reasons: shuffledReasons,
-      explain: `${explainReal} شدة ${realSeverity} لكنها مُعرّضة بشدة (${realContext}). ${explainFake} شدة ${fakeSeverity} لكن السياق يقلل الخطر (${fakeContext}).`
-    });
+    rounds.push({ A: cardA, B: cardB, correct: correctLetter, reasons: shuffledReasons, explain: `البطاقة ${correctLetter} هي الخطر الحقيقي.` });
   }
   return rounds;
 }
 
-// توليد 100 سؤال مرة واحدة
 const MASTER_BANK = generate100Rounds();
-
-// ============================================================
-// حالة الغرف
-// ============================================================
 const rooms = {};
 
 function makeCode() { return Math.random().toString(36).substring(2, 6).toUpperCase(); }
@@ -147,31 +132,47 @@ function distributeTeams(players) {
 }
 
 function publicRoom(room) {
-  const base = { mode: room.mode, phase: room.phase, round: room.round, total: 10 };
-  if (room.mode === 'solo') {
-    base.players = room.players.map(p => ({ id: p.id, name: p.name }));
-    base.scores = room.playerScores;
-  } else {
-    base.teams = room.teams.map((t, i) => ({ id: i, name: t.name, members: t.members.map(m => m.name), score: t.score }));
-  }
-  return base;
+  return {
+    mode: room.mode,
+    phase: room.phase,
+    distributed: room.distributed,
+    players: room.players.map(p => ({ id: p.id, name: p.name })),
+    teams: room.teams.map((t, i) => ({ id: i, name: t.name, members: t.members.map(m => m.name), score: t.score })),
+    scores: room.playerScores
+  };
 }
 
-// ============================================================
-// Socket events
-// ============================================================
-io.on('connection', (socket) => {
+// ✅ دالة مساعدة لتجهيز الفرق (تستخدم للتوزيع العشوائي أو اليدوي)
+function setupTeams(room, groups) {
+  room.teams = groups.map((members, i) => ({
+    name: 'الفريق ' + (i + 1),
+    members: members.map(m => ({ id: m.id, name: m.name, socketId: m.socketId })),
+    score: 0
+  }));
+  room.teamAnswers = room.teams.map(() => null);
+  room.teamReasons = room.teams.map(() => null);
+  room.distributed = true;
+  room.phase = 'distributed';
 
+  room.teams.forEach((team, idx) => {
+    team.members.forEach(m => {
+      io.to(m.socketId).emit('youAreInTeam', { teamIdx: idx, teamName: team.name, members: team.members.map(x => x.name) });
+      const s = io.sockets.sockets.get(m.socketId);
+      if (s) s.playerTeamIdx = idx;
+    });
+  });
+  io.to(room.hostSocket).emit('roomUpdate', publicRoom(room));
+  io.to(room.hostSocket).emit('distributed', publicRoom(room));
+}
+
+io.on('connection', (socket) => {
   socket.on('createRoom', ({ mode }, cb) => {
     const code = makeCode();
-    // سحب 10 جولات عشوائية من أصل 100
-    const selectedRounds = shuffleArray(MASTER_BANK).slice(0, 10);
-    
     rooms[code] = {
-      hostSocket: socket.id, mode: mode || 'team', rounds: selectedRounds,
+      hostSocket: socket.id, mode: mode || 'team', rounds: shuffleArray(MASTER_BANK).slice(0, 10),
       players: [], teams: [], distributed: false, round: 0, phase: 'waiting',
       playerScores: {}, playerAnswers: {}, playerReasons: {},
-      teamScores: [], teamAnswers: [], teamReasons: []
+      teamAnswers: [], teamReasons: []
     };
     socket.join(code);
     socket.roomCode = code;
@@ -184,77 +185,57 @@ io.on('connection', (socket) => {
     if (!room) return cb({ error: 'الغرفة غير موجودة' });
     if (room.phase !== 'waiting' && room.phase !== 'distributed') return cb({ error: 'اللعبة بدأت بالفعل' });
     
-    const playerId = 'P' + Date.now() + Math.floor(Math.random() * 1000);
+    const playerId = 'P' + Date.now();
     room.players.push({ id: playerId, name: name || 'لاعب', socketId: socket.id });
     room.playerScores[playerId] = 0;
     socket.join(code);
     socket.roomCode = code;
     socket.playerId = playerId;
-    socket.playerName = name;
     socket.playerTeamIdx = null;
-    io.to(code).emit('roomUpdate', publicRoom(room));
+
+    io.to(room.hostSocket).emit('roomUpdate', publicRoom(room));
     cb({ ok: true, playerId, name, mode: room.mode });
   });
 
-  socket.on('distribute', () => {
+  // ✅ التوزيع العشوائي
+  socket.on('distributeRandom', () => {
     const room = rooms[socket.roomCode];
     if (!room || room.mode !== 'team' || room.players.length < 2) return;
-    const groups = distributeTeams(room.players);
-    room.teams = groups.map((members, i) => ({
-      name: 'الفريق ' + (i + 1),
-      members: members.map(m => ({ id: m.id, name: m.name, socketId: m.socketId })),
-      score: 0
-    }));
-    room.teamScores = room.teams.map(() => 0);
-    room.teamAnswers = room.teams.map(() => null);
-    room.teamReasons = room.teams.map(() => null);
-    room.distributed = true;
-    room.phase = 'distributed';
-
-    room.teams.forEach((team, idx) => {
-      team.members.forEach(m => {
-        io.to(m.socketId).emit('youAreInTeam', { teamIdx: idx, teamName: team.name, members: team.members.map(x => x.name) });
-        const s = io.sockets.sockets.get(m.socketId);
-        if (s) s.playerTeamIdx = idx;
-      });
-    });
-    io.to(room.hostSocket).emit('roomUpdate', publicRoom(room));
-    io.to(room.hostSocket).emit('distributed', publicRoom(room));
-    room.players.forEach(p => io.to(p.socketId).emit('roomUpdate', publicRoom(room)));
+    setupTeams(room, distributeTeams(room.players));
   });
 
-  socket.on('redistribute', () => {
+  // ✅ التوزيع اليدوي
+  socket.on('distributeManual', ({ assignments }) => {
     const room = rooms[socket.roomCode];
     if (!room || room.mode !== 'team') return;
-    room.teams = []; room.distributed = false; room.phase = 'waiting';
-    room.players.forEach(p => io.to(p.socketId).emit('resetTeam'));
-    io.to(room.hostSocket).emit('roomUpdate', publicRoom(room));
-    room.players.forEach(p => io.to(p.socketId).emit('roomUpdate', publicRoom(room)));
+    
+    // تجميع اللاعبين حسب الفريق المختار
+    const teamMap = {};
+    assignments.forEach(a => {
+      const player = room.players.find(p => p.id === a.playerId);
+      if (player) {
+        if (!teamMap[a.teamNum]) teamMap[a.teamNum] = [];
+        teamMap[a.teamNum].push(player);
+      }
+    });
+
+    const groups = Object.values(teamMap);
+    setupTeams(room, groups);
   });
 
   socket.on('startRound', () => {
     const room = rooms[socket.roomCode];
-    if (!room || (room.mode === 'team' && !room.distributed) || room.players.length === 0) return;
-
+    if (!room || (room.mode === 'team' && !room.distributed)) return;
     room.round++;
     room.phase = 'question';
-    if (room.mode === 'solo') {
-      room.playerAnswers = {}; room.playerReasons = {};
-    } else {
-      room.teamAnswers = room.teams.map(() => null); room.teamReasons = room.teams.map(() => null);
-    }
     
-    // نرسل البيانات للمعلم فقط مع الحل (hostData)
-    const currentData = room.rounds[room.round - 1];
-    io.to(room.hostSocket).emit('roundStartedHost', {
-      round: room.round, total: 10, data: currentData, mode: room.mode
-    });
+    if (room.mode === 'solo') { room.playerAnswers = {}; room.playerReasons = {}; }
+    else { room.teamAnswers = room.teams.map(() => null); room.teamReasons = room.teams.map(() => null); }
     
-    // نرسل البيانات للطلاب بدون الحل
+    const data = room.rounds[room.round - 1];
+    io.to(room.hostSocket).emit('roundStartedHost', { round: room.round, total: 10, data, mode: room.mode });
     room.players.forEach(p => {
-      io.to(p.socketId).emit('roundStarted', {
-        round: room.round, total: 10, data: currentData, mode: room.mode
-      });
+      io.to(p.socketId).emit('roundStarted', { round: room.round, total: 10, data, mode: room.mode });
     });
   });
 
@@ -265,17 +246,13 @@ io.on('connection', (socket) => {
       if (room.playerAnswers[socket.playerId]) return;
       room.playerAnswers[socket.playerId] = card;
       io.to(room.hostSocket).emit('progressUpdate', { answered: Object.keys(room.playerAnswers).length, total: room.players.length });
-      if (Object.keys(room.playerAnswers).length === room.players.length) {
-        room.phase = 'reason'; io.to(socket.roomCode).emit('phaseChange', { phase: 'reason' });
-      }
+      if (Object.keys(room.playerAnswers).length === room.players.length) { room.phase = 'reason'; io.to(socket.roomCode).emit('phaseChange', { phase: 'reason' }); }
     } else {
       const idx = socket.playerTeamIdx;
       if (idx === null || idx === undefined || room.teamAnswers[idx]) return;
       room.teamAnswers[idx] = card;
       io.to(room.hostSocket).emit('progressUpdate', { answered: room.teamAnswers.filter(a => a).length, total: room.teams.length });
-      if (room.teamAnswers.every(a => a)) {
-        room.phase = 'reason'; io.to(socket.roomCode).emit('phaseChange', { phase: 'reason' });
-      }
+      if (room.teamAnswers.every(a => a)) { room.phase = 'reason'; io.to(socket.roomCode).emit('phaseChange', { phase: 'reason' }); }
     }
   });
 
@@ -285,13 +262,11 @@ io.on('connection', (socket) => {
     if (room.mode === 'solo') {
       if (room.playerReasons[socket.playerId] !== undefined) return;
       room.playerReasons[socket.playerId] = idx;
-      io.to(room.hostSocket).emit('progressUpdate', { answered: Object.keys(room.playerReasons).length, total: room.players.length });
       if (Object.keys(room.playerReasons).length === room.players.length) revealSolo(room);
     } else {
       const teamIdx = socket.playerTeamIdx;
       if (teamIdx === null || teamIdx === undefined || room.teamReasons[teamIdx] !== null) return;
       room.teamReasons[teamIdx] = idx;
-      io.to(room.hostSocket).emit('progressUpdate', { answered: room.teamReasons.filter(r => r !== null).length, total: room.teams.length });
       if (room.teamReasons.every(r => r !== null)) revealTeam(room);
     }
   });
@@ -300,28 +275,11 @@ io.on('connection', (socket) => {
     const room = rooms[socket.roomCode];
     if (!room) return;
     if (room.round >= 10) {
-      room.phase = 'ended';
-      const finalScores = room.mode === 'solo'
-        ? Object.fromEntries(room.players.map(p => [p.id, room.playerScores[p.id]]))
-        : room.teams.map(t => ({ name: t.name, score: t.score }));
+      const finalScores = room.mode === 'solo' ? room.playerScores : room.teams.map(t => ({ name: t.name, score: t.score }));
       io.to(socket.roomCode).emit('gameEnded', { mode: room.mode, finalScores });
     } else {
       room.phase = 'waiting';
-      if (room.mode === 'solo') { room.playerAnswers = {}; room.playerReasons = {}; }
-      else { room.teamAnswers = room.teams.map(() => null); room.teamReasons = room.teams.map(() => null); }
       io.to(socket.roomCode).emit('readyNext', publicRoom(room));
-    }
-  });
-
-  socket.on('disconnect', () => {
-    const code = socket.roomCode;
-    if (!code || !rooms[code]) return;
-    const room = rooms[code];
-    if (socket.id === room.hostSocket) {
-      io.to(code).emit('hostLeft'); delete rooms[code];
-    } else {
-      room.players = room.players.filter(p => p.socketId !== socket.id);
-      io.to(room.hostSocket).emit('roomUpdate', publicRoom(room));
     }
   });
 });
@@ -336,13 +294,8 @@ function revealSolo(room) {
     room.playerScores[p.id] += pts;
     return { id: p.id, name: p.name, cardOk, reasonOk, pts, total: room.playerScores[p.id] };
   }).sort((a, b) => b.total - a.total);
-
-  io.to(room.hostSocket).emit('revealSolo', { correct: r.correct, explain: r.explain, leaderboard, round: room.round, total: 10 });
-  room.players.forEach(p => {
-    io.to(p.socketId).emit('revealSoloPlayer', {
-      correct: r.correct, explain: r.explain, mine: leaderboard.find(x => x.id === p.id), leaderboard, round: room.round, total: 10
-    });
-  });
+  io.to(room.hostSocket).emit('revealSolo', { correct: r.correct, explain: r.explain, leaderboard });
+  room.players.forEach(p => io.to(p.socketId).emit('revealSoloPlayer', { correct: r.correct, explain: r.explain, mine: leaderboard.find(x => x.id === p.id) }));
 }
 
 function revealTeam(room) {
@@ -355,14 +308,8 @@ function revealTeam(room) {
     team.score += pts;
     return { teamIdx: i, name: team.name, members: team.members.map(m => m.name), cardOk, reasonOk, pts, total: team.score };
   });
-  io.to(room.hostSocket).emit('revealTeam', { correct: r.correct, explain: r.explain, results, round: room.round, total: 10 });
-  room.teams.forEach((team, idx) => {
-    team.members.forEach(m => {
-      io.to(m.socketId).emit('revealTeamPlayer', {
-        correct: r.correct, explain: r.explain, mine: results.find(x => x.teamIdx === idx), results, round: room.round, total: 10
-      });
-    });
-  });
+  io.to(room.hostSocket).emit('revealTeam', { correct: r.correct, explain: r.explain, results });
+  room.teams.forEach((team, idx) => team.members.forEach(m => io.to(m.socketId).emit('revealTeamPlayer', { correct: r.correct, explain: r.explain, mine: results.find(x => x.teamIdx === idx) })));
 }
 
 const PORT = process.env.PORT || 3000;
