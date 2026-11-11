@@ -30,9 +30,14 @@
     
     <a href="player.html" class="choice-card">
       <img src="/img/player.png" alt="اللاعب" style="width: 130px; height: 130px; object-fit: cover; border-radius: 50%; border: 3px solid #8b5cf6; box-shadow: 0 0 25px rgba(139, 92, 246, 0.7); margin-bottom: 20px; background-color: #060b19;">
-      <h2 data-i18n="playerTitle">أنا اللاعب</h2>
+      <h2 data-i18n="playerTitle">أنا لاعب</h2>
       <p data-i18n="playerDesc">انضم إلى غرفة بكود من المشرف</p>
     </a>
+  </div>
+
+  <!-- ✅ زر التدريب الفردي -->
+  <div style="text-align: center; margin-top: 20px; width: 100%;">
+    <a href="solo.html" class="btn" style="background: linear-gradient(135deg, #10b981, #059669); text-decoration: none; padding: 15px 40px; border-radius: 50px; font-weight: bold; color: white; display: inline-block; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);" data-i18n="soloBtn">🎮 تدريب فردي (بدون مشرف)</a>
   </div>
 
   <div style="text-align: center; margin-top: 40px; color: #64748b; font-size: 0.9em;">
@@ -50,6 +55,7 @@ const translations = {
     hostDesc: "أنشئ غرفة واعرض الكود على اللاعبين",
     playerTitle: "أنا لاعب",
     playerDesc: "انضم إلى غرفة بكود من المشرف",
+    soloBtn: "🎮 تدريب فردي (بدون مشرف)",
     copyright: "تم التصميم والتطوير بواسطة محمد العقيلي HIM.PY © 2026",
     langBtn: "🌐 English",
     pageTitle: "صراع النشرات الأمنية"
@@ -60,9 +66,10 @@ const translations = {
     subtitle2: "20 Cards · 10 Rounds · Solo or Team",
     hostTitle: "I am the Host",
     hostDesc: "Create a room and share the code with players",
-    playerTitle: "I am the Player",
+    playerTitle: "I am a Player",
     playerDesc: "Join a room with a code from the host",
-    copyright: "Designed & Developed by Mohammed Al-Akili HIM.PY © 2026",
+    soloBtn: "🎮 Solo Training (No Host)",
+    copyright: "Designed & Developed by Mohammed Al-Oqaili HIM.PY © 2026",
     langBtn: "🌐 عربي",
     pageTitle: "Cyber Security Duel"
   }
@@ -90,7 +97,6 @@ function applyLanguage(lang) {
   document.getElementById('pageTitle').innerText = translations[lang].pageTitle;
 }
 
-// تطبيق اللغة عند التحميل
 window.onload = () => {
   const savedLang = localStorage.getItem('lang') || 'ar';
   applyLanguage(savedLang);
