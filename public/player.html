@@ -81,15 +81,12 @@
     <div id="revealBox" class="reveal hidden"></div>
   </div>
 
-  <!-- ✅ شاشة النهاية (المنصة) -->
+  <!-- شاشة النهاية (المنصة) -->
   <div id="endBox" class="panel hidden" style="text-align: center; padding: 40px 20px;">
     <h2 style="color: #0ea5e9; font-size: 2.5em; margin-bottom: 10px;" data-i18n="gameOverTitle">🏆 انتهت اللعبة! 🏆</h2>
     <p style="color: #94a3b8; margin-bottom: 20px;" data-i18n="gameOverDesc">إليكم منصة التتويج والترتيب النهائي</p>
     
-    <!-- منصة التتويج -->
     <div class="podium-container" id="podiumContainer"></div>
-
-    <!-- الترتيب الكامل -->
     <div class="full-leaderboard" id="fullLeaderboard"></div>
   </div>
 
@@ -172,7 +169,7 @@ socket.on('roundStarted', ({ round, total, data }) => {
   renderCards(data, lang);
 });
 
-// ✅ تحديث renderCards لعرض النصوص المترجمة (ar/en)
+// ✅ تحديث renderCards لعرض النصوص المترجمة للاعب
 function renderCards(data, lang) {
   const c = document.getElementById('cardsView');
   c.innerHTML = '';
