@@ -148,25 +148,26 @@ function generateQuestionByType(type) {
     enExplain = `In this round, both are dangerous! But Card ${correctLetter} is more severe and has a higher score.`;
   }
 
-  // أسباب باللغتين
+  // ✅ توليد الأسباب مع إضافة ID
   const arReasons = [
-    { text: `البطاقة ${correctLetter}: لأن السياق المحلي (${realCard.context.ar}) يجعلها مكشوفة للخطر أكثر.`, correct: true },
-    { text: `البطاقة ${wrongLetter}: لأن درجة شدتها (${fakeCard.severity}) هي الأعلى.`, correct: false },
-    { text: "كلتاهما آمنتان.", correct: false },
-    { text: "لا يمكن تحديد الأولوية.", correct: false }
+    { id: 0, text: `البطاقة ${correctLetter}: لأن السياق المحلي (${realCard.context.ar}) يجعلها مكشوفة للخطر أكثر.`, correct: true },
+    { id: 1, text: `البطاقة ${wrongLetter}: لأن درجة شدتها (${fakeCard.severity}) هي الأعلى.`, correct: false },
+    { id: 2, text: "كلتاهما آمنتان.", correct: false },
+    { id: 3, text: "لا يمكن تحديد الأولوية.", correct: false }
   ];
   const enReasons = [
-    { text: `Card ${correctLetter}: Because the local context (${realCard.context.en}) makes it more exposed.`, correct: true },
-    { text: `Card ${wrongLetter}: Because its severity (${fakeCard.severity}) is the highest.`, correct: false },
-    { text: "Both are safe.", correct: false },
-    { text: "Priority cannot be determined.", correct: false }
+    { id: 0, text: `Card ${correctLetter}: Because the local context (${realCard.context.en}) makes it more exposed.`, correct: true },
+    { id: 1, text: `Card ${wrongLetter}: Because its severity (${fakeCard.severity}) is the highest.`, correct: false },
+    { id: 2, text: "Both are safe.", correct: false },
+    { id: 3, text: "Priority cannot be determined.", correct: false }
   ];
 
   return { 
     A: cardA, B: cardB, correct: correctLetter, 
     reasons_ar: shuffleArray(arReasons), reasons_en: shuffleArray(enReasons), 
     points: points,
-    explain_ar: arExplain, explain_en: enExplain
+    explain_ar: arExplain, explain_en: enExplain,
+    correctReasonId: 0 // ✅ حفظ ID السبب الصحيح
   };
 }
 
@@ -288,22 +289,23 @@ io.on('connection', (socket) => {
         reasons_en: currentRound.reasons_en 
       });
       
-      // لا ننهي الجولة هنا! ننتظر حتى يختار السبب
-      // ولكن نرسل تحديث للمشرف بأن الطالب اختار البطاقة
       const answeredNames = room.players.filter(p => room.playerAnswers[p.id]).map(p => p.name);
       io.to(room.hostSocket).emit('progressUpdate', { answeredNames, total: room.players.length });
     }
   });
 
-  socket.on('pickReason', ({ idx }) => {
+  socket.on('pickReason', ({ reasonId }) => {
     const room = rooms[socket.roomCode];
     if (!room || room.phase === 'reveal') return;
-    room.playerReasons[socket.playerId] = idx;
+    
+    const currentRound = room.rounds[room.round - 1];
+    // ✅ التحقق من السبب باستخدام ID
+    const selectedReason = currentRound.reasons_ar.find(r => r.id === reasonId);
+    room.playerReasons[socket.playerId] = selectedReason && selectedReason.correct ? 0 : -1;
     
     // التحقق مما إذا كان الجميع قد أجاب على الأسباب
     if (Object.keys(room.playerReasons).length === room.players.length) finishRound(room);
     else {
-      // تحديث المشرف بأن بعض الطلاب أجابوا على الأسباب
       const answeredNames = room.players.filter(p => room.playerReasons[p.id] !== undefined).map(p => p.name);
       io.to(room.hostSocket).emit('progressUpdate', { answeredNames, total: room.players.length });
     }
@@ -358,7 +360,7 @@ function revealSolo(room) {
   const maxPoints = r.points;
   const leaderboard = room.players.map(p => {
     const cardOk = room.playerAnswers[p.id] === r.correct;
-    const reasonOk = r.reasons_ar[room.playerReasons[p.id]]?.correct;
+    const reasonOk = room.playerReasons[p.id] === 0; // ✅ تحقق مباشر
     let pts = (cardOk && reasonOk) ? maxPoints : cardOk ? (maxPoints / 2) : 0;
     room.playerScores[p.id] += pts;
     return { id: p.id, name: p.name, cardOk, reasonOk, pts, total: room.playerScores[p.id] };
@@ -386,8 +388,8 @@ function revealTeamFractional(room) {
     const teamReasons = team.members.map(m => room.playerReasons[m.id]).filter(a => a !== undefined && a !== -1);
     const correctCardVotes = teamAnswers.filter(ans => ans === r.correct).length;
     const cardRatio = teamAnswers.length > 0 ? (correctCardVotes / teamAnswers.length) : 0;
-    const correctReasonIdx = r.reasons_ar.findIndex(x => x.correct);
-    const correctReasonVotes = teamReasons.filter(ans => ans === correctReasonIdx).length;
+    // ✅ التحقق من الأسباب الصحيحة (التي ID = 0)
+    const correctReasonVotes = team.members.filter(m => room.playerReasons[m.id] === 0).length;
     const reasonRatio = teamReasons.length > 0 ? (correctReasonVotes / teamReasons.length) : 0;
     let pts = ((cardRatio * maxPoints) / 2) + ((reasonRatio * maxPoints) / 2); 
     pts = Math.round(pts * 100) / 100; team.score = Math.round((team.score + pts) * 100) / 100; 
