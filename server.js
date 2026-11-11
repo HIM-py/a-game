@@ -11,7 +11,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const COPYRIGHT_TEXT = "محمد العقيلي HIM.PY";
 
-// قواميس البيانات باللغتين
 const PRODUCTS = ["LibraryApp", "PayPortal", "PrintServer", "VPN Gateway", "ChatApp", "StudentPortal", "Antivirus", "Backup Server", "Email Filter", "File Share", "WebServer", "HR Portal", "Router Firmware", "Cloud Storage", "Dev Tools", "Public API", "Backup Tape", "Mobile App", "Old CRM", "Wi-Fi Guest"];
 const CONDITIONS = [
   { ar: "تسجيل دخول الزوار مُفعّل", en: "Guest login enabled" },
@@ -149,7 +148,7 @@ function generateQuestionByType(type) {
     enExplain = `In this round, both are dangerous! But Card ${correctLetter} is more severe and has a higher score.`;
   }
 
-  // توليد أسباب عشوائية (بسيطة للعرض)
+  // أسباب باللغتين
   const arReasons = [
     { text: `البطاقة ${correctLetter}: لأن السياق المحلي (${realCard.context.ar}) يجعلها مكشوفة للخطر أكثر.`, correct: true },
     { text: `البطاقة ${wrongLetter}: لأن درجة شدتها (${fakeCard.severity}) هي الأعلى.`, correct: false },
@@ -267,33 +266,47 @@ io.on('connection', (socket) => {
     const room = rooms[socket.roomCode];
     if (!room || room.phase !== 'question') return;
     const currentRound = room.rounds[room.round - 1];
+    
+    // تسجيل إجابة البطاقة
     room.playerAnswers[socket.playerId] = card;
     
     if (card !== currentRound.correct) {
+      // إذا اختار البطاقة الخطأ: نرسل له الشرح فوراً ونعتبره أجاب على السبب بـ -1 (خطأ)
       socket.emit('wrongAnswer', { 
         correct: currentRound.correct, 
         explain_ar: currentRound.explain_ar, 
         explain_en: currentRound.explain_en 
       });
       room.playerReasons[socket.playerId] = -1;
+      
+      // التحقق مما إذا كان الجميع قد أجاب على البطاقات
+      if (Object.keys(room.playerAnswers).length === room.players.length) finishRound(room);
     } else {
+      // إذا اختار البطاقة الصحيحة: نطلب منه اختيار السبب
       socket.emit('showReasons', { 
         reasons_ar: currentRound.reasons_ar, 
         reasons_en: currentRound.reasons_en 
       });
+      
+      // لا ننهي الجولة هنا! ننتظر حتى يختار السبب
+      // ولكن نرسل تحديث للمشرف بأن الطالب اختار البطاقة
+      const answeredNames = room.players.filter(p => room.playerAnswers[p.id]).map(p => p.name);
+      io.to(room.hostSocket).emit('progressUpdate', { answeredNames, total: room.players.length });
     }
-
-    const answeredNames = room.players.filter(p => room.playerAnswers[p.id]).map(p => p.name);
-    io.to(room.hostSocket).emit('progressUpdate', { answeredNames, total: room.players.length });
-
-    if (Object.keys(room.playerAnswers).length === room.players.length) finishRound(room);
   });
 
   socket.on('pickReason', ({ idx }) => {
     const room = rooms[socket.roomCode];
     if (!room || room.phase === 'reveal') return;
     room.playerReasons[socket.playerId] = idx;
+    
+    // التحقق مما إذا كان الجميع قد أجاب على الأسباب
     if (Object.keys(room.playerReasons).length === room.players.length) finishRound(room);
+    else {
+      // تحديث المشرف بأن بعض الطلاب أجابوا على الأسباب
+      const answeredNames = room.players.filter(p => room.playerReasons[p.id] !== undefined).map(p => p.name);
+      io.to(room.hostSocket).emit('progressUpdate', { answeredNames, total: room.players.length });
+    }
   });
 
   socket.on('forceEnd', () => {
