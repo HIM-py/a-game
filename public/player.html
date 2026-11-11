@@ -151,7 +151,6 @@ let myPlayerId = null;
 let playerTimerInterval = null;
 let playerTimeLeft = 35;
 
-// ✅ دالة تشغيل العداد للاعب
 function startPlayerTimer() {
   if (playerTimerInterval) clearInterval(playerTimerInterval);
   playerTimeLeft = 35;
@@ -164,8 +163,6 @@ function startPlayerTimer() {
     if (playerTimeLeft <= 0) {
       clearInterval(playerTimerInterval);
       timerDisplay.textContent = '00:00';
-      
-      // عند انتهاء الوقت: إخفاء البطاقات والأسباب وإظهار رسالة
       document.getElementById('cardsView').style.display = 'none';
       document.getElementById('reasonView').classList.add('hidden');
       document.getElementById('statusMsg').textContent = localStorage.getItem('lang') === 'en' ? 'Time is up! Waiting for host...' : 'انتهى الوقت! في انتظار المشرف...';
@@ -210,12 +207,12 @@ socket.on('roundStarted', ({ round, total, data }) => {
   document.getElementById('endBox').classList.add('hidden');
   document.getElementById('reasonView').classList.add('hidden');
   document.getElementById('revealBox').classList.add('hidden');
-  document.getElementById('cardsView').style.display = 'grid'; // إعادة إظهار البطاقات
+  document.getElementById('cardsView').style.display = 'grid'; 
   document.getElementById('statusMsg').textContent = `${lang === 'ar' ? 'الجولة' : 'Round'} ${round} / ${total} — ${lang === 'ar' ? 'اختر البطاقة' : 'Choose a card'}`;
   document.getElementById('statusMsg').style.color = '#0ea5e9';
   document.getElementById('roundPoints').textContent = data.points + (lang === 'ar' ? " نقاط" : " pts");
   renderCards(data, lang);
-  startPlayerTimer(); // ✅ تشغيل العداد
+  startPlayerTimer();
 });
 
 function renderCards(data, lang) {
@@ -260,14 +257,15 @@ socket.on('showReasons', ({ reasons_ar, reasons_en }) => {
   document.getElementById('statusMsg').textContent = lang === 'ar' ? 'اختر السبب' : 'Choose reason';
   const box = document.getElementById('reasonOptions');
   box.innerHTML = '';
-  reasons.forEach((r, i) => {
+  reasons.forEach((r) => {
     const b = document.createElement('button');
     b.className = 'reason-option';
     b.textContent = r.text;
     b.onclick = () => {
       document.querySelectorAll('.reason-option').forEach(x => x.disabled = true);
       b.classList.add('selected');
-      socket.emit('pickReason', { idx: i });
+      // ✅ إرسال reasonId بدلاً من idx
+      socket.emit('pickReason', { reasonId: r.id });
       document.getElementById('reasonView').classList.add('hidden');
       document.getElementById('statusMsg').textContent = lang === 'ar' ? 'تم اختيار السبب — في انتظار المشرف...' : 'Reason selected — Waiting for host...';
     };
@@ -279,9 +277,9 @@ socket.on('wrongAnswer', ({ correct, explain_ar, explain_en }) => {
   const lang = localStorage.getItem('lang') || 'ar';
   const explain = lang === 'ar' ? explain_ar : explain_en;
   
-  stopPlayerTimer(); // إيقاف العداد عند الإجابة
+  stopPlayerTimer();
   document.getElementById('reasonView').classList.add('hidden');
-  document.getElementById('cardsView').style.display = 'none'; // إخفاء البطاقات
+  document.getElementById('cardsView').style.display = 'none';
   document.getElementById('statusMsg').textContent = lang === 'ar' ? 'إجابة خاطئة!' : 'Wrong Answer!';
   document.getElementById('statusMsg').style.color = '#ef4444';
   
