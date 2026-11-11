@@ -6,7 +6,6 @@
 <title id="pageTitle">لوحة المشرف</title>
 <link rel="stylesheet" href="style.css">
 <style>
-  /* تنسيقات منصة التتويج */
   .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 10px; margin: 40px 0; height: 250px; }
   .podium-step { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 120px; background: linear-gradient(180deg, rgba(13,27,56,0.9), rgba(6,11,25,0.95)); border: 2px solid; border-radius: 10px 10px 0 0; padding: 15px; }
   .podium-step.first { height: 220px; border-color: #fbbf24; box-shadow: 0 0 20px rgba(251,191,36,0.4); }
@@ -18,7 +17,6 @@
   .podium-step.first .podium-rank { color: #fbbf24; }
   .podium-step.second .podium-rank { color: #94a3b8; }
   .podium-step.third .podium-rank { color: #b45309; }
-  
   .full-leaderboard { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px; margin-top: 20px; max-width: 600px; margin-left: auto; margin-right: auto; }
   .lb-item { display: flex; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; }
   .lb-item:last-child { border-bottom: none; }
@@ -100,15 +98,11 @@
     </div>
   </div>
 
-  <!-- ✅ شاشة النهاية (المنصة) -->
   <div id="endScreen" class="panel hidden" style="text-align: center; padding: 40px 20px;">
     <h2 style="color: #0ea5e9; font-size: 2.5em; margin-bottom: 10px;" data-i18n="gameOverTitle">🏆 انتهت اللعبة! 🏆</h2>
     <p style="color: #94a3b8; margin-bottom: 30px;" data-i18n="gameOverDesc">إليكم منصة التتويج والترتيب النهائي</p>
     
-    <!-- منصة التتويج (أعلى 3) -->
     <div class="podium-container" id="podiumContainer"></div>
-
-    <!-- الترتيب الكامل -->
     <div class="full-leaderboard" id="fullLeaderboard"></div>
 
     <button class="btn" onclick="location.reload()" style="margin-top: 30px;" data-i18n="newGame">لعبة جديدة</button>
@@ -254,7 +248,7 @@ socket.on('roundStartedHost', ({ round, total, data }) => {
   startTimer(); 
 });
 
-// ✅ تحديث renderCards لعرض النصوص المترجمة (ar/en)
+// ✅ تحديث renderCards لعرض النصوص المترجمة
 function renderCards(data, lang) {
   const c = document.getElementById('cardsView');
   c.innerHTML = '';
@@ -334,7 +328,6 @@ socket.on('readyNext', () => {
   stopTimer();
 });
 
-// ✅ استقبال النتائج النهائية وبناء المنصة
 socket.on('gameEnded', ({ mode, leaderboard }) => {
   stopTimer();
   document.getElementById('gameArea').classList.add('hidden');
