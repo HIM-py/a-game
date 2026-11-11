@@ -254,19 +254,24 @@ socket.on('roundStartedHost', ({ round, total, data }) => {
   startTimer(); 
 });
 
+// ✅ تحديث renderCards لعرض النصوص المترجمة (ar/en)
 function renderCards(data, lang) {
   const c = document.getElementById('cardsView');
   c.innerHTML = '';
   ['A','B'].forEach(k => {
     const d = data[k];
+    const conditionText = lang === 'ar' ? d.condition.ar : d.condition.en;
+    const impactText = lang === 'ar' ? d.impact.ar : d.impact.en;
+    const contextText = lang === 'ar' ? d.context.ar : d.context.en;
+
     c.innerHTML += `
       <div class="card">
         <div class="card-title">${lang === 'ar' ? 'البطاقة' : 'Card'} ${k}</div>
         <div class="card-field"><span>${lang === 'ar' ? 'المنتج' : 'Product'}</span><b>${d.product}</b></div>
         <div class="card-field"><span>${lang === 'ar' ? 'الشدة' : 'Severity'}</span><b class="severity">${d.severity}</b></div>
-        <div class="card-field"><span>${lang === 'ar' ? 'الحالة' : 'Condition'}</span><b>${d.condition}</b></div>
-        <div class="card-field"><span>${lang === 'ar' ? 'الأثر' : 'Impact'}</span><b>${d.impact}</b></div>
-        <div class="context-box">${d.context}</div>
+        <div class="card-field"><span>${lang === 'ar' ? 'الحالة' : 'Condition'}</span><b>${conditionText}</b></div>
+        <div class="card-field"><span>${lang === 'ar' ? 'الأثر' : 'Impact'}</span><b>${impactText}</b></div>
+        <div class="context-box">${contextText}</div>
       </div>`;
   });
 }
@@ -329,7 +334,7 @@ socket.on('readyNext', () => {
   stopTimer();
 });
 
-// ✅ استقبال النتائج النهائية وبناء منصة التتويج
+// ✅ استقبال النتائج النهائية وبناء المنصة
 socket.on('gameEnded', ({ mode, leaderboard }) => {
   stopTimer();
   document.getElementById('gameArea').classList.add('hidden');
@@ -343,38 +348,12 @@ socket.on('gameEnded', ({ mode, leaderboard }) => {
   podium.innerHTML = '';
   fullList.innerHTML = '';
 
-  // بناء المنصة لأعلى 3
   if (leaderboard.length > 0) {
-    // المركز الثاني (يسار)
-    if (leaderboard[1]) {
-      podium.innerHTML += `
-        <div class="podium-step second">
-          <div class="podium-rank">2</div>
-          <div class="podium-name">${leaderboard[1].name}</div>
-          <div class="podium-score">${leaderboard[1].score}</div>
-        </div>`;
-    }
-    // المركز الأول (وسط)
-    if (leaderboard[0]) {
-      podium.innerHTML += `
-        <div class="podium-step first">
-          <div class="podium-rank">1</div>
-          <div class="podium-name">${leaderboard[0].name}</div>
-          <div class="podium-score">${leaderboard[0].score}</div>
-        </div>`;
-    }
-    // المركز الثالث (يمين)
-    if (leaderboard[2]) {
-      podium.innerHTML += `
-        <div class="podium-step third">
-          <div class="podium-rank">3</div>
-          <div class="podium-name">${leaderboard[2].name}</div>
-          <div class="podium-score">${leaderboard[2].score}</div>
-        </div>`;
-    }
+    if (leaderboard[1]) podium.innerHTML += `<div class="podium-step second"><div class="podium-rank">2</div><div class="podium-name">${leaderboard[1].name}</div><div class="podium-score">${leaderboard[1].score}</div></div>`;
+    if (leaderboard[0]) podium.innerHTML += `<div class="podium-step first"><div class="podium-rank">1</div><div class="podium-name">${leaderboard[0].name}</div><div class="podium-score">${leaderboard[0].score}</div></div>`;
+    if (leaderboard[2]) podium.innerHTML += `<div class="podium-step third"><div class="podium-rank">3</div><div class="podium-name">${leaderboard[2].name}</div><div class="podium-score">${leaderboard[2].score}</div></div>`;
   }
 
-  // بناء القائمة الكاملة
   leaderboard.forEach((p, i) => {
     fullList.innerHTML += `
       <div class="lb-item">
