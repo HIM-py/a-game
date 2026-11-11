@@ -25,6 +25,17 @@
   .lb-item .rank { color: #0ea5e9; font-weight: bold; width: 30px; }
   .lb-item .name { flex: 1; text-align: right; margin-right: 15px; }
   .lb-item .score { color: #10b981; font-weight: bold; }
+
+  /* ✅ تنسيقات عداد الوقت */
+  #playerTimer {
+    text-align: center;
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #ef4444;
+    margin: 20px 0;
+    text-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+    display: none; /* مخفي افتراضياً */
+  }
 </style>
 </head>
 <body>
@@ -68,6 +79,9 @@
   </div>
 
   <div id="playBox" class="panel hidden" style="max-width: 900px;">
+    <!-- ✅ عداد الوقت -->
+    <div id="playerTimer">00:35</div>
+
     <div style="text-align: center; margin-bottom: 25px; font-weight: bold; color: #10b981; font-size: 1.3em; background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.3);">
       <span data-i18n="roundPoints">نقاط هذه الجولة:</span> <span id="roundPoints">-</span>
     </div>
@@ -134,6 +148,38 @@ window.onload = () => {
 const socket = io();
 let myPick = null;
 let myPlayerId = null;
+let playerTimerInterval = null;
+let playerTimeLeft = 35;
+
+// ✅ دالة تشغيل العداد للاعب
+function startPlayerTimer() {
+  if (playerTimerInterval) clearInterval(playerTimerInterval);
+  playerTimeLeft = 35;
+  const timerDisplay = document.getElementById('playerTimer');
+  timerDisplay.textContent = `00:${playerTimeLeft < 10 ? '0'+playerTimeLeft : playerTimeLeft}`;
+  timerDisplay.style.display = 'block';
+
+  playerTimerInterval = setInterval(() => {
+    playerTimeLeft--;
+    if (playerTimeLeft <= 0) {
+      clearInterval(playerTimerInterval);
+      timerDisplay.textContent = '00:00';
+      
+      // عند انتهاء الوقت: إخفاء البطاقات والأسباب وإظهار رسالة
+      document.getElementById('cardsView').style.display = 'none';
+      document.getElementById('reasonView').classList.add('hidden');
+      document.getElementById('statusMsg').textContent = localStorage.getItem('lang') === 'en' ? 'Time is up! Waiting for host...' : 'انتهى الوقت! في انتظار المشرف...';
+      document.getElementById('statusMsg').style.color = '#ef4444';
+    } else {
+      timerDisplay.textContent = `00:${playerTimeLeft < 10 ? '0'+playerTimeLeft : playerTimeLeft}`;
+    }
+  }, 1000);
+}
+
+function stopPlayerTimer() {
+  if (playerTimerInterval) clearInterval(playerTimerInterval);
+  document.getElementById('playerTimer').style.display = 'none';
+}
 
 document.getElementById('joinBtn').onclick = () => {
   const code = document.getElementById('codeInput').value.trim().toUpperCase();
@@ -164,12 +210,14 @@ socket.on('roundStarted', ({ round, total, data }) => {
   document.getElementById('endBox').classList.add('hidden');
   document.getElementById('reasonView').classList.add('hidden');
   document.getElementById('revealBox').classList.add('hidden');
+  document.getElementById('cardsView').style.display = 'grid'; // إعادة إظهار البطاقات
   document.getElementById('statusMsg').textContent = `${lang === 'ar' ? 'الجولة' : 'Round'} ${round} / ${total} — ${lang === 'ar' ? 'اختر البطاقة' : 'Choose a card'}`;
+  document.getElementById('statusMsg').style.color = '#0ea5e9';
   document.getElementById('roundPoints').textContent = data.points + (lang === 'ar' ? " نقاط" : " pts");
   renderCards(data, lang);
+  startPlayerTimer(); // ✅ تشغيل العداد
 });
 
-// ✅ تحديث renderCards لعرض النصوص المترجمة للاعب
 function renderCards(data, lang) {
   const c = document.getElementById('cardsView');
   c.innerHTML = '';
@@ -231,8 +279,11 @@ socket.on('wrongAnswer', ({ correct, explain_ar, explain_en }) => {
   const lang = localStorage.getItem('lang') || 'ar';
   const explain = lang === 'ar' ? explain_ar : explain_en;
   
+  stopPlayerTimer(); // إيقاف العداد عند الإجابة
   document.getElementById('reasonView').classList.add('hidden');
+  document.getElementById('cardsView').style.display = 'none'; // إخفاء البطاقات
   document.getElementById('statusMsg').textContent = lang === 'ar' ? 'إجابة خاطئة!' : 'Wrong Answer!';
+  document.getElementById('statusMsg').style.color = '#ef4444';
   
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
@@ -246,16 +297,19 @@ socket.on('wrongAnswer', ({ correct, explain_ar, explain_en }) => {
 });
 
 socket.on('prepareNextRound', () => {
+  stopPlayerTimer();
   const box = document.getElementById('revealBox');
   box.classList.add('hidden');
   box.style.display = 'none'; 
 });
 
 socket.on('revealSoloPlayer', ({ correct, explain_ar, explain_en, mine, points }) => {
+  stopPlayerTimer();
   const lang = localStorage.getItem('lang') || 'ar';
   const explain = lang === 'ar' ? explain_ar : explain_en;
   
   document.getElementById('statusMsg').textContent = '';
+  document.getElementById('cardsView').style.display = 'none';
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
   box.style.display = 'block'; 
@@ -263,10 +317,12 @@ socket.on('revealSoloPlayer', ({ correct, explain_ar, explain_en, mine, points }
 });
 
 socket.on('revealTeamPlayer', ({ correct, explain_ar, explain_en, mine, points }) => {
+  stopPlayerTimer();
   const lang = localStorage.getItem('lang') || 'ar';
   const explain = lang === 'ar' ? explain_ar : explain_en;
   
   document.getElementById('statusMsg').textContent = '';
+  document.getElementById('cardsView').style.display = 'none';
   const box = document.getElementById('revealBox');
   box.classList.remove('hidden');
   box.style.display = 'block'; 
@@ -274,6 +330,7 @@ socket.on('revealTeamPlayer', ({ correct, explain_ar, explain_en, mine, points }
 });
 
 socket.on('gameEnded', ({ mode, leaderboard }) => {
+  stopPlayerTimer();
   const lang = localStorage.getItem('lang') || 'ar';
   
   document.getElementById('playBox').classList.add('hidden');
