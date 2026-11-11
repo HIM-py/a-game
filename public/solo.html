@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="pageTitle">تدريب فردي</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  /* تنسيقات منصة التتويج */
+  .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 10px; margin: 30px 0; height: 220px; }
+  .podium-step { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 100px; background: linear-gradient(180deg, rgba(13,27,56,0.9), rgba(6,11,25,0.95)); border: 2px solid; border-radius: 10px 10px 0 0; padding: 15px 10px; }
+  .podium-step.first { height: 200px; border-color: #fbbf24; box-shadow: 0 0 20px rgba(251,191,36,0.4); }
+  .podium-name { font-weight: bold; color: #fff; margin-bottom: 5px; text-align: center; font-size: 0.9em; word-break: break-all; }
+  .podium-score { color: #10b981; font-size: 1em; font-weight: bold; }
+  .podium-rank { font-size: 1.8em; font-weight: bold; margin-bottom: 10px; color: #fbbf24; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div style="display: flex; align-items: center; gap: 15px;">
+      <img src="/img/player.png" alt="لاعب" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%; border: 2px solid #8b5cf6; box-shadow: 0 0 10px rgba(139, 92, 246, 0.7); background-color: #060b19;">
+      <div>
+        <h1 style="margin: 0;" data-i18n="soloTitle">تدريب فردي</h1>
+        <p style="margin: 0; color: #94a3b8; font-size: 0.9em;" data-i18n="gameTitle">صراع النشرات الأمنية</p>
+      </div>
+    </div>
+    <a href="index.html" style="text-decoration: none; color: #0ea5e9; font-weight: bold; background: rgba(14, 165, 233, 0.1); padding: 10px 20px; border-radius: 20px; border: 1px solid #0ea5e9;" data-i18n="backHome">العودة للرئيسية</a>
+  </header>
+
+  <!-- شاشة البداية للتدريب -->
+  <div id="startBox" class="panel" style="max-width: 500px; text-align: center;">
+    <img src="/img/player.png" alt="لاعب" style="width: 110px; height: 110px; object-fit: cover; border-radius: 50%; border: 3px solid #8b5cf6; box-shadow: 0 0 20px rgba(139, 92, 246, 0.7); margin-bottom: 20px; background-color: #060b19;">
+    <h2 style="color: #fff; margin-bottom: 10px;" data-i18n="soloWelcome">أهلاً بك في التدريب الفردي</h2>
+    <p style="color: #94a3b8; margin-bottom: 30px;" data-i18n="soloDesc">ستلعب 10 جولات منفرداً، وستظهر نتيجتك النهائية في النهاية.</p>
+    
+    <label data-i18n="yourName">اسمك</label>
+    <input id="nameInput" class="input" placeholder="Ahmed" style="text-align: center;">
+    
+    <button id="startSoloBtn" class="btn" style="width: 100%; margin-top: 20px;" data-i18n="startTraining">ابدأ التدريب</button>
+  </div>
+
+  <!-- شاشة اللعب -->
+  <div id="playBox" class="panel hidden" style="max-width: 900px;">
+    <div style="text-align: center; margin-bottom: 25px; font-weight: bold; color: #10b981; font-size: 1.3em; background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.3);">
+      <span data-i18n="roundPoints">نقاط هذه الجولة:</span> <span id="roundPoints">-</span> | 
+      <span data-i18n="yourScore">مجموع نقاطك:</span> <span id="totalScore">0</span>
+    </div>
+    
+    <div id="cardsView" class="cards"></div>
+    <div id="reasonView" class="hidden">
+      <h3 style="color: #fff; margin-bottom: 15px;" data-i18n="whyChoose">لماذا اخترت هذه البطاقة؟</h3>
+      <div id="reasonOptions" class="reason-options"></div>
+    </div>
+    <div id="statusMsg" class="status"></div>
+    <div id="revealBox" class="reveal hidden"></div>
+    <button id="nextBtn" class="btn next-btn hidden" style="margin-top: 20px; width: 100%;" data-i18n="nextRound">الجولة التالية</button>
+  </div>
+
+  <!-- شاشة النهاية (منصة التتويج للفردي) -->
+  <div id="endBox" class="panel hidden" style="text-align: center; padding: 40px 20px;">
+    <h2 style="color: #0ea5e9; font-size: 2.5em; margin-bottom: 10px;" data-i18n="trainingComplete">🏆 اكتمل التدريب! 🏆</h2>
+    <p style="color: #94a3b8; margin-bottom: 20px;" data-i18n="finalResult">هذه هي نتيجتك النهائية</p>
+    
+    <div class="podium-container" id="podiumContainer"></div>
+    <button class="btn" onclick="location.reload()" style="margin-top: 30px;" data-i18n="restartTraining">إعادة التدريب</button>
+  </div>
+
+  <div style="text-align: center; margin-top: 40px; color: #475569; font-size: 0.9em; padding-bottom: 20px;">
+    <p data-i18n="copyright">صراع النشرات الأمنية - تصميم محمد العقيلي HIM.PY &copy; 2026</p>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const translations = {
+  ar: {
+    soloTitle: "تدريب فردي", gameTitle: "صراع النشرات الأمنية", backHome: "العودة للرئيسية",
+    soloWelcome: "أهلاً بك في التدريب الفردي", soloDesc: "ستلعب 10 جولات منفرداً، وستظهر نتيجتك النهائية في النهاية.",
+    yourName: "اسمك", startTraining: "ابدأ التدريب", roundPoints: "نقاط هذه الجولة:", yourScore: "مجموع نقاطك:",
+    whyChoose: "لماذا اخترت هذه البطاقة؟", nextRound: "الجولة التالية", trainingComplete: "🏆 اكتمل التدريب! 🏆",
+    finalResult: "هذه هي نتيجتك النهائية", restartTraining: "إعادة التدريب", copyright: "صراع النشرات الأمنية - تصميم محمد العقيلي HIM.PY © 2026"
+  },
+  en: {
+    soloTitle: "Solo Training", gameTitle: "Cyber Security Duel", backHome: "Back to Home",
+    soloWelcome: "Welcome to Solo Training", soloDesc: "You will play 10 rounds alone, and your final score will appear at the end.",
+    yourName: "Your Name", startTraining: "Start Training", roundPoints: "Round Points:", yourScore: "Total Score:",
+    whyChoose: "Why did you choose this card?", nextRound: "Next Round", trainingComplete: "🏆 Training Complete! 🏆",
+    finalResult: "Here is your final result", restartTraining: "Restart Training", copyright: "Cyber Security Duel - Designed by Mohammed Al-Oqaili HIM.PY © 2026"
+  }
+};
+
+function applyLanguage(lang) {
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (translations[lang][key]) el.innerHTML = translations[lang][key];
+  });
+}
+
+window.onload = () => {
+  const savedLang = localStorage.getItem('lang') || 'ar';
+  applyLanguage(savedLang);
+};
+
+const socket = io();
+let myPick = null;
+let myPlayerId = null;
+let currentRound = 0;
+let totalScore = 0;
+let myName = "";
+
+document.getElementById('startSoloBtn').onclick = () => {
+  myName = document.getElementById('nameInput').value.trim();
+  if (!myName) { myName = localStorage.getItem('lang') === 'en' ? 'Player' : 'لاعب'; }
+  
+  // إنشاء غرفة فردية
+  socket.emit('createRoom', { mode: 'solo' }, ({ code, mode }) => {
+    // الانضمام للغرفة
+    socket.emit('joinRoom', { code, name: myName }, (res) => {
+      if (res.error) { alert(res.error); return; }
+      myPlayerId = res.playerId;
+      document.getElementById('startBox').classList.add('hidden');
+      document.getElementById('playBox').classList.remove('hidden');
+      // بدء الجولة الأولى
+      socket.emit('startRound');
+    });
+  });
+};
+
+socket.on('roundStarted', ({ round, total, data }) => {
+  currentRound = round;
+  myPick = null;
+  const lang = localStorage.getItem('lang') || 'ar';
+  document.getElementById('reasonView').classList.add('hidden');
+  document.getElementById('revealBox').classList.add('hidden');
+  document.getElementById('nextBtn').classList.add('hidden');
+  document.getElementById('cardsView').style.display = 'grid';
+  document.getElementById('statusMsg').textContent = `${lang === 'ar' ? 'الجولة' : 'Round'} ${round} / ${total} — ${lang === 'ar' ? 'اختر البطاقة' : 'Choose a card'}`;
+  document.getElementById('statusMsg').style.color = '#0ea5e9';
+  document.getElementById('roundPoints').textContent = data.points + (lang === 'ar' ? " نقاط" : " pts");
+  renderCards(data, lang);
+});
+
+function renderCards(data, lang) {
+  const c = document.getElementById('cardsView');
+  c.innerHTML = '';
+  ['A','B'].forEach(k => {
+    const d = data[k];
+    const conditionText = lang === 'ar' ? d.condition.ar : d.condition.en;
+    const impactText = lang === 'ar' ? d.impact.ar : d.impact.en;
+    const contextText = lang === 'ar' ? d.context.ar : d.context.en;
+
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.id = 'pick' + k;
+    div.onclick = () => pickCard(k);
+    div.innerHTML = `
+      <div class="card-title">${lang === 'ar' ? 'البطاقة' : 'Card'} ${k}</div>
+      <div class="card-field"><span>${lang === 'ar' ? 'المنتج' : 'Product'}</span><b>${d.product}</b></div>
+      <div class="card-field"><span>${lang === 'ar' ? 'الشدة' : 'Severity'}</span><b class="severity">${d.severity}</b></div>
+      <div class="card-field"><span>${lang === 'ar' ? 'الحالة' : 'Condition'}</span><b>${conditionText}</b></div>
+      <div class="card-field"><span>${lang === 'ar' ? 'الأثر' : 'Impact'}</span><b>${impactText}</b></div>
+      <div class="context-box">${contextText}</div>`;
+    c.appendChild(div);
+  });
+}
+
+function pickCard(k) {
+  if (myPick) return;
+  myPick = k;
+  const lang = localStorage.getItem('lang') || 'ar';
+  document.getElementById('pickA').classList.toggle('picked', k === 'A');
+  document.getElementById('pickB').classList.toggle('picked', k === 'B');
+  socket.emit('pickCard', { card: k });
+  document.getElementById('statusMsg').textContent = lang === 'ar' ? 'جاري التحقق...' : 'Checking...';
+}
+
+socket.on('showReasons', ({ reasons_ar, reasons_en }) => {
+  const lang = localStorage.getItem('lang') || 'ar';
+  const reasons = lang === 'ar' ? reasons_ar : reasons_en;
+  
+  document.getElementById('reasonView').classList.remove('hidden');
+  document.getElementById('statusMsg').textContent = lang === 'ar' ? 'اختر السبب' : 'Choose reason';
+  const box = document.getElementById('reasonOptions');
+  box.innerHTML = '';
+  reasons.forEach((r) => {
+    const b = document.createElement('button');
+    b.className = 'reason-option';
+    b.textContent = r.text;
+    b.onclick = () => {
+      document.querySelectorAll('.reason-option').forEach(x => x.disabled = true);
+      b.classList.add('selected');
+      socket.emit('pickReason', { reasonId: r.id });
+      document.getElementById('reasonView').classList.add('hidden');
+      document.getElementById('statusMsg').textContent = lang === 'ar' ? 'تم اختيار السبب...' : 'Reason selected...';
+    };
+    box.appendChild(b);
+  });
+});
+
+socket.on('wrongAnswer', ({ correct, explain_ar, explain_en }) => {
+  const lang = localStorage.getItem('lang') || 'ar';
+  const explain = lang === 'ar' ? explain_ar : explain_en;
+  
+  document.getElementById('reasonView').classList.add('hidden');
+  document.getElementById('cardsView').style.display = 'none';
+  document.getElementById('statusMsg').textContent = lang === 'ar' ? 'إجابة خاطئة!' : 'Wrong Answer!';
+  document.getElementById('statusMsg').style.color = '#ef4444';
+  
+  const box = document.getElementById('revealBox');
+  box.classList.remove('hidden');
+  box.style.display = 'block';
+  box.innerHTML = `
+    <h3 style="color: #ef4444; text-align:center;">${lang === 'ar' ? 'إجابة خاطئة!' : 'Wrong Answer!'}</h3>
+    <p style="text-align:center;">${lang === 'ar' ? 'الإجابة الصحيحة كانت:' : 'Correct answer was:'} <strong style="color:#10b981;">${lang === 'ar' ? 'البطاقة' : 'Card'} ${correct}</strong></p>
+    <p class="explain" style="text-align:center; margin-top:10px;">${explain}</p>
+  `;
+  document.getElementById('nextBtn').classList.remove('hidden');
+});
+
+socket.on('revealSoloPlayer', ({ correct, explain_ar, explain_en, mine, points }) => {
+  const lang = localStorage.getItem('lang') || 'ar';
+  const explain = lang === 'ar' ? explain_ar : explain_en;
+  totalScore = mine.total;
+  
+  document.getElementById('totalScore').textContent = totalScore;
+  document.getElementById('statusMsg').textContent = '';
+  document.getElementById('cardsView').style.display = 'none';
+  const box = document.getElementById('revealBox');
+  box.classList.remove('hidden');
+  box.style.display = 'block'; 
+  box.innerHTML = `
+    <h3 style="color:#10b981; text-align:center;">${lang === 'ar' ? 'الإجابة' : 'Answer'}: ${correct} (${points} ${lang === 'ar' ? 'نقاط' : 'pts'})</h3>
+    <p class="explain" style="text-align:center; margin-bottom:15px;">${explain}</p>
+    <div class="res-team ${mine.cardOk && mine.reasonOk ? 'perfect' : mine.cardOk ? 'partial' : 'wrong'}">
+      <h4>${lang === 'ar' ? 'نتيجتك' : 'Your Score'}</h4>
+      <p>${mine.cardOk ? (lang === 'ar'?'البطاقة صحيحة':'Card Correct') : (lang === 'ar'?'البطاقة خاطئة':'Card Wrong')} | ${mine.reasonOk ? (lang === 'ar'?'السبب صحيح':'Reason Correct') : (lang === 'ar'?'السبب خاطئ':'Reason Wrong')}</p>
+      <p class="pts">+${mine.pts}</p>
+    </div>`;
+  
+  document.getElementById('nextBtn').classList.remove('hidden');
+});
+
+document.getElementById('nextBtn').onclick = () => {
+  socket.emit('nextRound');
+};
+
+socket.on('prepareNextRound', () => {
+  // في النمط الفردي، لا نحتاج لفعل شيء هنا، سيتم بدء الجولة التالية تلقائياً
+});
+
+socket.on('roundStarted', ({ round, total, data }) => {
+  if (round === 1) return; // تم التعامل مع الجولة الأولى
+  currentRound = round;
+  myPick = null;
+  const lang = localStorage.getItem('lang') || 'ar';
+  document.getElementById('reasonView').classList.add('hidden');
+  document.getElementById('revealBox').classList.add('hidden');
+  document.getElementById('nextBtn').classList.add('hidden');
+  document.getElementById('cardsView').style.display = 'grid';
+  document.getElementById('statusMsg').textContent = `${lang === 'ar' ? 'الجولة' : 'Round'} ${round} / ${total} — ${lang === 'ar' ? 'اختر البطاقة' : 'Choose a card'}`;
+  document.getElementById('statusMsg').style.color = '#0ea5e9';
+  document.getElementById('roundPoints').textContent = data.points + (lang === 'ar' ? " نقاط" : " pts");
+  renderCards(data, lang);
+});
+
+socket.on('gameEnded', ({ mode, leaderboard }) => {
+  const lang = localStorage.getItem('lang') || 'ar';
+  
+  document.getElementById('playBox').classList.add('hidden');
+  document.getElementById('endBox').classList.remove('hidden');
+
+  const podium = document.getElementById('podiumContainer');
+  podium.innerHTML = '';
+  
+  // عرض النتيجة النهائية في المنصة
+  if (leaderboard.length > 0) {
+    podium.innerHTML += `<div class="podium-step first"><div class="podium-rank">1</div><div class="podium-name">${leaderboard[0].name}</div><div class="podium-score">${leaderboard[0].score}</div></div>`;
+  }
+});
+</script>
+</body>
+</html>
