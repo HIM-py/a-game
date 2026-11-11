@@ -11,53 +11,65 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const COPYRIGHT_TEXT = "محمد العقيلي HIM.PY";
 
+// قواميس البيانات باللغتين
 const PRODUCTS = ["LibraryApp", "PayPortal", "PrintServer", "VPN Gateway", "ChatApp", "StudentPortal", "Antivirus", "Backup Server", "Email Filter", "File Share", "WebServer", "HR Portal", "Router Firmware", "Cloud Storage", "Dev Tools", "Public API", "Backup Tape", "Mobile App", "Old CRM", "Wi-Fi Guest"];
-const CONDITIONS = ["تسجيل دخول الزوار مُفعّل", "الجلسة لا تنتهي بعد الخروج", "ثغرة في خدمة الطباعة", "ثغرة في المصادقة الثنائية", "رسائل غير مشفرة", "ثغرة في رفع الملفات", "ثغرة في محرك الفحص", "ثغرة في استعادة النسخ", "تجاوز فلتر البريد", "صلاحيات مفتوحة", "ثغرة تنفيذ أوامر عن بُعد", "تسريب بيانات الموظفين", "كلمة مرور افتراضية", "روابط مشاركة دائمة"];
-const IMPACTS = ["وصول غير مصرّح للبيانات", "سرقة جلسات العملاء", "تسريب مستندات داخلية", "دخول غير مصرّح للشبكة", "كشف محادثات الموظفين", "رفع ملفات خبيثة", "تجاوز الفحص الأمني", "فشل استعادة البيانات", "وصول تصيّد للموظفين", "وصول لملفات حساسة", "اختراق كامل للخادم", "كشف رواتب وبيانات شخصية"];
-const CONTEXT_LOW = ["غير مثبت لدينا", "نسخة اختبارية معزولة بلا بيانات", "داخل شبكة الموظفين + جدار حماية", "8 موظفين فقط، لا بيانات حساسة", "التحديث طُبّق تلقائياً أمس", "توعية + نظام كشف ثانٍ", "تم تغيير كلمة المرور بالفعل", "خادم داخلي مغلق، لا يوجد اتصال بالإنترنت، وصول محصور بموظف واحد"];
-const CONTEXT_HIGH = ["صفحة عامة يومية — لا ضوابط", "مثبت، يستخدمه الكل عن بُعد، لا بديل", "2000 طالب يومياً + لا فحص للملفات", "لا نسخة بديلة، لا اختبار منذ 6 أشهر", "الجميع يستخدمه، لا تدقيق منذ سنة", "مثبت، يستخدمه كل الموظفين، بلا تشفير", "مفتوح للإنترنت، يستخدمه آلاف العملاء", "مفتوح للإنترنت بالكامل، بيانات العملاء الحساسة مكشوفة، لا يوجد أي جدار حماية"];
+const CONDITIONS = [
+  { ar: "تسجيل دخول الزوار مُفعّل", en: "Guest login enabled" },
+  { ar: "الجلسة لا تنتهي بعد الخروج", en: "Session doesn't expire after logout" },
+  { ar: "ثغرة في خدمة الطباعة", en: "Print service vulnerability" },
+  { ar: "ثغرة في المصادقة الثنائية", en: "2FA vulnerability" },
+  { ar: "رسائل غير مشفرة", en: "Unencrypted messages" },
+  { ar: "ثغرة في رفع الملفات", en: "File upload vulnerability" },
+  { ar: "ثغرة في محرك الفحص", en: "Scan engine vulnerability" },
+  { ar: "ثغرة في استعادة النسخ", en: "Backup restore vulnerability" },
+  { ar: "تجاوز فلتر البريد", en: "Email filter bypass" },
+  { ar: "صلاحيات مفتوحة", en: "Open permissions" },
+  { ar: "ثغرة تنفيذ أوامر عن بُعد", en: "Remote Code Execution (RCE)" },
+  { ar: "تسريب بيانات الموظفين", en: "Employee data leak" },
+  { ar: "كلمة مرور افتراضية", en: "Default password" },
+  { ar: "روابط مشاركة دائمة", en: "Permanent share links" }
+];
+
+const IMPACTS = [
+  { ar: "وصول غير مصرّح للبيانات", en: "Unauthorized data access" },
+  { ar: "سرقة جلسات العملاء", en: "Customer session theft" },
+  { ar: "تسريب مستندات داخلية", en: "Internal document leak" },
+  { ar: "دخول غير مصرّح للشبكة", en: "Unauthorized network access" },
+  { ar: "كشف محادثات الموظفين", en: "Employee chat exposure" },
+  { ar: "رفع ملفات خبيثة", en: "Malicious file upload" },
+  { ar: "تجاوز الفحص الأمني", en: "Security check bypass" },
+  { ar: "فشل استعادة البيانات", en: "Data restore failure" },
+  { ar: "وصول تصيّد للموظفين", en: "Phishing access to employees" },
+  { ar: "وصول لملفات حساسة", en: "Sensitive file access" },
+  { ar: "اختراق كامل للخادم", en: "Full server compromise" },
+  { ar: "كشف رواتب وبيانات شخصية", en: "Salaries & PII exposure" }
+];
+
+const CONTEXT_LOW = [
+  { ar: "غير مثبت لدينا", en: "Not installed here" },
+  { ar: "نسخة اختبارية معزولة بلا بيانات", en: "Isolated test version, no data" },
+  { ar: "داخل شبكة الموظفين + جدار حماية", en: "Internal network + firewall" },
+  { ar: "8 موظفين فقط، لا بيانات حساسة", en: "Only 8 employees, no sensitive data" },
+  { ar: "التحديث طُبّق تلقائياً أمس", en: "Update applied automatically yesterday" },
+  { ar: "توعية + نظام كشف ثانٍ", en: "Awareness + secondary detection system" },
+  { ar: "تم تغيير كلمة المرور بالفعل", en: "Password already changed" },
+  { ar: "خادم داخلي مغلق، لا يوجد اتصال بالإنترنت", en: "Closed internal server, no internet" }
+];
+
+const CONTEXT_HIGH = [
+  { ar: "صفحة عامة يومية — لا ضوابط", en: "Public daily page — no controls" },
+  { ar: "مثبت، يستخدمه الكل عن بُعد، لا بديل", en: "Installed, used by all remotely, no alternative" },
+  { ar: "2000 طالب يومياً + لا فحص للملفات", en: "2000 students daily + no file scanning" },
+  { ar: "لا نسخة بديلة، لا اختبار منذ 6 أشهر", en: "No backup, no testing for 6 months" },
+  { ar: "الجميع يستخدمه، لا تدقيق منذ سنة", en: "Everyone uses it, no audit for a year" },
+  { ar: "مثبت، يستخدمه كل الموظفين، بلا تشفير", en: "Installed, used by all employees, no encryption" },
+  { ar: "مفتوح للإنترنت، يستخدمه آلاف العملاء", en: "Open to internet, used by thousands" },
+  { ar: "مفتوح للإنترنت بالكامل، بيانات مكشوفة", en: "Fully open to internet, data exposed" }
+];
 
 function getRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function shuffleArray(arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
-
-function getI18nReasons(isExpert, isTrap, realCard, fakeCard, correctLetter, wrongLetter) {
-  const ar = [];
-  const en = [];
-
-  if (isExpert) {
-    ar.push({ text: `البطاقة ${correctLetter}: لأنها تفتح ثغرة للمخترق للدخول كمدير (تجاوز 2FA)، بينما ${wrongLetter} مجرد تسريب معلومات لا يسمح بالدخول.`, correct: true });
-    ar.push({ text: `البطاقة ${correctLetter}: لأنها رغم أن شدتها أقل بقليل، إلا أن طبيعتها تسمح بالتحكم الكامل، بينما ${wrongLetter} لا تفعل.`, correct: true });
-    ar.push({ text: `البطاقة ${correctLetter}: لأنها تعمل على مستوى المصادقة، بينما ${wrongLetter} تعمل على مستوى الإفصاح فقط.`, correct: false });
-    ar.push({ text: `البطاقة ${correctLetter}: لأن البطاقة ${wrongLetter} قد تكون خطيرة أيضاً، لكن الأثر المباشر لـ ${correctLetter} أخطر بكثير.`, correct: false });
-
-    en.push({ text: `Card ${correctLetter}: Because it allows an attacker to bypass 2FA and gain admin access, while ${wrongLetter} is just information disclosure.`, correct: true });
-    en.push({ text: `Card ${correctLetter}: Because despite its slightly lower severity, it allows full control, while ${wrongLetter} does not.`, correct: true });
-    en.push({ text: `Card ${correctLetter}: Because it operates at the authentication level, while ${wrongLetter} operates at the disclosure level only.`, correct: false });
-    en.push({ text: `Card ${correctLetter}: Because ${wrongLetter} might also be dangerous, but the direct impact of ${correctLetter} is much worse.`, correct: false });
-  } else if (isTrap) {
-    ar.push({ text: `البطاقة ${correctLetter}: لأن كلتاهما لهما سياق خطير، ولكن درجة الشدة (${realCard.severity}) وطبيعة الثغرة تجعلها الأكثر فتكاً.`, correct: true });
-    ar.push({ text: `البطاقة ${correctLetter}: لأن الأثر المترتب عليها كارثي (${realCard.impact})، بينما ${wrongLetter} أثره محدود.`, correct: true });
-    ar.push({ text: `البطاقة ${correctLetter}: لأن سياقها يبدو آمناً أكثر للوهلة الأولى.`, correct: false });
-    ar.push({ text: "كلتاهما آمنتان، لا يوجد خطر حقيقي.", correct: false });
-
-    en.push({ text: `Card ${correctLetter}: Because both have a dangerous context, but the severity (${realCard.severity}) and nature of the vulnerability make it the most lethal.`, correct: true });
-    en.push({ text: `Card ${correctLetter}: Because its impact is catastrophic (${realCard.impact}), while ${wrongLetter}'s impact is limited.`, correct: true });
-    en.push({ text: `Card ${correctLetter}: Because its context seems safer at first glance.`, correct: false });
-    en.push({ text: "Both are safe, there is no real risk.", correct: false });
-  } else {
-    ar.push({ text: `البطاقة ${correctLetter}: لأن السياق المحلي (${realCard.context}) يجعلها مكشوفة للخطر أكثر من ${wrongLetter}.`, correct: true });
-    ar.push({ text: `البطاقة ${correctLetter}: لأن طبيعة الثغرة (${realCard.condition}) والأثر (${realCard.impact}) أخطر بكثير، بينما ${wrongLetter} ثغرة بسيطة.`, correct: true });
-    ar.push({ text: `البطاقة ${correctLetter}: لأن درجة شدتها (${realCard.severity}) هي الأعلى، وفي الأمن السيبراني الرقم الأكبر هو الأخطر دائماً.`, correct: false });
-    ar.push({ text: `البطاقة ${correctLetter}: لأنها الأحدث في الإصدار، والنسخ الجديدة تكون أكثر عرضة للثغرات المكتشفة حديثاً.`, correct: false });
-
-    en.push({ text: `Card ${correctLetter}: Because the local context (${realCard.context}) makes it more exposed than ${wrongLetter}.`, correct: true });
-    en.push({ text: `Card ${correctLetter}: Because the nature of the vulnerability (${realCard.condition}) and impact (${realCard.impact}) are far worse than ${wrongLetter}.`, correct: true });
-    en.push({ text: `Card ${correctLetter}: Because its severity (${realCard.severity}) is the highest, and in cybersecurity, the biggest number always wins.`, correct: false });
-    en.push({ text: `Card ${correctLetter}: Because it's the newest version, and new versions are more prone to newly discovered vulnerabilities.`, correct: false });
-  }
-  return { ar, en };
-}
 
 function generateQuestionByType(type) {
   let realSev, fakeSev;
@@ -71,21 +83,24 @@ function generateQuestionByType(type) {
     points = 3;
     realSev = (Math.random() * 1.9 + 8.0).toFixed(1);
     fakeSev = (Math.random() * 1.9 + 8.0).toFixed(1);
-    realCondition = "ثغرة في خدمة الويب"; fakeCondition = "ثغرة في خدمة الويب";
-    realContext = "مفتوح للإنترنت، بيانات العملاء مكشوفة، لا يوجد جدار حماية";
-    fakeContext = "خادم داخلي، يستخدمه الموظفون، لكن عليه جدار حماية داخلي";
+    realCondition = getRandom(CONDITIONS); fakeCondition = realCondition;
+    realContext = getRandom(CONTEXT_HIGH);
+    fakeContext = getRandom(CONTEXT_LOW);
   } else if (type === 'trap') {
     points = 2; isTrap = true;
     realSev = (Math.random() * 1.5 + 8.5).toFixed(1);
     fakeSev = (Math.random() * 1.5 + 8.5).toFixed(1);
-    realCondition = "ثغرة تنفيذ أوامر عن بُعد (RCE)"; fakeCondition = "ثغرة إفصاح عن معلومات بسيطة";
-    realContext = "مثبت، يستخدمه كل الموظفين، لا يوجد بديل"; fakeContext = "مثبت، يستخدمه كل الموظفين، لا يوجد بديل";
+    realCondition = { ar: "ثغرة تنفيذ أوامر عن بُعد (RCE)", en: "Remote Code Execution (RCE)" };
+    fakeCondition = { ar: "ثغرة إفصاح عن معلومات بسيطة", en: "Simple Information Disclosure" };
+    realContext = getRandom(CONTEXT_HIGH); fakeContext = realContext;
   } else if (type === 'nature') {
     points = 3;
     realSev = (Math.random() * 1.5 + 7.5).toFixed(1);
     fakeSev = (Math.random() * 1.5 + 7.5).toFixed(1);
-    realCondition = "ثغرة تنفيذ أوامر عن بُعد (RCE)"; fakeCondition = "ثغرة إفصاح عن معلومات حساسة (تسريب)";
-    realContext = "خادم داخلي، لكن الثغرة تسمح بالتحكم الكامل"; fakeContext = "خادم داخلي، الثغرة تكشف مسارات الملفات";
+    realCondition = { ar: "ثغرة تنفيذ أوامر عن بُعد (RCE)", en: "Remote Code Execution (RCE)" };
+    fakeCondition = { ar: "ثغرة إفصاح عن معلومات حساسة", en: "Sensitive Information Disclosure" };
+    realContext = { ar: "خادم داخلي، لكن الثغرة تسمح بالتحكم الكامل", en: "Internal server, but allows full control" };
+    fakeContext = { ar: "خادم داخلي، الثغرة تكشف مسارات الملفات", en: "Internal server, discloses file paths" };
   } else if (type === 'balance') {
     points = 2; isTrap = Math.random() < 0.5;
     if (isTrap) {
@@ -94,16 +109,18 @@ function generateQuestionByType(type) {
       const base = Math.random() * 1.5 + 7.5;
       realSev = (base + 0.1).toFixed(1); fakeSev = base.toFixed(1);
     }
-    realCondition = "ثغرة في المصادقة"; fakeCondition = "ثغرة في التسجيل";
-    realContext = "خادم داخلي، الثغرة تسمح بتجاوز الحماية"; fakeContext = "خادم داخلي، الثغرة لا تؤدي إلا لكشف سجلات بسيطة";
+    realCondition = { ar: "ثغرة في المصادقة", en: "Authentication vulnerability" };
+    fakeCondition = { ar: "ثغرة في التسجيل", en: "Logging vulnerability" };
+    realContext = { ar: "خادم داخلي، الثغرة تسمح بتجاوز الحماية", en: "Internal server, allows bypassing protection" };
+    fakeContext = { ar: "خادم داخلي، الثغرة تكشف سجلات بسيطة", en: "Internal server, reveals simple logs" };
   } else if (type === 'expert') {
     points = 4; isExpert = true;
     realSev = (Math.random() * 1.0 + 8.5).toFixed(1);
-    realCondition = "ثغرة تجاوز المصادقة الثنائية (2FA Bypass)";
-    realContext = "مثبت، يستخدمه الموظفون، لا يوجد جدار حماية";
+    realCondition = { ar: "ثغرة تجاوز المصادقة الثنائية (2FA)", en: "2FA Bypass vulnerability" };
+    realContext = getRandom(CONTEXT_HIGH);
     fakeSev = (Math.random() * 0.5 + 9.5).toFixed(1);
-    fakeCondition = "ثغرة تسريب معلومات (Information Disclosure)";
-    fakeContext = "مثبت، يستخدمه الموظفون، لا يوجد جدار حماية";
+    fakeCondition = { ar: "ثغرة تسريب معلومات", en: "Information Disclosure" };
+    fakeContext = realContext;
   }
 
   const dangerInA = Math.random() < 0.5;
@@ -120,10 +137,9 @@ function generateQuestionByType(type) {
   const realCard = dangerInA ? cardA : cardB;
   const fakeCard = dangerInA ? cardB : cardA;
 
-  const i18nReasons = getI18nReasons(isExpert, isTrap, realCard, fakeCard, correctLetter, wrongLetter);
-  
-  let arExplain = `البطاقة ${correctLetter} هي الخطر الحقيقي لأن طبيعة الثغرة (${realCard.condition}) أو السياق المحلي (${realCard.context}) يجعلها أولوية قصوى، بينما البطاقة ${wrongLetter} أقل خطورة.`;
-  let enExplain = `Card ${correctLetter} is the real threat because its nature (${realCard.condition}) or local context (${realCard.context}) makes it a top priority, while Card ${wrongLetter} is less risky.`;
+  // شرح باللغتين
+  let arExplain = `البطاقة ${correctLetter} هي الخطر الحقيقي لأن طبيعة الثغرة (${realCard.condition.ar}) أو السياق المحلي (${realCard.context.ar}) يجعلها أولوية قصوى، بينما البطاقة ${wrongLetter} أقل خطورة.`;
+  let enExplain = `Card ${correctLetter} is the real threat because its nature (${realCard.condition.en}) or local context (${realCard.context.en}) makes it a top priority, while Card ${wrongLetter} is less risky.`;
 
   if (isExpert) {
     arExplain = `انتبه! البطاقة ${wrongLetter} شدتها ${fakeCard.severity}، لكنها لا تسمح بالدخول. بينما البطاقة ${correctLetter} شدتها ${realCard.severity}، لكنها تسمح بالدخول كمدير. الشدة وحدها لا تكفي!`;
@@ -133,17 +149,23 @@ function generateQuestionByType(type) {
     enExplain = `In this round, both are dangerous! But Card ${correctLetter} is more severe and has a higher score.`;
   }
 
-  const correctAr = i18nReasons.ar.filter(r => r.correct);
-  const wrongAr = i18nReasons.ar.filter(r => !r.correct);
-  const correctEn = i18nReasons.en.filter(r => r.correct);
-  const wrongEn = i18nReasons.en.filter(r => !r.correct);
-
-  const selectedAr = shuffleArray([...shuffleArray(correctAr).slice(0, 2), ...shuffleArray(wrongAr).slice(0, 2)]);
-  const selectedEn = shuffleArray([...shuffleArray(correctEn).slice(0, 2), ...shuffleArray(wrongEn).slice(0, 2)]);
+  // توليد أسباب عشوائية (بسيطة للعرض)
+  const arReasons = [
+    { text: `البطاقة ${correctLetter}: لأن السياق المحلي (${realCard.context.ar}) يجعلها مكشوفة للخطر أكثر.`, correct: true },
+    { text: `البطاقة ${wrongLetter}: لأن درجة شدتها (${fakeCard.severity}) هي الأعلى.`, correct: false },
+    { text: "كلتاهما آمنتان.", correct: false },
+    { text: "لا يمكن تحديد الأولوية.", correct: false }
+  ];
+  const enReasons = [
+    { text: `Card ${correctLetter}: Because the local context (${realCard.context.en}) makes it more exposed.`, correct: true },
+    { text: `Card ${wrongLetter}: Because its severity (${fakeCard.severity}) is the highest.`, correct: false },
+    { text: "Both are safe.", correct: false },
+    { text: "Priority cannot be determined.", correct: false }
+  ];
 
   return { 
     A: cardA, B: cardB, correct: correctLetter, 
-    reasons_ar: selectedAr, reasons_en: selectedEn, 
+    reasons_ar: shuffleArray(arReasons), reasons_en: shuffleArray(enReasons), 
     points: points,
     explain_ar: arExplain, explain_en: enExplain
   };
@@ -247,7 +269,6 @@ io.on('connection', (socket) => {
     const currentRound = room.rounds[room.round - 1];
     room.playerAnswers[socket.playerId] = card;
     
-    const lang = socket.handshake.auth.lang || 'ar';
     if (card !== currentRound.correct) {
       socket.emit('wrongAnswer', { 
         correct: currentRound.correct, 
@@ -281,7 +302,6 @@ io.on('connection', (socket) => {
     finishRound(room);
   });
 
-  // ✅ التعديل هنا: إرسال الترتيب النهائي كقائمة
   socket.on('nextRound', () => {
     const room = rooms[socket.roomCode];
     if (!room) return;
